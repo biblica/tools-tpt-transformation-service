@@ -1,0 +1,11 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=_CHANGE_ME;Trusted_Connection=True;MultipleActiveResultSets=true"
+  },
+  "InDesignServerUri": "http://10.20.2.4:9876/service",
+  "MaxConcurrentServerRequests": "4",
+  "PreviewScriptPath": "C:\\Work\\Scripts\\TypesettingPreviewRoman.jsx",
+  "PreviewOutputDirectory": "C:\\Work\\Output",
+  "ScriptTimeoutInSec": "600",
+  "MaxPreviewAgeInSec": "86400"
+}
