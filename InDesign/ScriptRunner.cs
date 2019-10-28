@@ -17,6 +17,7 @@ namespace tools_tpt_transformation_service.InDesign
         private readonly ILogger<ScriptRunner> _logger;
         private readonly IConfiguration _configuration;
         private readonly ServicePortTypeClient _serviceClient;
+        private readonly int _scriptTimeoutInSec;
         private readonly string _mainScriptPath;
 
         /// <summary>
@@ -33,8 +34,9 @@ namespace tools_tpt_transformation_service.InDesign
             _serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
                 _configuration.GetValue<string>("InDesignServerUri") ?? "http://localhost:9876/service");
-            _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMinutes(2.0);
-            _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromMinutes(2.0);
+            _scriptTimeoutInSec = int.Parse(_configuration.GetValue<string>("ScriptTimeoutInSec") ?? "600");
+            _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromSeconds(_scriptTimeoutInSec);
+            _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromSeconds(_scriptTimeoutInSec);
             _mainScriptPath = (_configuration.GetValue<string>("PreviewScriptPath") ?? "C:\\Work\\Scripts\\TypesettingPreviewRoman.jsx");
             _logger.LogDebug("ScriptRunner()");
         }

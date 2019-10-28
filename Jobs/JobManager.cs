@@ -61,7 +61,7 @@ namespace tools_tpt_transformation_service.Jobs
         }
 
         /// <summary>
-        /// Iterate through the jobs and clean up any old ones.
+        /// Iterate through jobs and clean up old ones.
         /// </summary>
         private void CheckJobs()
         {
@@ -103,7 +103,7 @@ namespace tools_tpt_transformation_service.Jobs
         }
 
         /// <summary>
-        /// Iterate through the preview files and clean up old ones.
+        /// Iterate through preview files and clean up old ones.
         /// </summary>
         private void CheckFiles()
         {
@@ -123,7 +123,7 @@ namespace tools_tpt_transformation_service.Jobs
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogWarning(ex, $"Can't delete preview file: {fileItem}.");
+                            _logger.LogWarning(ex, $"Can't delete preview file (will retry): {fileItem}.");
                         }
                     }
                 }
@@ -140,8 +140,8 @@ namespace tools_tpt_transformation_service.Jobs
         /// Initiate and schedule a new preview job. 
         /// </summary>
         /// <param name="inputJob">The job to be initiated.</param>
-        /// <param name="outputJob">Set to the initiated job if successful. Otherwise null.</param>
-        /// <returns>True: Job initiated successfully. False: Job not initiated successfully.</returns>
+        /// <param name="outputJob">Set to the initiated job if successful, otherwise null.</param>
+        /// <returns>True if job initiated successfully, false otherwise.</returns>
         public bool TryAddJob(PreviewJob inputJob, out PreviewJob outputJob)
         {
             if (inputJob.Id != null
@@ -183,8 +183,8 @@ namespace tools_tpt_transformation_service.Jobs
         /// Delete a preview job.
         /// </summary>
         /// <param name="jobId">The job to be initiated.</param>
-        /// <param name="outputJob">The deleted job if successful, otherwise null</param>
-        /// <returns>True if successful, otherwise false.</returns>
+        /// <param name="outputJob">The deleted job if successful, otherwise null.</param>
+        /// <returns>True if successful, false otherwise.</returns>
         public bool TryDeleteJob(string jobId, out PreviewJob outputJob)
         {
             lock (_previewContext)
@@ -211,7 +211,7 @@ namespace tools_tpt_transformation_service.Jobs
         /// Update a preview job.
         /// </summary>
         /// <param name="nextJob">Preview job to update with.</param>
-        /// <returns>Tue if successful, otherwise false.</returns>
+        /// <returns>True if successful, false otherwise.</returns>
         public bool TryUpdateJob(PreviewJob nextJob)
         {
             lock (_previewContext)
@@ -250,7 +250,7 @@ namespace tools_tpt_transformation_service.Jobs
         /// </summary>
         /// <param name="jobId">ID of preview  file to retrieve.</param>
         /// <param name="fileStream"><c>FileStream</c> if successful, otherwise null.</param>
-        /// <returns>True if successful, otherwise false.</returns>
+        /// <returns>True if successful, false otherwise.</returns>
         public bool TryGetFileStream(String jobId, out FileStream fileStream)
         {
             lock (_previewContext)
@@ -280,6 +280,9 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Disposes of class resources.
+        /// </summary>
         public void Dispose()
         {
             _jobScheduler.Dispose();

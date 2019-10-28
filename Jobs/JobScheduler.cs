@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace tools_tpt_transformation_service.Jobs
 {
     /// <summary>
-    /// Job execution scheduler. As C# uses a system-wide thread pool, this class makes sure that it's pararellism is bounded by a configuration value.
+    /// Job execution scheduler. As C# uses a system-wide thread pool, this class makes sure that pararellism is bounded by a configuration value.
     /// </summary>
     public class JobScheduler : IDisposable
     {
@@ -43,7 +43,7 @@ namespace tools_tpt_transformation_service.Jobs
         }
 
         /// <summary>
-        /// Function that kicks off the scheduler until cancelled or shutdown. This uses a semasphore and map to continually executes jobs based on a max thread limit and allow for job cancellation.
+        /// Kicks off the scheduler until cancelled or shutdown. This uses a semaphore and map to continually executes jobs based on a max thread limit and allow for job cancellation.
         /// </summary>
         private void RunScheduler()
         {
@@ -110,7 +110,7 @@ namespace tools_tpt_transformation_service.Jobs
         }
 
         /// <summary>
-        /// Class destructor.
+        /// Disposes of class resources.
         /// </summary>
         public void Dispose()
         {

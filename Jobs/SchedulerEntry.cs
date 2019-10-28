@@ -98,7 +98,7 @@ namespace tools_tpt_transformation_service.Jobs
         /// <summary>
         /// Whether or not a job is cancelled.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>True if job canceled, false otherwise.</returns>
         public bool IsJobCanceled()
         {
             return _cancellationTokenSource.IsCancellationRequested;

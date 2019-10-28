@@ -36,7 +36,7 @@ namespace tools_tpt_transformation_service.Models
         public DateTime? DateCancelled { get; set; }
 
         /// <summary>
-        /// The PT short project name to generate a typeseeting preview of.
+        /// The PT short project name to generate a typesetting preview of.
         /// </summary>
         public string ProjectName { get; set; }
 

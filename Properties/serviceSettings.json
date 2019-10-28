@@ -6,5 +6,6 @@
   "MaxConcurrentServerRequests": "4",
   "PreviewScriptPath": "C:\\Work\\Scripts\\TypesettingPreviewRoman.jsx",
   "PreviewOutputDirectory": "C:\\Work\\Output",
+  "ScriptTimeoutInSec": "600",
   "MaxPreviewAgeInSec": "86400"
 }
