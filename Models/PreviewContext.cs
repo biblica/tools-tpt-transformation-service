@@ -9,6 +9,9 @@ using tools_tpt_transformation_service.Jobs;
 
 namespace tools_tpt_transformation_service.Models
 {
+    /// <summary>
+    /// Standard <c>DBContext</c> class. Used for storing <c>PreviewJob</c>s.
+    /// </summary>
     public class PreviewContext : DbContext
     {
         public PreviewContext(DbContextOptions<PreviewContext> options)
@@ -16,6 +19,9 @@ namespace tools_tpt_transformation_service.Models
         {
         }
 
+        /// <summary>
+        /// DB collection accessor for <c>PreviewJob</c>s.
+        /// </summary>
         public DbSet<PreviewJob> PreviewJobs { get; set; }
     }
 }

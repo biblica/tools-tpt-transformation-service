@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace tools_tpt_transformation_service.Jobs
 {
+    /// <summary>
+    /// Job execution scheduler. As C# uses a system-wide thread pool, this class makes sure that it's pararellism is bounded by a configuration value.
+    /// </summary>
     public class JobScheduler : IDisposable
     {
         private readonly ILogger<JobManager> _logger;
@@ -18,6 +21,11 @@ namespace tools_tpt_transformation_service.Jobs
         private readonly IDictionary<String, SchedulerEntry> _jobMap;
         private readonly Thread _schedulerThread;
 
+        /// <summary>
+        /// JobScheduler Constructor.
+        /// </summary>
+        /// <param name="logger">Logger.</param>
+        /// <param name="configuration">Service configuration.</param>
         public JobScheduler(
             ILogger<JobManager> logger,
             IConfiguration configuration)
@@ -34,6 +42,9 @@ namespace tools_tpt_transformation_service.Jobs
             _logger.LogDebug("JobEntryScheduler()");
         }
 
+        /// <summary>
+        /// Function that kicks off the scheduler until cancelled or shutdown. This uses a semasphore and map to continually executes jobs based on a max thread limit and allow for job cancellation.
+        /// </summary>
         private void RunScheduler()
         {
             try
@@ -75,12 +86,20 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Adds a new scheduler entry for a job.
+        /// </summary>
+        /// <param name="nextEntry">SchedulerEntry to add.</param>
         public void AddEntry(SchedulerEntry nextEntry)
         {
             _jobList.Add(nextEntry);
             _jobMap[nextEntry.Job.Id] = nextEntry;
         }
 
+        /// <summary>
+        /// Removes a job scheduled entry.
+        /// </summary>
+        /// <param name="jobId">ID of job entry to remove.</param>
         public void RemoveEntry(string jobId)
         {
             if (_jobMap.TryGetValue(jobId, out SchedulerEntry jobEntry))
@@ -90,6 +109,9 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Class destructor.
+        /// </summary>
         public void Dispose()
         {
             _schedulerThread.Abort();

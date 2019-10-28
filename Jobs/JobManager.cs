@@ -13,6 +13,9 @@ using tools_tpt_transformation_service.Models;
 
 namespace tools_tpt_transformation_service.Jobs
 {
+    /// <summary>
+    /// Job manager for handling typesetting preview job request management and execution.
+    /// </summary>
     public partial class JobManager : IDisposable
     {
         private readonly ILogger<JobManager> _logger;
@@ -25,6 +28,14 @@ namespace tools_tpt_transformation_service.Jobs
         private readonly Timer _jobCheckTimer;
         private readonly Timer _fileCheckTimer;
 
+        /// <summary>
+        /// Constructor. Built using .NETs dependency injection.
+        /// </summary>
+        /// <param name="logger">Logger.</param>
+        /// <param name="configuration">Service configuration object.</param>
+        /// <param name="previewContext">Preview DB Context.</param>
+        /// <param name="scriptRunner">InDesign script runner.</param>
+        /// <param name="jobScheduler"></param>
         public JobManager(
             ILogger<JobManager> logger,
             IConfiguration configuration,
@@ -49,6 +60,9 @@ namespace tools_tpt_transformation_service.Jobs
             _logger.LogDebug("JobManager()");
         }
 
+        /// <summary>
+        /// Iterate through the jobs and clean up any old ones.
+        /// </summary>
         private void CheckJobs()
         {
             try
@@ -88,6 +102,9 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Iterate through the preview files and clean up old ones.
+        /// </summary>
         private void CheckFiles()
         {
             try
@@ -119,6 +136,12 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Initiate and schedule a new preview job. 
+        /// </summary>
+        /// <param name="inputJob">The job to be initiated.</param>
+        /// <param name="outputJob">Set to the initiated job if successful. Otherwise null.</param>
+        /// <returns>True: Job initiated successfully. False: Job not initiated successfully.</returns>
         public bool TryAddJob(PreviewJob inputJob, out PreviewJob outputJob)
         {
             if (inputJob.Id != null
@@ -142,6 +165,10 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Creates an initiated <c>PreviewJob</c> with expected initial values.
+        /// </summary>
+        /// <param name="previewJob"><c>PreviewJob</c> to initiate.</param>
         private void InitPreviewJob(PreviewJob previewJob)
         {
             previewJob.Id = Guid.NewGuid().ToString();
@@ -152,6 +179,12 @@ namespace tools_tpt_transformation_service.Jobs
             previewJob.DateCancelled = null;
         }
 
+        /// <summary>
+        /// Delete a preview job.
+        /// </summary>
+        /// <param name="jobId">The job to be initiated.</param>
+        /// <param name="outputJob">The deleted job if successful, otherwise null</param>
+        /// <returns>True if successful, otherwise false.</returns>
         public bool TryDeleteJob(string jobId, out PreviewJob outputJob)
         {
             lock (_previewContext)
@@ -174,6 +207,11 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Update a preview job.
+        /// </summary>
+        /// <param name="nextJob">Preview job to update with.</param>
+        /// <returns>Tue if successful, otherwise false.</returns>
         public bool TryUpdateJob(PreviewJob nextJob)
         {
             lock (_previewContext)
@@ -192,6 +230,12 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Retrieve a job.
+        /// </summary>
+        /// <param name="jobId">ID of preview job to retrieve.</param>
+        /// <param name="previewJob">The retrieve retrieve job if successful, null otherwise.</param>
+        /// <returns>True if successful, false otherwise.</returns>
         public bool TryGetJob(String jobId, out PreviewJob previewJob)
         {
             lock (_previewContext)
@@ -201,6 +245,12 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Get <c>FileStream</c> for preview file retrieval.
+        /// </summary>
+        /// <param name="jobId">ID of preview  file to retrieve.</param>
+        /// <param name="fileStream"><c>FileStream</c> if successful, otherwise null.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         public bool TryGetFileStream(String jobId, out FileStream fileStream)
         {
             lock (_previewContext)

@@ -11,6 +11,9 @@ using tools_tpt_transformation_service.Jobs;
 
 namespace tools_tpt_transformation_service.Controllers
 {
+    /// <summary>
+    /// REST Controller for the PreviewFile endpoint.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class PreviewFileController : ControllerBase
@@ -18,6 +21,11 @@ namespace tools_tpt_transformation_service.Controllers
         private readonly ILogger<PreviewFileController> _logger;
         private readonly JobManager _jobManager;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="logger">Logger.</param>
+        /// <param name="jobManager">Preview Job Manager</param>
         public PreviewFileController(
             ILogger<PreviewFileController> logger,
             JobManager jobManager)

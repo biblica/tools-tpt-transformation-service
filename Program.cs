@@ -17,6 +17,11 @@ namespace tools_tpt_transformation_service
             CreateHostBuilder(args).Build().Run();
         }
 
+        /// <summary>
+        /// Creates, configures, and builds the site host.
+        /// </summary>
+        /// <param name="args">Program arguments array.</param>
+        /// <returns>The HostBuilder</returns>
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
             .UseWindowsService()

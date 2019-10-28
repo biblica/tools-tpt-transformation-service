@@ -17,6 +17,9 @@ using tools_tpt_transformation_service.Jobs;
 
 namespace tools_tpt_transformation_service
 {
+    /// <summary>
+    /// Class used to configure the ASP.NET request services pipeline.
+    /// </summary>
     public class Startup
     {
         private readonly IConfiguration _configuration;
@@ -31,6 +34,7 @@ namespace tools_tpt_transformation_service
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // In-memory database for tracking typesetting preview jobs
             services.AddDbContext<PreviewContext>(
                 options => options.UseInMemoryDatabase("PreviewJobList"),
                ServiceLifetime.Singleton);

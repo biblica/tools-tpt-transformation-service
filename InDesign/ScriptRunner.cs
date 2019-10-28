@@ -9,6 +9,9 @@ using tools_tpt_transformation_service.Models;
 
 namespace tools_tpt_transformation_service.InDesign
 {
+    /// <summary>
+    /// InDesign server script runner class.
+    /// </summary>
     public class ScriptRunner
     {
         private readonly ILogger<ScriptRunner> _logger;
@@ -16,6 +19,11 @@ namespace tools_tpt_transformation_service.InDesign
         private readonly ServicePortTypeClient _serviceClient;
         private readonly string _mainScriptPath;
 
+        /// <summary>
+        /// Constructor. Populated by dependency injection.
+        /// </summary>
+        /// <param name="logger">Logger.</param>
+        /// <param name="configuration">Service configuration object.</param>
         public ScriptRunner(ILogger<ScriptRunner> logger,
             IConfiguration configuration)
         {
@@ -31,6 +39,11 @@ namespace tools_tpt_transformation_service.InDesign
             _logger.LogDebug("ScriptRunner()");
         }
 
+        /// <summary>
+        /// Kick off async request to create start typesetting preview generation.
+        /// </summary>
+        /// <param name="job">Typesetting preview job request.</param>
+        /// <returns></returns>
         public Task RunScriptAsync(PreviewJob job)
         {
             RunScriptRequest scriptRequest = new RunScriptRequest();

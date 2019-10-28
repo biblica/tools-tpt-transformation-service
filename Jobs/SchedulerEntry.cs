@@ -7,6 +7,9 @@ using tools_tpt_transformation_service.Models;
 
 namespace tools_tpt_transformation_service.Jobs
 {
+    /// <summary>
+    /// Facilitates the execution of scheduled preview jobs scheduled by the <c>JobScheduler</c>
+    /// </summary>
     public class SchedulerEntry
     {
         private readonly ILogger<JobManager> _logger;
@@ -18,6 +21,13 @@ namespace tools_tpt_transformation_service.Jobs
         public PreviewJob Job => _job;
         public CancellationTokenSource CancellationTokenSource => _cancellationTokenSource;
 
+        /// <summary>
+        /// Constructor. 
+        /// </summary>
+        /// <param name="logger">Logger.</param>
+        /// <param name="jobManager">JobManager that constructed this entry.</param>
+        /// <param name="scriptRunner">ScriptRunner for calls to InDesign server.</param>
+        /// <param name="job">The job to be executed.</param>
         public SchedulerEntry(
             ILogger<JobManager> logger,
             JobManager jobManager,
@@ -33,6 +43,9 @@ namespace tools_tpt_transformation_service.Jobs
             _logger.LogDebug("JobEntry()");
         }
 
+        /// <summary>
+        /// Execute the associated job.
+        /// </summary>
         public void RunJob()
         {
             try
@@ -60,6 +73,9 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Attempt cancellation of a job's execution.
+        /// </summary>
         public void CancelJob()
         {
             try
@@ -79,6 +95,10 @@ namespace tools_tpt_transformation_service.Jobs
             }
         }
 
+        /// <summary>
+        /// Whether or not a job is cancelled.
+        /// </summary>
+        /// <returns></returns>
         public bool IsJobCanceled()
         {
             return _cancellationTokenSource.IsCancellationRequested;

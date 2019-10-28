@@ -12,6 +12,9 @@ using tools_tpt_transformation_service.Models;
 
 namespace tools_tpt_transformation_service.Controllers
 {
+    /// <summary>
+    /// REST Controller for the PreviewJob endpoint.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class PreviewJobsController : ControllerBase
@@ -19,6 +22,11 @@ namespace tools_tpt_transformation_service.Controllers
         private readonly ILogger<PreviewJobsController> _logger;
         private readonly JobManager _jobManager;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="logger">Logger.</param>
+        /// <param name="jobManager">Preview Job Manager</param>
         public PreviewJobsController(
             ILogger<PreviewJobsController> logger,
             JobManager jobManager)
