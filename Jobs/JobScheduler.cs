@@ -19,6 +19,7 @@ namespace tools_tpt_transformation_service.Jobs
         private readonly SemaphoreSlim _taskSemaphore;
         private readonly BlockingCollection<SchedulerEntry> _jobList;
         private readonly IDictionary<String, SchedulerEntry> _jobMap;
+        private readonly CancellationTokenSource _tokenSource;
         private readonly Thread _schedulerThread;
 
         /// <summary>
@@ -37,6 +38,8 @@ namespace tools_tpt_transformation_service.Jobs
             _taskSemaphore = new SemaphoreSlim(_maxConcurrency);
             _jobList = new BlockingCollection<SchedulerEntry>();
             _jobMap = new ConcurrentDictionary<string, SchedulerEntry>();
+
+            _tokenSource = new CancellationTokenSource();
             _schedulerThread = new Thread(() => { RunScheduler(); });
             _schedulerThread.Start();
             _logger.LogDebug("JobEntryScheduler()");
@@ -78,6 +81,11 @@ namespace tools_tpt_transformation_service.Jobs
                             }
                         }, nextEntry.CancellationTokenSource.Token);
                     }
+
+                    if (_tokenSource.Token.IsCancellationRequested)
+                    {
+                        return;
+                    }
                 }
             }
             catch (Exception ex)
@@ -114,7 +122,9 @@ namespace tools_tpt_transformation_service.Jobs
         /// </summary>
         public void Dispose()
         {
-            _schedulerThread.Abort();
+            _tokenSource.Cancel();
+
+            _schedulerThread.Interrupt();
             _schedulerThread.Join();
 
             while (_jobList.TryTake(out SchedulerEntry nextEntry))
