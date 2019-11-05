@@ -54,12 +54,14 @@ namespace tools_tpt_transformation_service.Jobs
                 _job.DateStarted = DateTime.UtcNow;
                 _jobManager.TryUpdateJob(_job);
 
-                Task scriptTask = Task.Run(
-                    () => _scriptRunner.RunScriptAsync(_job),
-                    _cancellationTokenSource.Token);
-                scriptTask.Wait();
+                Task jobTask = Task.Run(() =>
+                {
+                    return _scriptRunner.RunScriptAsync(_job);
+                },
+                _cancellationTokenSource.Token);
+                jobTask.Wait();
 
-                _logger.LogInformation($"Job finsihed: {_job.Id}, status: {scriptTask.Status}");
+                _logger.LogInformation($"Job finsihed: {_job.Id}, status: {jobTask.Status}");
             }
             catch (Exception ex)
             {

@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using tools_tpt_transformation_service.InDesign;
 using tools_tpt_transformation_service.Models;
+using tools_tpt_transformation_service.Util;
 
 namespace tools_tpt_transformation_service.Jobs
 {
@@ -23,10 +24,10 @@ namespace tools_tpt_transformation_service.Jobs
         private readonly PreviewContext _previewContext;
         private readonly ScriptRunner _scriptRunner;
         private readonly JobScheduler _jobScheduler;
-        private readonly DirectoryInfo _outputDirectory;
-        private readonly int _maxPreviewAgeInSec;
+        private readonly DirectoryInfo _pdfDirectory;
+        private readonly int _maxPdfAgeInSec;
         private readonly Timer _jobCheckTimer;
-        private readonly Timer _fileCheckTimer;
+        private readonly Timer _pdfCheckTimer;
 
         /// <summary>
         /// Constructor. Built using .NETs dependency injection.
@@ -49,21 +50,26 @@ namespace tools_tpt_transformation_service.Jobs
             _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
             _jobScheduler = jobScheduler ?? throw new ArgumentNullException(nameof(jobScheduler));
 
-            _outputDirectory = new DirectoryInfo(_configuration.GetValue<string>("PreviewOutputDirectory") ?? "C:\\Work\\Output");
-            _maxPreviewAgeInSec = int.Parse(_configuration.GetValue<string>("MaxPreviewAgeInSec") ?? "600");
-            _jobCheckTimer = new Timer((stateObject) => { CheckJobs(); }, null,
+            _pdfDirectory = new DirectoryInfo(_configuration.GetValue<string>("PDF.Directory") ?? "C:\\Work\\Output");
+            _maxPdfAgeInSec = int.Parse(_configuration.GetValue<string>("PDF.MaxAgeInSec") ?? "86400");
+            _jobCheckTimer = new Timer((stateObject) => { CheckPreviewJobs(); }, null,
                 TimeSpan.FromSeconds(60.0),
-                TimeSpan.FromSeconds(_maxPreviewAgeInSec / 10.0));
-            _fileCheckTimer = new Timer((stateObject) => { CheckFiles(); }, null,
+                TimeSpan.FromSeconds(_maxPdfAgeInSec / 10.0));
+            _pdfCheckTimer = new Timer((stateObject) => { CheckPdfFiles(); }, null,
                 TimeSpan.FromSeconds(60.0),
-                TimeSpan.FromSeconds(_maxPreviewAgeInSec / 10.0));
+                TimeSpan.FromSeconds(_maxPdfAgeInSec / 10.0));
+
+            if (!Directory.Exists(_pdfDirectory.FullName))
+            {
+                Directory.CreateDirectory(_pdfDirectory.FullName);
+            }
             _logger.LogDebug("JobManager()");
         }
 
         /// <summary>
         /// Iterate through jobs and clean up old ones.
         /// </summary>
-        private void CheckJobs()
+        private void CheckPreviewJobs()
         {
             try
             {
@@ -71,7 +77,7 @@ namespace tools_tpt_transformation_service.Jobs
                 {
                     _logger.LogDebug("Checking preview jobs...");
 
-                    DateTime checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxPreviewAgeInSec));
+                    DateTime checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxPdfAgeInSec));
                     IList<PreviewJob> toRemove = new List<PreviewJob>();
 
                     foreach (PreviewJob jobItem in _previewContext.PreviewJobs)
@@ -105,14 +111,14 @@ namespace tools_tpt_transformation_service.Jobs
         /// <summary>
         /// Iterate through preview files and clean up old ones.
         /// </summary>
-        private void CheckFiles()
+        private void CheckPdfFiles()
         {
             try
             {
-                _logger.LogDebug("Checking preview files...");
+                _logger.LogDebug("Checking PDF files...");
 
-                DateTime checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxPreviewAgeInSec));
-                foreach (string fileItem in Directory.EnumerateFiles(_outputDirectory.FullName, "preview-*.pdf"))
+                DateTime checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxPdfAgeInSec));
+                foreach (string fileItem in Directory.EnumerateFiles(_pdfDirectory.FullName, "preview-*.pdf"))
                 {
                     FileInfo foundFile = new FileInfo(fileItem);
                     if (foundFile.CreationTimeUtc < checkTime)
@@ -128,11 +134,11 @@ namespace tools_tpt_transformation_service.Jobs
                     }
                 }
 
-                _logger.LogDebug("...Preview files checked.");
+                _logger.LogDebug("...PDF files checked.");
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, $"Can't check preview files.");
+                _logger.LogWarning(ex, $"Can't check PDF files.");
             }
         }
 
@@ -171,12 +177,21 @@ namespace tools_tpt_transformation_service.Jobs
         /// <param name="previewJob"><c>PreviewJob</c> to initiate.</param>
         private void InitPreviewJob(PreviewJob previewJob)
         {
+            // identifying information
             previewJob.Id = Guid.NewGuid().ToString();
             previewJob.IsError = false;
             previewJob.DateSubmitted = DateTime.UtcNow;
             previewJob.DateStarted = null;
             previewJob.DateCompleted = null;
             previewJob.DateCancelled = null;
+
+            // project defaults
+            previewJob.FontSizeInPts = previewJob.FontSizeInPts ?? MainConsts.DEFAULT_FONT_SIZE_IN_PTS;
+            previewJob.FontLeadingInPts = previewJob.FontLeadingInPts ?? MainConsts.DEFAULT_FONT_LEADING_IN_PTS;
+            previewJob.PageWidthInPts = previewJob.PageWidthInPts ?? MainConsts.DEFAULT_PAGE_WIDTH_IN_PTS;
+            previewJob.PageHeightInPts = previewJob.PageHeightInPts ?? MainConsts.DEFAULT_PAGE_HEIGHT_IN_PTS;
+            previewJob.PageHeaderInPts = previewJob.PageHeaderInPts ?? MainConsts.DEFAULT_PAGE_HEADER_IN_PTS;
+            previewJob.BookFormat = previewJob.BookFormat ?? MainConsts.DEFAULT_BOOK_FORMAT;
         }
 
         /// <summary>
@@ -251,7 +266,7 @@ namespace tools_tpt_transformation_service.Jobs
         /// <param name="jobId">ID of preview  file to retrieve.</param>
         /// <param name="fileStream"><c>FileStream</c> if successful, otherwise null.</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public bool TryGetFileStream(String jobId, out FileStream fileStream)
+        public bool TryGetPreviewStream(String jobId, out FileStream fileStream)
         {
             lock (_previewContext)
             {
@@ -265,7 +280,7 @@ namespace tools_tpt_transformation_service.Jobs
                     try
                     {
                         fileStream = File.Open(
-                            Path.Combine(_outputDirectory.FullName, $"preview-{previewJob.Id}.pdf"),
+                            Path.Combine(_pdfDirectory.FullName, $"preview-{previewJob.Id}.pdf"),
                             FileMode.Open, FileAccess.Read);
                         return true;
                     }
@@ -287,7 +302,7 @@ namespace tools_tpt_transformation_service.Jobs
         {
             _jobScheduler.Dispose();
             _jobCheckTimer.Dispose();
-            _fileCheckTimer.Dispose();
+            _pdfCheckTimer.Dispose();
         }
     }
 }

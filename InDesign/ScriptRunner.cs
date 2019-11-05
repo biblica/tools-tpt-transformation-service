@@ -17,8 +17,8 @@ namespace tools_tpt_transformation_service.InDesign
         private readonly ILogger<ScriptRunner> _logger;
         private readonly IConfiguration _configuration;
         private readonly ServicePortTypeClient _serviceClient;
-        private readonly int _scriptTimeoutInSec;
-        private readonly string _mainScriptPath;
+        private readonly int _idsTimeoutInSec;
+        private readonly string _idsPreviewScriptPath;
 
         /// <summary>
         /// Constructor. Populated by dependency injection.
@@ -33,11 +33,12 @@ namespace tools_tpt_transformation_service.InDesign
 
             _serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
-                _configuration.GetValue<string>("InDesignServerUri") ?? "http://localhost:9876/service");
-            _scriptTimeoutInSec = int.Parse(_configuration.GetValue<string>("ScriptTimeoutInSec") ?? "600");
-            _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromSeconds(_scriptTimeoutInSec);
-            _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromSeconds(_scriptTimeoutInSec);
-            _mainScriptPath = (_configuration.GetValue<string>("PreviewScriptPath") ?? "C:\\Work\\Scripts\\TypesettingPreviewRoman.jsx");
+                _configuration.GetValue<string>("InDesign.ServerUri") ?? "http://localhost:9876/service");
+            _idsTimeoutInSec = int.Parse(_configuration.GetValue<string>("InDesign.TimeoutInSec") ?? "600");
+            _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
+            _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
+            _idsPreviewScriptPath = (_configuration.GetValue<string>("InDesign.PreviewScriptPath") ?? "C:\\Work\\JSX\\TypesettingPreviewRoman.jsx");
+
             _logger.LogDebug("ScriptRunner()");
         }
 
@@ -54,7 +55,7 @@ namespace tools_tpt_transformation_service.InDesign
             scriptRequest.runScriptParameters = scriptParameters;
 
             scriptParameters.scriptLanguage = "javascript";
-            scriptParameters.scriptFile = _mainScriptPath;
+            scriptParameters.scriptFile = _idsPreviewScriptPath;
 
             IList<IDSPScriptArg> scriptArgs = new List<IDSPScriptArg>();
 
@@ -62,13 +63,19 @@ namespace tools_tpt_transformation_service.InDesign
             scriptArgs.Add(jobIdArg);
 
             jobIdArg.name = "jobId";
-            jobIdArg.value = job.Id;
+            jobIdArg.value = Convert.ToString(job.Id);
 
             IDSPScriptArg projectNameArg = new IDSPScriptArg();
             scriptArgs.Add(projectNameArg);
 
             projectNameArg.name = "projectName";
-            projectNameArg.value = job.ProjectName;
+            projectNameArg.value = Convert.ToString(job.ProjectName);
+
+            IDSPScriptArg bookFormatArg = new IDSPScriptArg();
+            scriptArgs.Add(bookFormatArg);
+
+            bookFormatArg.name = "bookFormat";
+            bookFormatArg.value = Convert.ToString(job.BookFormat);
 
             scriptParameters.scriptArgs = scriptArgs.ToArray();
             return _serviceClient.RunScriptAsync(scriptRequest);

@@ -15,7 +15,7 @@ namespace tools_tpt_transformation_service.Jobs
     {
         private readonly ILogger<JobManager> _logger;
         private readonly IConfiguration _configuration;
-        private readonly int _maxConcurrency;
+        private readonly int _maxConcurrentJobs;
         private readonly SemaphoreSlim _taskSemaphore;
         private readonly BlockingCollection<SchedulerEntry> _jobList;
         private readonly IDictionary<String, SchedulerEntry> _jobMap;
@@ -34,14 +34,15 @@ namespace tools_tpt_transformation_service.Jobs
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _maxConcurrency = int.Parse(_configuration.GetValue<string>("MaxConcurrentServerRequests") ?? "4");
-            _taskSemaphore = new SemaphoreSlim(_maxConcurrency);
+            _maxConcurrentJobs = int.Parse(_configuration.GetValue<string>("Jobs.MaxConcurrent") ?? "4");
+            _taskSemaphore = new SemaphoreSlim(_maxConcurrentJobs);
             _jobList = new BlockingCollection<SchedulerEntry>();
             _jobMap = new ConcurrentDictionary<string, SchedulerEntry>();
 
             _tokenSource = new CancellationTokenSource();
             _schedulerThread = new Thread(() => { RunScheduler(); });
             _schedulerThread.Start();
+
             _logger.LogDebug("JobEntryScheduler()");
         }
 

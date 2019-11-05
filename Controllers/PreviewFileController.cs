@@ -37,10 +37,10 @@ namespace tools_tpt_transformation_service.Controllers
         }
 
         // GET: api/PreviewFile/5
-        [HttpGet("{jobId}", Name = "Get")]
+        [HttpGet("{jobId}")]
         public ActionResult Get(string jobId)
         {
-            if (!_jobManager.TryGetFileStream(jobId, out FileStream fileStream))
+            if (!_jobManager.TryGetPreviewStream(jobId, out FileStream fileStream))
             {
                 return NotFound();
             }
