@@ -27,12 +27,11 @@ namespace tools_tpt_transformation_service.Projects
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _idttDirectory = new DirectoryInfo(_configuration.GetValue<string>("IDTT.Directory") ?? "C:\\Work\\IDTT");
-            _idttCheckIntervalInSec = int.Parse(_configuration.GetValue<string>("IDTT.CheckIntervalInSec") ?? "120");
+            _idttDirectory = new DirectoryInfo(_configuration.GetValue<string>("IDTT:Directory") ?? "C:\\Work\\IDTT");
+            _idttCheckIntervalInSec = int.Parse(_configuration.GetValue<string>("IDTT:CheckIntervalInSec") ?? "120");
             _idttCheckTimer = new Timer((stateObject) => { CheckIdttFiles(); }, null,
                 TimeSpan.FromSeconds(60.0),
                 TimeSpan.FromSeconds(_idttCheckIntervalInSec));
-            _projectDetails = ImmutableDictionary<String, ProjectDetails>.Empty;
 
             if (!Directory.Exists(_idttDirectory.FullName))
             {
@@ -47,43 +46,54 @@ namespace tools_tpt_transformation_service.Projects
         /// </summary>
         private void CheckIdttFiles()
         {
-            try
+            lock (this)
             {
-                _logger.LogDebug("Checking IDTT files...");
-
-                IDictionary<String, ProjectDetails> newProjectDateTimes = new SortedDictionary<String, ProjectDetails>();
-                foreach (string directoryItem in Directory.EnumerateDirectories(_idttDirectory.FullName))
+                try
                 {
-                    DateTime dateTime = DateTime.MinValue;
-                    foreach (string fileItem in Directory.EnumerateFiles(directoryItem))
+                    _logger.LogDebug("Checking IDTT files...");
+
+                    IDictionary<String, ProjectDetails> newProjectDateTimes = new SortedDictionary<String, ProjectDetails>();
+                    foreach (string directoryItem in Directory.EnumerateDirectories(_idttDirectory.FullName))
                     {
-                        DateTime lastWriteTime = File.GetLastWriteTimeUtc(fileItem);
-                        if (lastWriteTime > dateTime)
+                        DateTime dateTime = DateTime.MinValue;
+                        foreach (string fileItem in Directory.EnumerateFiles(directoryItem))
                         {
-                            dateTime = lastWriteTime;
+                            DateTime lastWriteTime = File.GetLastWriteTimeUtc(fileItem);
+                            if (lastWriteTime > dateTime)
+                            {
+                                dateTime = lastWriteTime;
+                            }
+                        }
+                        if (dateTime > DateTime.MinValue)
+                        {
+                            string projectName = Path.GetFileName(directoryItem);
+                            newProjectDateTimes[projectName] = new ProjectDetails
+                            { ProjectName = projectName, ProjectUpdated = dateTime };
                         }
                     }
-                    if (dateTime > DateTime.MinValue)
-                    {
-                        string projectName = Path.GetFileName(directoryItem);
-                        newProjectDateTimes[projectName] = new ProjectDetails
-                        { ProjectName = projectName, ProjectUpdated = dateTime };
-                    }
-                }
 
-                _projectDetails = newProjectDateTimes.ToImmutableDictionary();
-                _logger.LogDebug("...IDTT files checked.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, $"Can't check IDTT files.");
+                    _projectDetails = newProjectDateTimes.ToImmutableDictionary();
+                    _logger.LogDebug("...IDTT files checked.");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, $"Can't check IDTT files.");
+                }
             }
         }
 
         public bool TryGetProjectDateTimes(out IDictionary<String, ProjectDetails> projectDetails)
         {
-            projectDetails = _projectDetails;
-            return (projectDetails.Count > 0);
+            lock (this)
+            {
+                if (_projectDetails == null)
+                {
+                    CheckIdttFiles();
+                }
+
+                projectDetails = _projectDetails;
+                return (projectDetails.Count > 0);
+            }
         }
     }
 }

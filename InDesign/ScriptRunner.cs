@@ -33,11 +33,11 @@ namespace tools_tpt_transformation_service.InDesign
 
             _serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
-                _configuration.GetValue<string>("InDesign.ServerUri") ?? "http://localhost:9876/service");
-            _idsTimeoutInSec = int.Parse(_configuration.GetValue<string>("InDesign.TimeoutInSec") ?? "600");
+                _configuration.GetValue<string>("InDesign:ServerUri") ?? "http://localhost:9876/service");
+            _idsTimeoutInSec = int.Parse(_configuration.GetValue<string>("InDesign:TimeoutInSec") ?? "600");
             _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
             _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
-            _idsPreviewScriptPath = (_configuration.GetValue<string>("InDesign.PreviewScriptPath") ?? "C:\\Work\\JSX\\TypesettingPreviewRoman.jsx");
+            _idsPreviewScriptPath = (_configuration.GetValue<string>("InDesign:PreviewScriptPath") ?? "C:\\Work\\JSX\\TypesettingPreviewRoman.jsx");
 
             _logger.LogDebug("ScriptRunner()");
         }

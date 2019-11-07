@@ -50,8 +50,8 @@ namespace tools_tpt_transformation_service.Jobs
             _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
             _jobScheduler = jobScheduler ?? throw new ArgumentNullException(nameof(jobScheduler));
 
-            _pdfDirectory = new DirectoryInfo(_configuration.GetValue<string>("PDF.Directory") ?? "C:\\Work\\Output");
-            _maxPdfAgeInSec = int.Parse(_configuration.GetValue<string>("PDF.MaxAgeInSec") ?? "86400");
+            _pdfDirectory = new DirectoryInfo(_configuration.GetValue<string>("PDF:Directory") ?? "C:\\Work\\PDF");
+            _maxPdfAgeInSec = int.Parse(_configuration.GetValue<string>("PDF:MaxAgeInSec") ?? "86400");
             _jobCheckTimer = new Timer((stateObject) => { CheckPreviewJobs(); }, null,
                 TimeSpan.FromSeconds(60.0),
                 TimeSpan.FromSeconds(_maxPdfAgeInSec / 10.0));

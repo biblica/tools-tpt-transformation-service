@@ -34,7 +34,7 @@ namespace tools_tpt_transformation_service.Jobs
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _maxConcurrentJobs = int.Parse(_configuration.GetValue<string>("Jobs.MaxConcurrent") ?? "4");
+            _maxConcurrentJobs = int.Parse(_configuration.GetValue<string>("Jobs:MaxConcurrent") ?? "4");
             _taskSemaphore = new SemaphoreSlim(_maxConcurrentJobs);
             _jobList = new BlockingCollection<SchedulerEntry>();
             _jobMap = new ConcurrentDictionary<string, SchedulerEntry>();
