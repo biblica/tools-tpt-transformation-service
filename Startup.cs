@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using tools_tpt_transformation_service.Models;
 using tools_tpt_transformation_service.InDesign;
 using tools_tpt_transformation_service.Jobs;
+using tools_tpt_transformation_service.Projects;
 
 namespace tools_tpt_transformation_service
 {
@@ -42,6 +43,7 @@ namespace tools_tpt_transformation_service
             services.AddSingleton<ScriptRunner>();
             services.AddSingleton<JobManager>();
             services.AddSingleton<JobScheduler>();
+            services.AddSingleton<ProjectManager>();
 
             services.AddControllers();
         }

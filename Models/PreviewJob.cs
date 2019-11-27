@@ -64,5 +64,35 @@ namespace tools_tpt_transformation_service.Models
         /// Whether or not there was an error during job execution.
         /// </summary>
         public bool IsError { get; set; }
+
+        /// <summary>
+        /// Font size in points.
+        /// </summary>
+        public float? FontSizeInPts { get; set; }
+
+        /// <summary>
+        /// Font leading in points.
+        /// </summary>
+        public float? FontLeadingInPts { get; set; }
+
+        /// <summary>
+        /// Page width in points.
+        /// </summary>
+        public float? PageWidthInPts { get; set; }
+
+        /// <summary>
+        /// Page height in points.
+        /// </summary>
+        public float? PageHeightInPts { get; set; }
+
+        /// <summary>
+        /// Page header in points.
+        /// </summary>
+        public float? PageHeaderInPts { get; set; }
+
+        /// <summary>
+        /// Book format, either TBOTB or CAV.
+        /// </summary>
+        public BookFormat? BookFormat { get; set; }
     }
 }

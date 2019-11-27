@@ -2,10 +2,24 @@
   "ConnectionStrings": {
     "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=_CHANGE_ME;Trusted_Connection=True;MultipleActiveResultSets=true"
   },
-  "InDesignServerUri": "http://10.20.2.4:9876/service",
-  "MaxConcurrentServerRequests": "4",
-  "PreviewScriptPath": "C:\\Work\\Scripts\\TypesettingPreviewRoman.jsx",
-  "PreviewOutputDirectory": "C:\\Work\\Output",
-  "ScriptTimeoutInSec": "600",
-  "MaxPreviewAgeInSec": "86400"
+  "Jobs": {
+    "MaxConcurrent": "4"
+  },
+  "InDesign": {
+    "ServerUri": "http://10.20.2.4:9876/service",
+    "TimeoutInSec": "600",
+    "PreviewScriptPath": "C:\\Work\\JSX\\TypesettingPreviewRoman.jsx"
+  },
+  "PDF": {
+    "Directory": "C:\\Work\\PDF",
+    "MaxAgeInSec": "86400"
+  },
+  "IDML": {
+    "Directory": "C:\\Work\\IDML",
+    "ServerUri": "https://api.biblica.com/admin/idtt_template_generator/generate_template"
+  },
+  "IDTT": {
+    "Directory": "C:\\Work\\IDTT",
+    "CheckIntervalInSec": "120"
+  }
 }
