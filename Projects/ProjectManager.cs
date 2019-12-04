@@ -8,18 +8,50 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using tools_tpt_transformation_service.Models;
+using tools_tpt_transformation_service.Util;
 
 namespace tools_tpt_transformation_service.Projects
 {
+    /// <summary>
+    /// Project manager, provider of Paratext project details.
+    /// </summary>
     public class ProjectManager
     {
+        /// <summary>
+        /// Type-specific logger (injected).
+        /// </summary>
         private readonly ILogger<ProjectManager> _logger;
+
+        /// <summary>
+        /// System configuration (injected).
+        /// </summary>
         private readonly IConfiguration _configuration;
+
+        /// <summary>
+        /// IDTT directory (configured).
+        /// </summary>
         private readonly DirectoryInfo _idttDirectory;
+
+        /// <summary>
+        /// IDTT check interval, in seconds (configured).
+        /// </summary>
         private readonly int _idttCheckIntervalInSec;
-        private readonly Timer _idttCheckTimer;
+
+        /// <summary>
+        /// IDTT check timer.
+        /// </summary>
+        private readonly Timer _projectCheckTimer;
+
+        /// <summary>
+        /// Found project details.
+        /// </summary>
         private IDictionary<String, ProjectDetails> _projectDetails;
 
+        /// <summary>
+        /// Basic ctor.
+        /// </summary>
+        /// <param name="logger">Type-specific logger (required).</param>
+        /// <param name="configuration">System configuration (required).</param>
         public ProjectManager(
             ILogger<ProjectManager> logger,
             IConfiguration configuration)
@@ -27,10 +59,12 @@ namespace tools_tpt_transformation_service.Projects
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _idttDirectory = new DirectoryInfo(_configuration.GetValue<string>("IDTT:Directory") ?? "C:\\Work\\IDTT");
-            _idttCheckIntervalInSec = int.Parse(_configuration.GetValue<string>("IDTT:CheckIntervalInSec") ?? "120");
-            _idttCheckTimer = new Timer((stateObject) => { CheckIdttFiles(); }, null,
-                TimeSpan.FromSeconds(60.0),
+            _idttDirectory = new DirectoryInfo(_configuration.GetValue<string>("Docs:IDTT:Directory")
+                ?? throw new ArgumentNullException("Docs:IDTT:Directory"));
+            _idttCheckIntervalInSec = int.Parse(_configuration.GetValue<string>("Docs:IDTT:CheckIntervalInSec")
+                ?? throw new ArgumentNullException("Docs:IDTT:CheckIntervalInSec"));
+            _projectCheckTimer = new Timer((stateObject) => { CheckProjectFiles(); }, null,
+                TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
                 TimeSpan.FromSeconds(_idttCheckIntervalInSec));
 
             if (!Directory.Exists(_idttDirectory.FullName))
@@ -42,9 +76,9 @@ namespace tools_tpt_transformation_service.Projects
 
 
         /// <summary>
-        /// Iterate through preview files and clean up old ones.
+        /// Inventories project files to build map.
         /// </summary>
-        private void CheckIdttFiles()
+        private void CheckProjectFiles()
         {
             lock (this)
             {
@@ -52,7 +86,7 @@ namespace tools_tpt_transformation_service.Projects
                 {
                     _logger.LogDebug("Checking IDTT files...");
 
-                    IDictionary<String, ProjectDetails> newProjectDateTimes = new SortedDictionary<String, ProjectDetails>();
+                    IDictionary<String, ProjectDetails> newProjectDetails = new SortedDictionary<String, ProjectDetails>();
                     foreach (string directoryItem in Directory.EnumerateDirectories(_idttDirectory.FullName))
                     {
                         DateTime dateTime = DateTime.MinValue;
@@ -67,12 +101,12 @@ namespace tools_tpt_transformation_service.Projects
                         if (dateTime > DateTime.MinValue)
                         {
                             string projectName = Path.GetFileName(directoryItem);
-                            newProjectDateTimes[projectName] = new ProjectDetails
+                            newProjectDetails[projectName] = new ProjectDetails
                             { ProjectName = projectName, ProjectUpdated = dateTime };
                         }
                     }
 
-                    _projectDetails = newProjectDateTimes.ToImmutableDictionary();
+                    _projectDetails = newProjectDetails.ToImmutableDictionary();
                     _logger.LogDebug("...IDTT files checked.");
                 }
                 catch (Exception ex)
@@ -82,13 +116,18 @@ namespace tools_tpt_transformation_service.Projects
             }
         }
 
-        public bool TryGetProjectDateTimes(out IDictionary<String, ProjectDetails> projectDetails)
+        /// <summary>
+        /// Gets a read-only copy of the current project details map, initiating an inventory if it hasn't happened yet.
+        /// </summary>
+        /// <param name="projectDetails">Immutable map of project names to details.</param>
+        /// <returns>True if any project details found, false otherwise.</returns>
+        public bool TryGetProjectDetails(out IDictionary<String, ProjectDetails> projectDetails)
         {
             lock (this)
             {
                 if (_projectDetails == null)
                 {
-                    CheckIdttFiles();
+                    CheckProjectFiles();
                 }
 
                 projectDetails = _projectDetails;

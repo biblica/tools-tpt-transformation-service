@@ -6,20 +6,27 @@
     "MaxConcurrent": "4"
   },
   "InDesign": {
-    "ServerUri": "http://10.20.2.4:9876/service",
+    "ServerUri": "http://172.31.10.90:9876/service",
     "TimeoutInSec": "600",
     "PreviewScriptPath": "C:\\Work\\JSX\\TypesettingPreviewRoman.jsx"
   },
-  "PDF": {
-    "Directory": "C:\\Work\\PDF",
-    "MaxAgeInSec": "86400"
+  "Docs": {
+    "MaxAgeInSec": "86400",
+    "IDML": {
+      "Directory": "C:\\Work\\IDML"
+    },
+    "PDF": {
+      "Directory": "C:\\Work\\PDF"
+    },
+    "IDTT": {
+      "Directory": "C:\\Work\\IDTT",
+      "CheckIntervalInSec": "120"
+    }
   },
-  "IDML": {
-    "Directory": "C:\\Work\\IDML",
-    "ServerUri": "https://api.biblica.com/admin/idtt_template_generator/generate_template"
-  },
-  "IDTT": {
-    "Directory": "C:\\Work\\IDTT",
-    "CheckIntervalInSec": "120"
+  "Toolbox": {
+    "Template": {
+      "ServerUri": "http://172.31.10.175:3000/idtt/template/create",
+      "TimeoutInSec": "600"
+    }
   }
 }

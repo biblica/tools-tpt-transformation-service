@@ -13,20 +13,27 @@ using tools_tpt_transformation_service.Models;
 namespace tools_tpt_transformation_service.Controllers
 {
     /// <summary>
-    /// REST Controller for the PreviewJob endpoint.
+    /// REST Controller for preview jobs resources.
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class PreviewJobsController : ControllerBase
     {
+        /// <summary>
+        /// Type-specific logger (injected).
+        /// </summary>
         private readonly ILogger<PreviewJobsController> _logger;
+
+        /// <summary>
+        /// Job manager (injected).
+        /// </summary>
         private readonly JobManager _jobManager;
 
         /// <summary>
-        /// Constructor.
+        /// Basic ctor.
         /// </summary>
-        /// <param name="logger">Logger.</param>
-        /// <param name="jobManager">Preview Job Manager</param>
+        /// <param name="logger">Logger (required).</param>
+        /// <param name="jobManager">Job manager (required).</param>
         public PreviewJobsController(
             ILogger<PreviewJobsController> logger,
             JobManager jobManager)
@@ -37,7 +44,11 @@ namespace tools_tpt_transformation_service.Controllers
             _logger.LogDebug("PreviewJobsController()");
         }
 
-        // GET: api/PreviewJobs/5
+        /// <summary>
+        /// GET (read) resource for preview jobs.
+        /// </summary>
+        /// <param name="jobId">Job ID (required).</param>
+        /// <returns>Preview job if found, 404 or other error otherwise.</returns>
         [HttpGet("{jobId}")]
         public ActionResult<PreviewJob> GetPreviewJob(string jobId)
         {
@@ -48,9 +59,11 @@ namespace tools_tpt_transformation_service.Controllers
             return previewJob;
         }
 
-        // POST: api/PreviewJobs
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+        /// <summary>
+        /// POST (create) resource for preview jobs.
+        /// </summary>
+        /// <param name="previewJob">Preview job (required).</param>
+        /// <returns>Saved preview job if created, error otherwise.</returns>
         [HttpPost]
         public ActionResult<PreviewJob> PostPreviewJob(PreviewJob previewJob)
         {
@@ -61,7 +74,11 @@ namespace tools_tpt_transformation_service.Controllers
             return CreatedAtAction("GetPreviewJob", new { jobId = outputJob.Id }, outputJob);
         }
 
-        // DELETE: api/PreviewJobs/5
+        /// <summary>
+        /// Delete resource for preview jobs.
+        /// </summary>
+        /// <param name="jobId">Job ID (required).</param>
+        /// <returns>Deleted preview job if found, 404 or other error otherwise.</returns>
         [HttpDelete("{jobId}")]
         public ActionResult<PreviewJob> DeletePreviewJob(string jobId)
         {

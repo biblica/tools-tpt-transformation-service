@@ -15,6 +15,7 @@ using tools_tpt_transformation_service.Models;
 using tools_tpt_transformation_service.InDesign;
 using tools_tpt_transformation_service.Jobs;
 using tools_tpt_transformation_service.Projects;
+using tools_tpt_transformation_service.Toolbox;
 
 namespace tools_tpt_transformation_service
 {
@@ -44,6 +45,7 @@ namespace tools_tpt_transformation_service
             services.AddSingleton<JobManager>();
             services.AddSingleton<JobScheduler>();
             services.AddSingleton<ProjectManager>();
+            services.AddSingleton<TemplateManager>();
 
             services.AddControllers();
         }

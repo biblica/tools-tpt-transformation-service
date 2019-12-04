@@ -12,20 +12,27 @@ using tools_tpt_transformation_service.Jobs;
 namespace tools_tpt_transformation_service.Controllers
 {
     /// <summary>
-    /// REST Controller for the PreviewFile endpoint.
+    /// REST Controller for preview file resources.
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class PreviewFileController : ControllerBase
     {
+        /// <summary>
+        /// Type-specific logger (injected).
+        /// </summary>
         private readonly ILogger<PreviewFileController> _logger;
+
+        /// <summary>
+        /// Job manager (injected).
+        /// </summary>
         private readonly JobManager _jobManager;
 
         /// <summary>
-        /// Constructor.
+        /// Basic ctor.
         /// </summary>
-        /// <param name="logger">Logger.</param>
-        /// <param name="jobManager">Preview Job Manager</param>
+        /// <param name="logger">Logger (required).</param>
+        /// <param name="jobManager">Job manager (required).</param>
         public PreviewFileController(
             ILogger<PreviewFileController> logger,
             JobManager jobManager)
@@ -36,7 +43,11 @@ namespace tools_tpt_transformation_service.Controllers
             _logger.LogDebug("PreviewFileController()");
         }
 
-        // GET: api/PreviewFile/5
+        /// <summary>
+        /// GET (read) resource method.
+        /// </summary>
+        /// <param name="jobId">Job ID (required).</param>
+        /// <returns>Preview file stream if found, 404 or other error otherwise.</returns>
         [HttpGet("{jobId}")]
         public ActionResult Get(string jobId)
         {

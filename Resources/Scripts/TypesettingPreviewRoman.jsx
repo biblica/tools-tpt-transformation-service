@@ -4,15 +4,16 @@ var projectName = app.scriptArgs.getValue("projectName");
 var bookFormat = app.scriptArgs.getValue("bookFormat");
 
 // Set top-level base and output dir
-var baseDir = 'C:\\Work\\IDTT\\';
+var idttDir = 'C:\\Work\\IDTT\\';
+var idmlDir = 'C:\\Work\\IDML\\';
 var outputDir = 'C:\\Work\\PDF\\';
 
 // Set project input dir and output file
-var projectDir = baseDir + projectName + '\\';
+var projectDir = idttDir + projectName + '\\';
 var outputFile = outputDir + 'preview-' + jobId + '.pdf';
 
 // Open input template and build PDF
-var doc = app.open(baseDir + 'template_' + bookFormat + '.idml');
+var doc = app.open(idmlDir + 'preview-' + jobId + '.idml');
 doc.preflightOptions.preflightOff = true;
 
 var spread = doc.spreads[1];
