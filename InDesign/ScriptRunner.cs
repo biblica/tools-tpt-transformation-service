@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using tools_tpt_transformation_service.Models;
+using System.Text;
+using System.IO;
+using tools_tpt_transformation_service.Util;
 
 namespace tools_tpt_transformation_service.InDesign
 {
@@ -37,7 +40,17 @@ namespace tools_tpt_transformation_service.InDesign
         /// <summary>
         /// Preview script (JSX) path (configured).
         /// </summary>
-        private readonly string _idsPreviewScriptPath;
+        private readonly DirectoryInfo _idsPreviewScriptDirectory;
+
+        /// <summary>
+        /// Preview script (JSX) name format (configured).
+        /// </summary>
+        private readonly string _idsPreviewScriptNameFormat;
+
+        /// <summary>
+        /// Default (Roman) script file.
+        /// </summary>
+        private readonly FileInfo _defaultScriptFile;
 
         /// <summary>
         /// Basic ctor.
@@ -58,14 +71,18 @@ namespace tools_tpt_transformation_service.InDesign
                 ?? throw new ArgumentNullException("InDesign:TimeoutInSec"));
             _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
             _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
-            _idsPreviewScriptPath = (_configuration.GetValue<string>("InDesign:PreviewScriptPath")
-                ?? throw new ArgumentNullException("InDesign:PreviewScriptPath"));
+            _idsPreviewScriptDirectory = new DirectoryInfo((_configuration.GetValue<string>("InDesign:PreviewScriptDirectory")
+                ?? throw new ArgumentNullException("InDesign:PreviewScriptDirectory")));
+            _idsPreviewScriptNameFormat = (_configuration.GetValue<string>("InDesign:PreviewScriptNameFormat")
+                ?? throw new ArgumentNullException("InDesign:PreviewScriptNameFormat"));
+            _defaultScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
+                string.Format(_idsPreviewScriptNameFormat, MainConsts.DEFAULT_PROJECT_PREFIX)));
 
             _logger.LogDebug("ScriptRunner()");
         }
 
         /// <summary>
-        /// Kick off async request to create start typesetting preview generation.
+        /// Kick off async request to start typesetting preview generation.
         /// </summary>
         /// <param name="inputJob">Input preview job (required).</param>
         /// <returns>Async request task.</returns>
@@ -77,7 +94,7 @@ namespace tools_tpt_transformation_service.InDesign
             scriptRequest.runScriptParameters = scriptParameters;
 
             scriptParameters.scriptLanguage = "javascript";
-            scriptParameters.scriptFile = _idsPreviewScriptPath;
+            scriptParameters.scriptFile = GetScriptFile(inputJob).FullName;
 
             IList<IDSPScriptArg> scriptArgs = new List<IDSPScriptArg>();
 
@@ -101,6 +118,29 @@ namespace tools_tpt_transformation_service.InDesign
 
             scriptParameters.scriptArgs = scriptArgs.ToArray();
             return _serviceClient.RunScriptAsync(scriptRequest);
+        }
+
+        /// <summary>
+        /// Gets the script file for a given project language.
+        /// 
+        /// Looks for a script file matching the initial, lower-case/non-numeric characters of the project name, 
+        /// then falls back to a default if a language-specific one isn't present.
+        /// </summary>
+        /// <param name="inputJob">Preview job (required).</param>
+        /// <returns>Found script file.</returns>
+        public FileInfo GetScriptFile(PreviewJob inputJob)
+        {
+            string projectPrefix = StringUtil.GetProjectPrefix(inputJob.ProjectName).ToUpper();
+            if (projectPrefix.Length < 1)
+            {
+                projectPrefix = MainConsts.DEFAULT_PROJECT_PREFIX;
+            }
+
+            FileInfo scriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
+                string.Format(_idsPreviewScriptNameFormat, projectPrefix)));
+            return scriptFile.Exists
+                ? scriptFile
+                : _defaultScriptFile;
         }
     }
 }

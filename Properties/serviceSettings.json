@@ -8,7 +8,8 @@
   "InDesign": {
     "ServerUri": "http://172.31.10.90:9876/service",
     "TimeoutInSec": "600",
-    "PreviewScriptPath": "C:\\Work\\JSX\\TypesettingPreviewRoman.jsx"
+    "PreviewScriptDirectory": "C:\\Work\\JSX",
+    "PreviewScriptNameFormat": "TypesettingPreview{0}.jsx"
   },
   "Docs": {
     "MaxAgeInSec": "86400",
