@@ -324,7 +324,7 @@ namespace TptTest
         /// Tests exceptions are generated from IDS script failures.
         /// </summary>
         [TestMethod]
-        public void TestRunScriptAsyncError()
+        public void TestRunScriptError()
         {
             // setup service under test
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
