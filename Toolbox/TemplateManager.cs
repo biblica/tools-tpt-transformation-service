@@ -3,20 +3,29 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
-using tools_tpt_transformation_service.Models;
-using tools_tpt_transformation_service.Util;
+using TptMain.Http;
+using TptMain.Models;
+using TptMain.Util;
 
-namespace tools_tpt_transformation_service.Toolbox
+namespace TptMain.Toolbox
 {
     /// <summary>
     /// Manages access to template (IDTT) files, provided by the Toolbox API.
     /// </summary>
     public class TemplateManager
     {
+        /// <summary>
+        /// Toolbox template server URI config key.
+        /// </summary>
+        private const string ToolboxTemplateServerUriKey = "Toolbox:Template:ServerUri";
+
+        /// <summary>
+        /// Toolbox template timeout config key.
+        /// </summary>
+        private const string ToolboxTemplateTimeoutInSecKey = "Toolbox:Template:TimeoutInSec";
+
         /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
@@ -28,31 +37,40 @@ namespace tools_tpt_transformation_service.Toolbox
         private readonly IConfiguration _configuration;
 
         /// <summary>
-        /// URI for Toolbox template service.
+        /// Web request factory.
         /// </summary>
-        private readonly String _templateUri;
+        private WebRequestFactory _requestFactory;
 
         /// <summary>
-        /// Timeout for template requests, in seconds.
+        /// URI for Toolbox template service.
         /// </summary>
-        private readonly int _templateTimeoutInSec;
+        private readonly string _templateUri;
+
+        /// <summary>
+        /// Timeout for template requests, in milliseconds.
+        /// </summary>
+        private readonly int _templateTimeoutInMSec;
 
         /// <summary>
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
         /// <param name="configuration">System configuration (required).</param>
+        /// <param name="requestFactory">Web request factory (required).</param>
         public TemplateManager(
             ILogger<TemplateManager> logger,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            WebRequestFactory requestFactory)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _requestFactory = requestFactory ?? throw new ArgumentNullException(nameof(requestFactory));
 
-            _templateUri = (_configuration.GetValue<string>("Toolbox:Template:ServerUri")
-                ?? throw new ArgumentNullException("Toolbox:Template:ServerUri"));
-            _templateTimeoutInSec = int.Parse(_configuration.GetValue<string>("Toolbox:Template:TimeoutInSec")
-                ?? throw new ArgumentNullException("Toolbox:Template:TimeoutInSec"));
+            _templateUri = (_configuration[ToolboxTemplateServerUriKey]
+                ?? throw new ArgumentNullException(ToolboxTemplateServerUriKey));
+            _templateTimeoutInMSec = int.Parse(_configuration[ToolboxTemplateTimeoutInSecKey]
+                ?? throw new ArgumentNullException(ToolboxTemplateTimeoutInSecKey))
+                * MainConsts.MILLISECONDS_PER_SECOND;
         }
 
         /// <summary>
@@ -61,19 +79,17 @@ namespace tools_tpt_transformation_service.Toolbox
         /// <param name="inputJob">Input job (required).</param>
         /// <param name="outputFile">Output file (required).</param>
         /// <returns></returns>
-        public void GetTemplateFile(PreviewJob inputJob, FileInfo outputFile)
+        public virtual void DownloadTemplateFile(PreviewJob inputJob, FileInfo outputFile)
         {
-            WebRequest webRequest = WebRequest.Create($"{_templateUri}{ToQueryString(inputJob)}");
-            webRequest.Method = HttpMethod.Get.Method;
-            webRequest.Timeout = _templateTimeoutInSec;
+            _logger.LogDebug($"DownloadTemplateFile() inputJob.Id={inputJob.Id}, outputFile={outputFile}.");
+            var webRequest = _requestFactory.CreateWebRequest(
+                $"{_templateUri}{ToQueryString(inputJob)}",
+                HttpMethod.Get.Method,
+                _templateTimeoutInMSec);
 
-            using (Stream inputStream = webRequest.GetResponse().GetResponseStream())
-            {
-                using (FileStream outputStream = outputFile.OpenWrite())
-                {
-                    inputStream.CopyTo(outputStream);
-                }
-            }
+            using var inputStream = webRequest.GetResponse().GetResponseStream();
+            using var outputStream = outputFile.OpenWrite();
+            inputStream?.CopyTo(outputStream);
         }
 
         /// <summary>
@@ -81,7 +97,7 @@ namespace tools_tpt_transformation_service.Toolbox
         /// </summary>
         /// <param name="inputJob">Preview job (required).</param>
         /// <returns>Template-specific query string.</returns>
-        static public String ToQueryString(PreviewJob inputJob)
+        public static string ToQueryString(PreviewJob inputJob)
         {
             IDictionary<string, string> queryMap = new Dictionary<string, string>();
 

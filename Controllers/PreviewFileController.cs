@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Mime;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using tools_tpt_transformation_service.Jobs;
+using System;
+using TptMain.Jobs;
 
-namespace tools_tpt_transformation_service.Controllers
+namespace TptMain.Controllers
 {
     /// <summary>
     /// REST Controller for preview file resources.
@@ -51,7 +45,8 @@ namespace tools_tpt_transformation_service.Controllers
         [HttpGet("{jobId}")]
         public ActionResult Get(string jobId)
         {
-            if (!_jobManager.TryGetPreviewStream(jobId, out FileStream fileStream))
+            _logger.LogDebug($"Get() - jobId={jobId}.");
+            if (!_jobManager.TryGetPreviewStream(jobId, out var fileStream))
             {
                 return NotFound();
             }

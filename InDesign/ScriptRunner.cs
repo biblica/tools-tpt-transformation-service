@@ -1,22 +1,41 @@
 ﻿using InDesignServer;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using tools_tpt_transformation_service.Models;
-using System.Text;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using tools_tpt_transformation_service.Util;
+using System.Linq;
+using System.Threading.Tasks;
+using TptMain.Models;
+using TptMain.Util;
 
-namespace tools_tpt_transformation_service.InDesign
+namespace TptMain.InDesign
 {
     /// <summary>
     /// InDesign Server script runner class.
     /// </summary>
     public class ScriptRunner
     {
+        /// <summary>
+        /// InDesign server uri config key.
+        /// </summary>
+        private const string IdsUriKey = "InDesign:ServerUri";
+
+        /// <summary>
+        /// InDesign server request timeout config key.
+        /// </summary>
+        private const string IdsTimeoutInSecKey = "InDesign:TimeoutInSec";
+
+        /// <summary>
+        /// InDesign server preview script config key.
+        /// </summary>
+        private const string IdsPreviewScriptDirKey = "InDesign:PreviewScriptDirectory";
+
+        /// <summary>
+        /// InDesign server preview script name format config key.
+        /// </summary>
+        private const string IdsPreviewScriptNameFormatKey = "InDesign:PreviewScriptNameFormat";
+
         /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
@@ -65,16 +84,17 @@ namespace tools_tpt_transformation_service.InDesign
 
             _serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
-                _configuration.GetValue<string>("InDesign:ServerUri")
-                ?? throw new ArgumentNullException("InDesign:ServerUri"));
-            _idsTimeoutInSec = int.Parse(_configuration.GetValue<string>("InDesign:TimeoutInSec")
-                ?? throw new ArgumentNullException("InDesign:TimeoutInSec"));
+                _configuration[IdsUriKey]
+                ?? throw new ArgumentNullException(IdsUriKey));
+            _idsTimeoutInSec = int.Parse(_configuration[IdsTimeoutInSecKey]
+                ?? throw new ArgumentNullException(IdsTimeoutInSecKey));
+            _idsPreviewScriptDirectory = new DirectoryInfo((_configuration[IdsPreviewScriptDirKey]
+                ?? throw new ArgumentNullException(IdsPreviewScriptDirKey)));
+            _idsPreviewScriptNameFormat = (_configuration[IdsPreviewScriptNameFormatKey]
+                ?? throw new ArgumentNullException(IdsPreviewScriptNameFormatKey));
+
             _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
             _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
-            _idsPreviewScriptDirectory = new DirectoryInfo((_configuration.GetValue<string>("InDesign:PreviewScriptDirectory")
-                ?? throw new ArgumentNullException("InDesign:PreviewScriptDirectory")));
-            _idsPreviewScriptNameFormat = (_configuration.GetValue<string>("InDesign:PreviewScriptNameFormat")
-                ?? throw new ArgumentNullException("InDesign:PreviewScriptNameFormat"));
             _defaultScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
                 string.Format(_idsPreviewScriptNameFormat, MainConsts.DEFAULT_PROJECT_PREFIX)));
 
@@ -85,12 +105,12 @@ namespace tools_tpt_transformation_service.InDesign
         /// Kick off async request to start typesetting preview generation.
         /// </summary>
         /// <param name="inputJob">Input preview job (required).</param>
-        /// <returns>Async request task.</returns>
-        public Task RunScriptAsync(PreviewJob inputJob)
+        public virtual void RunScript(PreviewJob inputJob)
         {
-            RunScriptRequest scriptRequest = new RunScriptRequest();
+            _logger.LogDebug($"RunScriptAsync() - inputJob.Id={inputJob.Id}.");
+            var scriptRequest = new RunScriptRequest();
 
-            RunScriptParameters scriptParameters = new RunScriptParameters();
+            var scriptParameters = new RunScriptParameters();
             scriptRequest.runScriptParameters = scriptParameters;
 
             scriptParameters.scriptLanguage = "javascript";
@@ -98,45 +118,45 @@ namespace tools_tpt_transformation_service.InDesign
 
             IList<IDSPScriptArg> scriptArgs = new List<IDSPScriptArg>();
 
-            IDSPScriptArg jobIdArg = new IDSPScriptArg();
+            var jobIdArg = new IDSPScriptArg();
             scriptArgs.Add(jobIdArg);
 
             jobIdArg.name = "jobId";
             jobIdArg.value = Convert.ToString(inputJob.Id);
 
-            IDSPScriptArg projectNameArg = new IDSPScriptArg();
+            var projectNameArg = new IDSPScriptArg();
             scriptArgs.Add(projectNameArg);
 
             projectNameArg.name = "projectName";
             projectNameArg.value = Convert.ToString(inputJob.ProjectName);
 
-            IDSPScriptArg bookFormatArg = new IDSPScriptArg();
+            var bookFormatArg = new IDSPScriptArg();
             scriptArgs.Add(bookFormatArg);
 
             bookFormatArg.name = "bookFormat";
             bookFormatArg.value = Convert.ToString(inputJob.BookFormat);
 
             scriptParameters.scriptArgs = scriptArgs.ToArray();
-            return _serviceClient.RunScriptAsync(scriptRequest);
+            _serviceClient.RunScript(scriptRequest);
         }
 
         /// <summary>
         /// Gets the script file for a given project language.
-        /// 
-        /// Looks for a script file matching the initial, lower-case/non-numeric characters of the project name, 
+        ///
+        /// Looks for a script file matching the initial, non-numeric characters of the project name,
         /// then falls back to a default if a language-specific one isn't present.
         /// </summary>
         /// <param name="inputJob">Preview job (required).</param>
         /// <returns>Found script file.</returns>
         public FileInfo GetScriptFile(PreviewJob inputJob)
         {
-            string projectPrefix = StringUtil.GetProjectPrefix(inputJob.ProjectName).ToUpper();
+            var projectPrefix = StringUtil.GetProjectPrefix(inputJob.ProjectName).ToUpper();
             if (projectPrefix.Length < 1)
             {
                 projectPrefix = MainConsts.DEFAULT_PROJECT_PREFIX;
             }
 
-            FileInfo scriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
+            var scriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
                 string.Format(_idsPreviewScriptNameFormat, projectPrefix)));
             return scriptFile.Exists
                 ? scriptFile

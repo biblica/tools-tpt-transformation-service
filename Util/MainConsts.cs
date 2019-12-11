@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using tools_tpt_transformation_service.Models;
+﻿using TptMain.Models;
 
-namespace tools_tpt_transformation_service.Util
+namespace TptMain.Util
 {
     /// <summary>
     /// Utility constants, magic numbers, etc.
@@ -50,6 +46,11 @@ namespace tools_tpt_transformation_service.Util
         /// What fraction of a max age to check for expiration.
         /// </summary>
         public const double MAX_AGE_CHECK_DIVISOR = 10.0;
+
+        /// <summary>
+        /// Milliseconds per second.
+        /// </summary>
+        public const int MILLISECONDS_PER_SECOND = 1000;
 
         /// <summary>
         /// Default project prefix, should a language prefix not be detectable or usable.

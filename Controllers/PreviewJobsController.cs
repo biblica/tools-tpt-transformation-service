@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using tools_tpt_transformation_service.InDesign;
-using tools_tpt_transformation_service.Jobs;
-using tools_tpt_transformation_service.Models;
+using System;
+using TptMain.Jobs;
+using TptMain.Models;
 
-namespace tools_tpt_transformation_service.Controllers
+namespace TptMain.Controllers
 {
     /// <summary>
     /// REST Controller for preview jobs resources.
@@ -52,7 +46,8 @@ namespace tools_tpt_transformation_service.Controllers
         [HttpGet("{jobId}")]
         public ActionResult<PreviewJob> GetPreviewJob(string jobId)
         {
-            if (!_jobManager.TryGetJob(jobId, out PreviewJob previewJob))
+            _logger.LogDebug($"GetPreviewJob() - jobId={jobId}.");
+            if (!_jobManager.TryGetJob(jobId, out var previewJob))
             {
                 return NotFound();
             }
@@ -67,7 +62,8 @@ namespace tools_tpt_transformation_service.Controllers
         [HttpPost]
         public ActionResult<PreviewJob> PostPreviewJob(PreviewJob previewJob)
         {
-            if (!_jobManager.TryAddJob(previewJob, out PreviewJob outputJob))
+            _logger.LogDebug($"PostPreviewJob() - previewJob.Id={previewJob.Id}.");
+            if (!_jobManager.TryAddJob(previewJob, out var outputJob))
             {
                 return BadRequest();
             }
@@ -82,7 +78,8 @@ namespace tools_tpt_transformation_service.Controllers
         [HttpDelete("{jobId}")]
         public ActionResult<PreviewJob> DeletePreviewJob(string jobId)
         {
-            if (!_jobManager.TryDeleteJob(jobId, out PreviewJob outputJob))
+            _logger.LogDebug($"DeletePreviewJob() - jobId={jobId}.");
+            if (!_jobManager.TryDeleteJob(jobId, out var outputJob))
             {
                 return NotFound();
             }

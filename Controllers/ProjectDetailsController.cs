@@ -1,14 +1,12 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using tools_tpt_transformation_service.Models;
-using tools_tpt_transformation_service.Projects;
+using TptMain.Models;
+using TptMain.Projects;
 
-namespace tools_tpt_transformation_service.Controllers
+namespace TptMain.Controllers
 {
     /// <summary>
     /// REST controller for project details resources.
@@ -49,7 +47,8 @@ namespace tools_tpt_transformation_service.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<ProjectDetails>> Get()
         {
-            if (_projectManager.TryGetProjectDetails(out IDictionary<String, ProjectDetails> projectDetails))
+            _logger.LogDebug("Get().");
+            if (_projectManager.TryGetProjectDetails(out var projectDetails))
             {
                 return projectDetails.Values.ToArray();
             }

@@ -1,25 +1,38 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
-using tools_tpt_transformation_service.InDesign;
-using tools_tpt_transformation_service.Models;
-using tools_tpt_transformation_service.Toolbox;
-using tools_tpt_transformation_service.Util;
+using TptMain.InDesign;
+using TptMain.Models;
+using TptMain.Toolbox;
+using TptMain.Util;
 
-namespace tools_tpt_transformation_service.Jobs
+namespace TptMain.Jobs
 {
     /// <summary>
     /// Job manager for handling typesetting preview job request management and execution.
     /// </summary>
     public partial class JobManager : IDisposable
     {
+        /// <summary>
+        /// IDML directory config key.
+        /// </summary>
+        private const string IdmlDocDirKey = "Docs:IDML:Directory";
+
+        /// <summary>
+        /// PDF directory config key.
+        /// </summary>
+        private const string PdfDocDirKey = "Docs:PDF:Directory";
+
+        /// <summary>
+        /// Max document age in seconds config key.
+        /// </summary>
+        private const string MaxDocAgeInSecKey = "Docs:MaxAgeInSec";
+
         /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
@@ -71,25 +84,25 @@ namespace tools_tpt_transformation_service.Jobs
         private readonly Timer _jobCheckTimer;
 
         /// <summary>
-        /// PDF exipiration check timer.
+        /// PDF expiration check timer.
         /// </summary>
         private readonly Timer _docCheckTimer;
 
         /// <summary>
         /// Template (IDML) storage directory.
         /// </summary>
-        public DirectoryInfo IdmlDirectory { get => _idmlDirectory; }
+        public DirectoryInfo IdmlDirectory => _idmlDirectory;
 
         /// <summary>
         /// Preview PDF storage directory.
         /// </summary>
-        public DirectoryInfo PdfDirectory { get => _pdfDirectory; }
+        public DirectoryInfo PdfDirectory => _pdfDirectory;
 
         /// <summary>
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
-        /// <param name="configuration">System configuration (required).<param>
+        /// <param name="configuration">System configuration (required).</param>
         /// <param name="previewContext">Job preview context (persistence; required).</param>
         /// <param name="scriptRunner">Script runner (required).</param>
         /// <param name="templateManager">Template manager (required).</param>
@@ -109,12 +122,12 @@ namespace tools_tpt_transformation_service.Jobs
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _jobScheduler = jobScheduler ?? throw new ArgumentNullException(nameof(jobScheduler));
 
-            _idmlDirectory = new DirectoryInfo(_configuration.GetValue<string>("Docs:IDML:Directory")
-                ?? throw new ArgumentNullException("Docs:IDML:Directory"));
-            _pdfDirectory = new DirectoryInfo(_configuration.GetValue<string>("Docs:PDF:Directory")
-                ?? throw new ArgumentNullException("Docs:PDF:Directory"));
-            _maxDocAgeInSec = int.Parse(_configuration.GetValue<string>("Docs:MaxAgeInSec")
-                ?? throw new ArgumentNullException("Docs:MaxAgeInSec"));
+            _idmlDirectory = new DirectoryInfo(_configuration[IdmlDocDirKey]
+                ?? throw new ArgumentNullException(IdmlDocDirKey));
+            _pdfDirectory = new DirectoryInfo(_configuration[PdfDocDirKey]
+                ?? throw new ArgumentNullException(PdfDocDirKey));
+            _maxDocAgeInSec = int.Parse(_configuration[MaxDocAgeInSecKey]
+                ?? throw new ArgumentNullException(MaxDocAgeInSecKey));
             _jobCheckTimer = new Timer((stateObject) => { CheckPreviewJobs(); }, null,
                  TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
                  TimeSpan.FromSeconds(_maxDocAgeInSec / MainConsts.MAX_AGE_CHECK_DIVISOR));
@@ -140,12 +153,12 @@ namespace tools_tpt_transformation_service.Jobs
                 {
                     _logger.LogDebug("Checking preview jobs...");
 
-                    DateTime checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
+                    var checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
                     IList<PreviewJob> toRemove = new List<PreviewJob>();
 
-                    foreach (PreviewJob jobItem in _previewContext.PreviewJobs)
+                    foreach (var jobItem in _previewContext.PreviewJobs)
                     {
-                        DateTime? refTime = jobItem.DateCompleted
+                        var refTime = jobItem.DateCompleted
                             ?? jobItem.DateCancelled
                             ?? jobItem.DateStarted
                             ?? jobItem.DateSubmitted;
@@ -179,11 +192,11 @@ namespace tools_tpt_transformation_service.Jobs
             try
             {
                 _logger.LogDebug("Checking document files...");
-                DateTime checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
+                var checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
 
-                foreach (string fileItem in Directory.EnumerateFiles(_pdfDirectory.FullName, "preview-*.pdf"))
+                foreach (var fileItem in Directory.EnumerateFiles(_pdfDirectory.FullName, "preview-*.pdf"))
                 {
-                    FileInfo foundFile = new FileInfo(fileItem);
+                    var foundFile = new FileInfo(fileItem);
                     if (foundFile.CreationTimeUtc < checkTime)
                     {
                         try
@@ -196,9 +209,9 @@ namespace tools_tpt_transformation_service.Jobs
                         }
                     }
                 }
-                foreach (string fileItem in Directory.EnumerateFiles(_idmlDirectory.FullName, "preview-*.idml"))
+                foreach (var fileItem in Directory.EnumerateFiles(_idmlDirectory.FullName, "preview-*.idml"))
                 {
-                    FileInfo foundFile = new FileInfo(fileItem);
+                    var foundFile = new FileInfo(fileItem);
                     if (foundFile.CreationTimeUtc < checkTime)
                     {
                         try
@@ -221,16 +234,17 @@ namespace tools_tpt_transformation_service.Jobs
         }
 
         /// <summary>
-        /// Create and schedule a new preview job. 
+        /// Create and schedule a new preview job.
         /// </summary>
         /// <param name="inputJob">Preview job to be added (required).</param>
         /// <param name="outputJob">Persisted preview job if created, null otherwise.</param>
         /// <returns>True if job created successfully, false otherwise.</returns>
-        public bool TryAddJob(PreviewJob inputJob, out PreviewJob outputJob)
+        public virtual bool TryAddJob(PreviewJob inputJob, out PreviewJob outputJob)
         {
+            _logger.LogDebug($"TryAddJob() - inputJob.Id={inputJob.Id}.");
             if (inputJob.Id != null
                 || inputJob.ProjectName == null
-                || inputJob.ProjectName.Any(charItem => !Char.IsLetterOrDigit(charItem)))
+                || inputJob.ProjectName.Any(charItem => !char.IsLetterOrDigit(charItem)))
             {
                 outputJob = null;
                 return false;
@@ -264,12 +278,12 @@ namespace tools_tpt_transformation_service.Jobs
             previewJob.DateCancelled = null;
 
             // project defaults
-            previewJob.FontSizeInPts = previewJob.FontSizeInPts ?? MainConsts.DEFAULT_FONT_SIZE_IN_PTS;
-            previewJob.FontLeadingInPts = previewJob.FontLeadingInPts ?? MainConsts.DEFAULT_FONT_LEADING_IN_PTS;
-            previewJob.PageWidthInPts = previewJob.PageWidthInPts ?? MainConsts.DEFAULT_PAGE_WIDTH_IN_PTS;
-            previewJob.PageHeightInPts = previewJob.PageHeightInPts ?? MainConsts.DEFAULT_PAGE_HEIGHT_IN_PTS;
-            previewJob.PageHeaderInPts = previewJob.PageHeaderInPts ?? MainConsts.DEFAULT_PAGE_HEADER_IN_PTS;
-            previewJob.BookFormat = previewJob.BookFormat ?? MainConsts.DEFAULT_BOOK_FORMAT;
+            previewJob.FontSizeInPts ??= MainConsts.DEFAULT_FONT_SIZE_IN_PTS;
+            previewJob.FontLeadingInPts ??= MainConsts.DEFAULT_FONT_LEADING_IN_PTS;
+            previewJob.PageWidthInPts ??= MainConsts.DEFAULT_PAGE_WIDTH_IN_PTS;
+            previewJob.PageHeightInPts ??= MainConsts.DEFAULT_PAGE_HEIGHT_IN_PTS;
+            previewJob.PageHeaderInPts ??= MainConsts.DEFAULT_PAGE_HEADER_IN_PTS;
+            previewJob.BookFormat ??= MainConsts.DEFAULT_BOOK_FORMAT;
         }
 
         /// <summary>
@@ -278,11 +292,12 @@ namespace tools_tpt_transformation_service.Jobs
         /// <param name="jobId">Job ID to delete (required).</param>
         /// <param name="outputJob">The deleted job if found, null otherwise.</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public bool TryDeleteJob(string jobId, out PreviewJob outputJob)
+        public virtual bool TryDeleteJob(string jobId, out PreviewJob outputJob)
         {
+            _logger.LogDebug($"TryDeleteJob() - jobId={jobId}.");
             lock (_previewContext)
             {
-                if (TryGetJob(jobId, out PreviewJob foundJob))
+                if (TryGetJob(jobId, out var foundJob))
                 {
                     _jobScheduler.RemoveEntry(foundJob.Id);
 
@@ -305,11 +320,12 @@ namespace tools_tpt_transformation_service.Jobs
         /// </summary>
         /// <param name="nextJob">Preview job to update (required).</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public bool TryUpdateJob(PreviewJob nextJob)
+        public virtual bool TryUpdateJob(PreviewJob nextJob)
         {
+            _logger.LogDebug($"TryUpdateJob() - nextJob={nextJob.Id}.");
             lock (_previewContext)
             {
-                if (TryGetJob(nextJob.Id, out PreviewJob prevJob))
+                if (TryGetJob(nextJob.Id, out var prevJob))
                 {
                     _previewContext.Entry(nextJob).State = EntityState.Modified;
                     _previewContext.SaveChanges();
@@ -329,8 +345,9 @@ namespace tools_tpt_transformation_service.Jobs
         /// <param name="jobId">Job ID to retrieve (required).</param>
         /// <param name="previewJob">Retrieved preview job if found, null otherwise.</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public bool TryGetJob(String jobId, out PreviewJob previewJob)
+        public virtual bool TryGetJob(string jobId, out PreviewJob previewJob)
         {
+            _logger.LogDebug($"TryGetJob() - jobId={jobId}.");
             lock (_previewContext)
             {
                 previewJob = _previewContext.PreviewJobs.Find(jobId);
@@ -344,11 +361,12 @@ namespace tools_tpt_transformation_service.Jobs
         /// <param name="jobId">Job ID of preview to retrieve file for.</param>
         /// <param name="fileStream">File stream if found, null otherwise.</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public bool TryGetPreviewStream(String jobId, out FileStream fileStream)
+        public virtual bool TryGetPreviewStream(string jobId, out FileStream fileStream)
         {
+            _logger.LogDebug($"TryGetPreviewStream() - jobId={jobId}.");
             lock (_previewContext)
             {
-                if (!TryGetJob(jobId, out PreviewJob previewJob))
+                if (!TryGetJob(jobId, out var previewJob))
                 {
                     fileStream = null;
                     return false;
@@ -378,6 +396,8 @@ namespace tools_tpt_transformation_service.Jobs
         /// </summary>
         public void Dispose()
         {
+            _logger.LogDebug("Dispose().");
+
             _jobScheduler.Dispose();
             _jobCheckTimer.Dispose();
             _docCheckTimer.Dispose();

@@ -3,11 +3,11 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using tools_tpt_transformation_service.InDesign;
-using tools_tpt_transformation_service.Models;
-using tools_tpt_transformation_service.Toolbox;
+using TptMain.InDesign;
+using TptMain.Models;
+using TptMain.Toolbox;
 
-namespace tools_tpt_transformation_service.Jobs
+namespace TptMain.Jobs
 {
     /// <summary>
     /// Facilitates execution of a single preview job.
@@ -47,15 +47,15 @@ namespace tools_tpt_transformation_service.Jobs
         /// <summary>
         /// Preview job accessor.
         /// </summary>
-        public PreviewJob Job { get => _previewJob; }
+        public PreviewJob Job => _previewJob;
 
         /// <summary>
         /// Cancellation token accessor.
         /// </summary>
-        public CancellationTokenSource CancellationTokenSource { get => _cancellationTokenSource; }
+        public CancellationTokenSource CancellationTokenSource => _cancellationTokenSource;
 
         /// <summary>
-        /// Basic ctor. 
+        /// Basic ctor.
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
         /// <param name="jobManager">Job manager constructing this entry (required).</param>
@@ -82,7 +82,7 @@ namespace tools_tpt_transformation_service.Jobs
         /// <summary>
         /// Execute the associated job.
         /// </summary>
-        public void RunJob()
+        public virtual void RunJob()
         {
             try
             {
@@ -90,13 +90,12 @@ namespace tools_tpt_transformation_service.Jobs
                 _previewJob.DateStarted = DateTime.UtcNow;
                 _jobManager.TryUpdateJob(_previewJob);
 
-
                 TaskStatus? templateStatus = null;
                 if (!IsJobCanceled)
                 {
-                    Task idmlTask = Task.Run(() =>
+                    var idmlTask = Task.Run(() =>
                     {
-                        _templateManager.GetTemplateFile(_previewJob,
+                        _templateManager.DownloadTemplateFile(_previewJob,
                             new FileInfo(Path.Combine(_jobManager.IdmlDirectory.FullName, $"preview-{_previewJob.Id}.idml")));
                     },
                     _cancellationTokenSource.Token);
@@ -108,17 +107,15 @@ namespace tools_tpt_transformation_service.Jobs
                 TaskStatus? pdfStatus = null;
                 if (!IsJobCanceled)
                 {
-                    Task pdfTask = Task.Run(() =>
-                    {
-                        return _scriptRunner.RunScriptAsync(_previewJob);
-                    },
-                    _cancellationTokenSource.Token);
+                    var pdfTask = Task.Run(
+                        () => _scriptRunner.RunScript(_previewJob),
+                        _cancellationTokenSource.Token);
 
                     pdfTask.Wait();
                     pdfStatus = pdfTask.Status;
                 }
 
-                _logger.LogInformation($"Job finsihed: {_previewJob.Id} (IDML status: {templateStatus}, PDF status: {pdfStatus}).");
+                _logger.LogInformation($"Job finished: {_previewJob.Id} (IDML status: {templateStatus}, PDF status: {pdfStatus}).");
             }
             catch (Exception ex)
             {
@@ -135,7 +132,7 @@ namespace tools_tpt_transformation_service.Jobs
         /// <summary>
         /// Attempt cancellation of a job's execution.
         /// </summary>
-        public void CancelJob()
+        public virtual void CancelJob()
         {
             try
             {
@@ -158,9 +155,6 @@ namespace tools_tpt_transformation_service.Jobs
         /// Whether or not a job is cancelled.
         /// </summary>
         /// <returns>True if job canceled, false otherwise.</returns>
-        public bool IsJobCanceled
-        {
-            get => _cancellationTokenSource.IsCancellationRequested;
-        }
+        public virtual bool IsJobCanceled => _cancellationTokenSource.IsCancellationRequested;
     }
 }

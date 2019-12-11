@@ -6,17 +6,24 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace tools_tpt_transformation_service.Jobs
+namespace TptMain.Jobs
 {
     /// <summary>
-    /// Job execution scheduler. As C# uses a system-wide thread pool, this class makes sure that pararellism is bounded by a configuration value.
+    /// Job execution scheduler.
+    ///
+    /// As C# uses a system-wide thread pool, this class makes sure that parallelism is bounded by a configuration value.
     /// </summary>
     public class JobScheduler : IDisposable
     {
         /// <summary>
+        /// Max concurrent jobs config key.
+        /// </summary>
+        private const string MaxConcurrentJobsKey = "Jobs:MaxConcurrent";
+
+        /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
-        private readonly ILogger<JobManager> _logger;
+        private readonly ILogger<JobScheduler> _logger;
 
         /// <summary>
         /// System configuration (injected).
@@ -41,7 +48,7 @@ namespace tools_tpt_transformation_service.Jobs
         /// <summary>
         /// Active and pending preview jobs.
         /// </summary>
-        private readonly IDictionary<String, JobWorkflow> _jobMap;
+        private readonly IDictionary<string, JobWorkflow> _jobMap;
 
         /// <summary>
         /// Cancellation token for entire scheduler.
@@ -59,38 +66,39 @@ namespace tools_tpt_transformation_service.Jobs
         /// <param name="logger">Type-specific logger (required).</param>
         /// <param name="configuration">System configuration (required).</param>
         public JobScheduler(
-            ILogger<JobManager> logger,
+            ILogger<JobScheduler> logger,
             IConfiguration configuration)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _maxConcurrentJobs = int.Parse(_configuration.GetValue<string>("Jobs:MaxConcurrent")
-                ?? throw new ArgumentNullException("Jobs:MaxConcurrent"));
+            _maxConcurrentJobs = int.Parse(_configuration[MaxConcurrentJobsKey]
+                ?? throw new ArgumentNullException(MaxConcurrentJobsKey));
             _taskSemaphore = new SemaphoreSlim(_maxConcurrentJobs);
             _jobList = new BlockingCollection<JobWorkflow>();
             _jobMap = new ConcurrentDictionary<string, JobWorkflow>();
 
             _tokenSource = new CancellationTokenSource();
-            _schedulerThread = new Thread(() => { RunScheduler(); });
+            _schedulerThread = new Thread(RunScheduler);
             _schedulerThread.Start();
 
             _logger.LogDebug("JobEntryScheduler()");
         }
 
         /// <summary>
-        /// Kicks off the scheduler until cancelled or shutdown. 
-        /// 
+        /// Kicks off the scheduler until cancelled or shutdown.
+        ///
         /// This uses a semaphore and map to continually executes jobs based on a max thread limit and allow for job cancellation.
         /// </summary>
         private void RunScheduler()
         {
+            _logger.LogDebug("RunScheduler().");
             try
             {
                 while (true)
                 {
                     _taskSemaphore.Wait();
-                    JobWorkflow nextEntry = _jobList.Take();
+                    var nextEntry = _jobList.Take();
 
                     // handle preemptive cancelation
                     if (nextEntry.IsJobCanceled)
@@ -137,6 +145,8 @@ namespace tools_tpt_transformation_service.Jobs
         /// <param name="nextEntry">SchedulerEntry to add (required).</param>
         public void AddEntry(JobWorkflow nextEntry)
         {
+            _logger.LogDebug($"AddEntry() - nextEntry.Job.Id={nextEntry.Job.Id}.");
+
             _jobList.Add(nextEntry);
             _jobMap[nextEntry.Job.Id] = nextEntry;
         }
@@ -147,7 +157,8 @@ namespace tools_tpt_transformation_service.Jobs
         /// <param name="jobId">ID of job entry to remove (required).</param>
         public void RemoveEntry(string jobId)
         {
-            if (_jobMap.TryGetValue(jobId, out JobWorkflow jobEntry))
+            _logger.LogDebug($"RemoveEntry() - jobId={jobId}.");
+            if (_jobMap.TryGetValue(jobId, out var jobEntry))
             {
                 _jobMap.Remove(jobId);
                 jobEntry.CancelJob();
@@ -159,12 +170,13 @@ namespace tools_tpt_transformation_service.Jobs
         /// </summary>
         public void Dispose()
         {
+            _logger.LogDebug("Dispose().");
             _tokenSource.Cancel();
 
             _schedulerThread.Interrupt();
             _schedulerThread.Join();
 
-            while (_jobList.TryTake(out JobWorkflow nextEntry))
+            while (_jobList.TryTake(out var nextEntry))
             {
                 nextEntry.CancelJob();
             }

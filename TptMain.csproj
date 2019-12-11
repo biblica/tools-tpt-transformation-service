@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <RootNamespace>tools_tpt_transformation_service</RootNamespace>
+    <RootNamespace>TptMain</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

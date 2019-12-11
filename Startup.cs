@@ -1,23 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
+using TptMain.Http;
+using TptMain.InDesign;
+using TptMain.Jobs;
+using TptMain.Models;
+using TptMain.Projects;
+using TptMain.Toolbox;
 
-using tools_tpt_transformation_service.Models;
-using tools_tpt_transformation_service.InDesign;
-using tools_tpt_transformation_service.Jobs;
-using tools_tpt_transformation_service.Projects;
-using tools_tpt_transformation_service.Toolbox;
-
-namespace tools_tpt_transformation_service
+namespace TptMain
 {
     /// <summary>
     /// Class used to configure the ASP.NET request services pipeline.
@@ -26,7 +20,7 @@ namespace tools_tpt_transformation_service
     {
         private readonly IConfiguration _configuration;
 
-        public IConfiguration Configuration { get => _configuration; }
+        public IConfiguration Configuration => _configuration;
 
         public Startup(IConfiguration configuration)
         {
@@ -46,6 +40,7 @@ namespace tools_tpt_transformation_service
             services.AddSingleton<JobScheduler>();
             services.AddSingleton<ProjectManager>();
             services.AddSingleton<TemplateManager>();
+            services.AddSingleton<WebRequestFactory>();
 
             services.AddControllers();
         }
