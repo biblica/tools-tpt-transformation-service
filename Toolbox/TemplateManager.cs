@@ -99,14 +99,15 @@ namespace TptMain.Toolbox
         /// <returns>Template-specific query string.</returns>
         public static string ToQueryString(PreviewJob inputJob)
         {
-            IDictionary<string, string> queryMap = new Dictionary<string, string>();
-
-            queryMap["font_size"] = inputJob.FontSizeInPts.ToString();
-            queryMap["leading"] = inputJob.FontLeadingInPts.ToString();
-            queryMap["page_width"] = inputJob.PageWidthInPts.ToString();
-            queryMap["page_height"] = inputJob.PageHeightInPts.ToString();
-            queryMap["header_size"] = inputJob.PageHeaderInPts.ToString();
-            queryMap["book_type"] = inputJob.BookFormat.ToString();
+            IDictionary<string, string> queryMap = new SortedDictionary<string, string>
+            {
+                ["font_size"] = inputJob.FontSizeInPts.ToString(),
+                ["leading"] = inputJob.FontLeadingInPts.ToString(),
+                ["page_width"] = inputJob.PageWidthInPts.ToString(),
+                ["page_height"] = inputJob.PageHeightInPts.ToString(),
+                ["header_size"] = inputJob.PageHeaderInPts.ToString(),
+                ["book_type"] = inputJob.BookFormat.ToString()
+            };
 
             return StringUtil.ToQueryString(queryMap);
         }

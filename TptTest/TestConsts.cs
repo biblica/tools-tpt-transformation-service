@@ -31,6 +31,6 @@ namespace TptTest
         /// Expected test request URI.
         /// </summary>
         public const string TestRequestUri =
-            "http://localhost:3000/idtt/template/create?font_size=123.4&leading=234.5&page_width=456.7&page_height=345.6&header_size=567.8&book_type=cav";
+            "http://localhost:3000/idtt/template/create?book_type=cav&font_size=123.4&header_size=567.8&leading=234.5&page_height=345.6&page_width=456.7";
     }
 }
