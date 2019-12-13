@@ -6,65 +6,126 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace tools_tpt_transformation_service.Jobs
+namespace TptMain.Jobs
 {
     /// <summary>
-    /// Job execution scheduler. As C# uses a system-wide thread pool, this class makes sure that pararellism is bounded by a configuration value.
+    /// Job execution scheduler.
+    ///
+    /// As C# uses a system-wide thread pool, this class makes sure that parallelism is bounded by configuration
+    /// without regularly creating threads.
+    ///
+    /// Jobs submitted to the scheduler are either active or pending, as follows:
+    /// - Active jobs are those currently being executed.
+    /// - Pending jobs are those that aren't yet being executed. They may be waiting on other jobs to complete or
+    /// be there in the instant between being enqueued and the Wait() or Take() in RunScheduler() returning.
+    /// 
+    /// _jobQueue keeps track of pending jobs. _jobMap keeps track of both active and pending jobs to enable tracking
+    /// them down for cancellation by the user.
+    /// 
+    /// This may also be accomplished more simply for pending jobs (only) by non-destructively iterating the queue, but
+    /// there also must be a way to cancel active jobs, necessitating either this map or a different container for
+    /// just active jobs.
+    /// 
+    /// With the map there ends up being a single, efficient approach for jobs of either kind, vs one cancellation approach
+    /// for pending and another for active jobs. The net complexity and performance win is therefore with the paired queue
+    /// and map.
     /// </summary>
     public class JobScheduler : IDisposable
     {
-        private readonly ILogger<JobManager> _logger;
+        /// <summary>
+        /// Max concurrent jobs config key.
+        /// </summary>
+        private const string MaxConcurrentJobsKey = "Jobs:MaxConcurrent";
+
+        /// <summary>
+        /// Type-specific logger (injected).
+        /// </summary>
+        private readonly ILogger<JobScheduler> _logger;
+
+        /// <summary>
+        /// System configuration (injected).
+        /// </summary>
         private readonly IConfiguration _configuration;
+
+        /// <summary>
+        /// Max concurrent jobs (configured).
+        /// </summary>
         private readonly int _maxConcurrentJobs;
+
+        /// <summary>
+        /// Semaphore for tracking max concurrent tasks.
+        /// </summary>
         private readonly SemaphoreSlim _taskSemaphore;
-        private readonly BlockingCollection<SchedulerEntry> _jobList;
-        private readonly IDictionary<String, SchedulerEntry> _jobMap;
+
+        /// <summary>
+        /// Pending preview jobs.
+        /// </summary>
+        private readonly BlockingCollection<JobWorkflow> _jobQueue;
+
+        /// <summary>
+        /// Active and pending preview jobs.
+        /// </summary>
+        private readonly IDictionary<string, JobWorkflow> _jobMap;
+
+        /// <summary>
+        /// Cancellation token for entire scheduler.
+        /// </summary>
         private readonly CancellationTokenSource _tokenSource;
+
+        /// <summary>
+        /// Thread that iterates queue and runs tasks.
+        /// </summary>
         private readonly Thread _schedulerThread;
 
         /// <summary>
         /// JobScheduler Constructor.
         /// </summary>
-        /// <param name="logger">Logger.</param>
-        /// <param name="configuration">Service configuration.</param>
+        /// <param name="logger">Type-specific logger (required).</param>
+        /// <param name="configuration">System configuration (required).</param>
         public JobScheduler(
-            ILogger<JobManager> logger,
+            ILogger<JobScheduler> logger,
             IConfiguration configuration)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _maxConcurrentJobs = int.Parse(_configuration.GetValue<string>("Jobs:MaxConcurrent") ?? "4");
+            _maxConcurrentJobs = int.Parse(_configuration[MaxConcurrentJobsKey]
+                ?? throw new ArgumentNullException(MaxConcurrentJobsKey));
             _taskSemaphore = new SemaphoreSlim(_maxConcurrentJobs);
-            _jobList = new BlockingCollection<SchedulerEntry>();
-            _jobMap = new ConcurrentDictionary<string, SchedulerEntry>();
+            _jobQueue = new BlockingCollection<JobWorkflow>();
+            _jobMap = new ConcurrentDictionary<string, JobWorkflow>();
 
             _tokenSource = new CancellationTokenSource();
-            _schedulerThread = new Thread(() => { RunScheduler(); });
+            _schedulerThread = new Thread(RunScheduler);
             _schedulerThread.Start();
 
             _logger.LogDebug("JobEntryScheduler()");
         }
 
         /// <summary>
-        /// Kicks off the scheduler until cancelled or shutdown. This uses a semaphore and map to continually executes jobs based on a max thread limit and allow for job cancellation.
+        /// Kicks off the scheduler until cancelled or shutdown.
+        ///
+        /// This uses a semaphore and map to continually executes jobs based on a max thread limit and allow for job cancellation.
         /// </summary>
         private void RunScheduler()
         {
+            _logger.LogDebug("RunScheduler().");
             try
             {
                 while (true)
                 {
                     _taskSemaphore.Wait();
-                    SchedulerEntry nextEntry = _jobList.Take();
+                    var nextEntry = _jobQueue.Take();
 
-                    if (nextEntry.IsJobCanceled())
+                    // handle preemptive cancellation
+                    if (nextEntry.IsJobCanceled)
                     {
                         _jobMap.Remove(nextEntry.Job.Id);
                         _taskSemaphore.Release();
                     }
                     else
                     {
+                        // spin up task and move on
                         Task.Run(() =>
                         {
                             try
@@ -98,20 +159,23 @@ namespace tools_tpt_transformation_service.Jobs
         /// <summary>
         /// Adds a new scheduler entry for a job.
         /// </summary>
-        /// <param name="nextEntry">SchedulerEntry to add.</param>
-        public void AddEntry(SchedulerEntry nextEntry)
+        /// <param name="nextEntry">SchedulerEntry to add (required).</param>
+        public void AddEntry(JobWorkflow nextEntry)
         {
-            _jobList.Add(nextEntry);
+            _logger.LogDebug($"AddEntry() - nextEntry.Job.Id={nextEntry.Job.Id}.");
+
+            _jobQueue.Add(nextEntry);
             _jobMap[nextEntry.Job.Id] = nextEntry;
         }
 
         /// <summary>
         /// Removes a job scheduled entry.
         /// </summary>
-        /// <param name="jobId">ID of job entry to remove.</param>
+        /// <param name="jobId">ID of job entry to remove (required).</param>
         public void RemoveEntry(string jobId)
         {
-            if (_jobMap.TryGetValue(jobId, out SchedulerEntry jobEntry))
+            _logger.LogDebug($"RemoveEntry() - jobId={jobId}.");
+            if (_jobMap.TryGetValue(jobId, out var jobEntry))
             {
                 _jobMap.Remove(jobId);
                 jobEntry.CancelJob();
@@ -123,12 +187,13 @@ namespace tools_tpt_transformation_service.Jobs
         /// </summary>
         public void Dispose()
         {
+            _logger.LogDebug("Dispose().");
             _tokenSource.Cancel();
 
             _schedulerThread.Interrupt();
             _schedulerThread.Join();
 
-            while (_jobList.TryTake(out SchedulerEntry nextEntry))
+            while (_jobQueue.TryTake(out var nextEntry))
             {
                 nextEntry.CancelJob();
             }

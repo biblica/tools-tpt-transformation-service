@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace tools_tpt_transformation_service.Models
+namespace TptMain.Models
 {
     /// <summary>
     /// Model for tracking Typesetting Preview jobs.
@@ -43,22 +40,22 @@ namespace tools_tpt_transformation_service.Models
         /// <summary>
         /// Whether the job was submitted or not.
         /// </summary>
-        public bool IsSubmitted { get => this.DateSubmitted != null; }
+        public bool IsSubmitted => this.DateSubmitted != null;
 
         /// <summary>
         /// Whether or not the job has started execution or not.
         /// </summary>
-        public bool IsStarted { get => this.DateStarted != null; }
+        public bool IsStarted => this.DateStarted != null;
 
         /// <summary>
         /// Whether the job has been completed or not.
         /// </summary>
-        public bool IsCompleted { get => this.DateCompleted != null; }
+        public bool IsCompleted => this.DateCompleted != null;
 
         /// <summary>
         ///  Whether the job has been cancelled or not.
         /// </summary>
-        public bool IsCancelled { get => this.DateCancelled != null; }
+        public bool IsCancelled => this.DateCancelled != null;
 
         /// <summary>
         /// Whether or not there was an error during job execution.

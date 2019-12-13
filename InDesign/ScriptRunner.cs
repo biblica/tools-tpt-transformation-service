@@ -1,30 +1,82 @@
 ﻿using InDesignServer;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using tools_tpt_transformation_service.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using TptMain.Models;
+using TptMain.Util;
 
-namespace tools_tpt_transformation_service.InDesign
+namespace TptMain.InDesign
 {
     /// <summary>
-    /// InDesign server script runner class.
+    /// InDesign Server script runner class.
     /// </summary>
     public class ScriptRunner
     {
-        private readonly ILogger<ScriptRunner> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly ServicePortTypeClient _serviceClient;
-        private readonly int _idsTimeoutInSec;
-        private readonly string _idsPreviewScriptPath;
+        /// <summary>
+        /// InDesign server uri config key.
+        /// </summary>
+        private const string IdsUriKey = "InDesign:ServerUri";
 
         /// <summary>
-        /// Constructor. Populated by dependency injection.
+        /// InDesign server request timeout config key.
         /// </summary>
-        /// <param name="logger">Logger.</param>
-        /// <param name="configuration">Service configuration object.</param>
+        private const string IdsTimeoutInSecKey = "InDesign:TimeoutInSec";
+
+        /// <summary>
+        /// InDesign server preview script config key.
+        /// </summary>
+        private const string IdsPreviewScriptDirKey = "InDesign:PreviewScriptDirectory";
+
+        /// <summary>
+        /// InDesign server preview script name format config key.
+        /// </summary>
+        private const string IdsPreviewScriptNameFormatKey = "InDesign:PreviewScriptNameFormat";
+
+        /// <summary>
+        /// Type-specific logger (injected).
+        /// </summary>
+        private readonly ILogger<ScriptRunner> _logger;
+
+        /// <summary>
+        /// Configuration (injected).
+        /// </summary>
+        private readonly IConfiguration _configuration;
+
+        /// <summary>
+        /// IDS server client (injected).
+        /// </summary>
+        private readonly ServicePortTypeClient _serviceClient;
+
+        /// <summary>
+        /// IDS request timeout in seconds (configured).
+        /// </summary>
+        private readonly int _idsTimeoutInMSec;
+
+        /// <summary>
+        /// Preview script (JSX) path (configured).
+        /// </summary>
+        private readonly DirectoryInfo _idsPreviewScriptDirectory;
+
+        /// <summary>
+        /// Preview script (JSX) name format (configured).
+        /// </summary>
+        private readonly string _idsPreviewScriptNameFormat;
+
+        /// <summary>
+        /// Default (Roman) script file.
+        /// </summary>
+        private readonly FileInfo _defaultScriptFile;
+
+        /// <summary>
+        /// Basic ctor.
+        /// </summary>
+        /// <param name="logger">Type-specific logger (required).</param>
+        /// <param name="configuration">System configuration (required).</param>
         public ScriptRunner(ILogger<ScriptRunner> logger,
             IConfiguration configuration)
         {
@@ -33,52 +85,103 @@ namespace tools_tpt_transformation_service.InDesign
 
             _serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
-                _configuration.GetValue<string>("InDesign:ServerUri") ?? "http://localhost:9876/service");
-            _idsTimeoutInSec = int.Parse(_configuration.GetValue<string>("InDesign:TimeoutInSec") ?? "600");
-            _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
-            _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
-            _idsPreviewScriptPath = (_configuration.GetValue<string>("InDesign:PreviewScriptPath") ?? "C:\\Work\\JSX\\TypesettingPreviewRoman.jsx");
+                _configuration[IdsUriKey]
+                ?? throw new ArgumentNullException(IdsUriKey));
+            _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(_configuration[IdsTimeoutInSecKey]
+                ?? throw new ArgumentNullException(IdsTimeoutInSecKey)))
+                .TotalMilliseconds;
+            _idsPreviewScriptDirectory = new DirectoryInfo((_configuration[IdsPreviewScriptDirKey]
+                ?? throw new ArgumentNullException(IdsPreviewScriptDirKey)));
+            _idsPreviewScriptNameFormat = (_configuration[IdsPreviewScriptNameFormatKey]
+                ?? throw new ArgumentNullException(IdsPreviewScriptNameFormatKey));
+
+            _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
+            _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
+            _defaultScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
+                string.Format(_idsPreviewScriptNameFormat, MainConsts.DEFAULT_PROJECT_PREFIX)));
 
             _logger.LogDebug("ScriptRunner()");
         }
 
         /// <summary>
-        /// Kick off async request to create start typesetting preview generation.
+        /// Execute typesetting preview generation synchronously.
         /// </summary>
-        /// <param name="job">Typesetting preview job request.</param>
-        /// <returns></returns>
-        public Task RunScriptAsync(PreviewJob job)
+        /// <param name="inputJob">Input preview job (required).</param>
+        public virtual void RunScript(PreviewJob inputJob)
         {
-            RunScriptRequest scriptRequest = new RunScriptRequest();
+            this.RunScript(inputJob, null);
+        }
 
-            RunScriptParameters scriptParameters = new RunScriptParameters();
+        /// <summary>
+        /// Execute typesetting preview generation synchronously, with optional cancellation.
+        /// </summary>
+        /// <param name="inputJob">Input preview job (required).</param>
+        /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
+        public virtual void RunScript(PreviewJob inputJob, CancellationToken? cancellationToken)
+        {
+            _logger.LogDebug($"RunScriptAsync() - inputJob.Id={inputJob.Id}.");
+            var scriptRequest = new RunScriptRequest();
+
+            var scriptParameters = new RunScriptParameters();
             scriptRequest.runScriptParameters = scriptParameters;
 
             scriptParameters.scriptLanguage = "javascript";
-            scriptParameters.scriptFile = _idsPreviewScriptPath;
+            scriptParameters.scriptFile = GetScriptFile(inputJob).FullName;
 
             IList<IDSPScriptArg> scriptArgs = new List<IDSPScriptArg>();
 
-            IDSPScriptArg jobIdArg = new IDSPScriptArg();
+            var jobIdArg = new IDSPScriptArg();
             scriptArgs.Add(jobIdArg);
 
             jobIdArg.name = "jobId";
-            jobIdArg.value = Convert.ToString(job.Id);
+            jobIdArg.value = Convert.ToString(inputJob.Id);
 
-            IDSPScriptArg projectNameArg = new IDSPScriptArg();
+            var projectNameArg = new IDSPScriptArg();
             scriptArgs.Add(projectNameArg);
 
             projectNameArg.name = "projectName";
-            projectNameArg.value = Convert.ToString(job.ProjectName);
+            projectNameArg.value = Convert.ToString(inputJob.ProjectName);
 
-            IDSPScriptArg bookFormatArg = new IDSPScriptArg();
+            var bookFormatArg = new IDSPScriptArg();
             scriptArgs.Add(bookFormatArg);
 
             bookFormatArg.name = "bookFormat";
-            bookFormatArg.value = Convert.ToString(job.BookFormat);
+            bookFormatArg.value = Convert.ToString(inputJob.BookFormat);
 
             scriptParameters.scriptArgs = scriptArgs.ToArray();
-            return _serviceClient.RunScriptAsync(scriptRequest);
+
+            if (cancellationToken == null)
+            {
+                _serviceClient.RunScript(scriptRequest);
+            }
+            else
+            {
+                _serviceClient.RunScriptAsync(scriptRequest)
+                    .Wait(_idsTimeoutInMSec, (CancellationToken)cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// Gets the script file for a given project language.
+        ///
+        /// Looks for a script file matching the initial, non-numeric characters of the project name,
+        /// then falls back to a default if a language-specific one isn't present.
+        /// </summary>
+        /// <param name="inputJob">Preview job (required).</param>
+        /// <returns>Found script file.</returns>
+        public FileInfo GetScriptFile(PreviewJob inputJob)
+        {
+            var projectPrefix = StringUtil.GetProjectPrefix(inputJob.ProjectName).ToUpper();
+            if (projectPrefix.Length < 1)
+            {
+                projectPrefix = MainConsts.DEFAULT_PROJECT_PREFIX;
+            }
+
+            var scriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
+                string.Format(_idsPreviewScriptNameFormat, projectPrefix)));
+            return scriptFile.Exists
+                ? scriptFile
+                : _defaultScriptFile;
         }
     }
 }

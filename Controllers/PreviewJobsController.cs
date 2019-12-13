@@ -1,32 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using tools_tpt_transformation_service.InDesign;
-using tools_tpt_transformation_service.Jobs;
-using tools_tpt_transformation_service.Models;
+using System;
+using TptMain.Jobs;
+using TptMain.Models;
 
-namespace tools_tpt_transformation_service.Controllers
+namespace TptMain.Controllers
 {
     /// <summary>
-    /// REST Controller for the PreviewJob endpoint.
+    /// REST Controller for preview jobs resources.
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class PreviewJobsController : ControllerBase
     {
+        /// <summary>
+        /// Type-specific logger (injected).
+        /// </summary>
         private readonly ILogger<PreviewJobsController> _logger;
+
+        /// <summary>
+        /// Job manager (injected).
+        /// </summary>
         private readonly JobManager _jobManager;
 
         /// <summary>
-        /// Constructor.
+        /// Basic ctor.
         /// </summary>
-        /// <param name="logger">Logger.</param>
-        /// <param name="jobManager">Preview Job Manager</param>
+        /// <param name="logger">Logger (required).</param>
+        /// <param name="jobManager">Job manager (required).</param>
         public PreviewJobsController(
             ILogger<PreviewJobsController> logger,
             JobManager jobManager)
@@ -37,35 +38,48 @@ namespace tools_tpt_transformation_service.Controllers
             _logger.LogDebug("PreviewJobsController()");
         }
 
-        // GET: api/PreviewJobs/5
+        /// <summary>
+        /// GET (read) resource for preview jobs.
+        /// </summary>
+        /// <param name="jobId">Job ID (required).</param>
+        /// <returns>Preview job if found, 404 or other error otherwise.</returns>
         [HttpGet("{jobId}")]
         public ActionResult<PreviewJob> GetPreviewJob(string jobId)
         {
-            if (!_jobManager.TryGetJob(jobId, out PreviewJob previewJob))
+            _logger.LogDebug($"GetPreviewJob() - jobId={jobId}.");
+            if (!_jobManager.TryGetJob(jobId, out var previewJob))
             {
                 return NotFound();
             }
             return previewJob;
         }
 
-        // POST: api/PreviewJobs
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+        /// <summary>
+        /// POST (create) resource for preview jobs.
+        /// </summary>
+        /// <param name="previewJob">Preview job (required).</param>
+        /// <returns>Saved preview job if created, error otherwise.</returns>
         [HttpPost]
         public ActionResult<PreviewJob> PostPreviewJob(PreviewJob previewJob)
         {
-            if (!_jobManager.TryAddJob(previewJob, out PreviewJob outputJob))
+            _logger.LogDebug($"PostPreviewJob() - previewJob.Id={previewJob.Id}.");
+            if (!_jobManager.TryAddJob(previewJob, out var outputJob))
             {
                 return BadRequest();
             }
             return CreatedAtAction("GetPreviewJob", new { jobId = outputJob.Id }, outputJob);
         }
 
-        // DELETE: api/PreviewJobs/5
+        /// <summary>
+        /// Delete resource for preview jobs.
+        /// </summary>
+        /// <param name="jobId">Job ID (required).</param>
+        /// <returns>Deleted preview job if found, 404 or other error otherwise.</returns>
         [HttpDelete("{jobId}")]
         public ActionResult<PreviewJob> DeletePreviewJob(string jobId)
         {
-            if (!_jobManager.TryDeleteJob(jobId, out PreviewJob outputJob))
+            _logger.LogDebug($"DeletePreviewJob() - jobId={jobId}.");
+            if (!_jobManager.TryDeleteJob(jobId, out var outputJob))
             {
                 return NotFound();
             }
