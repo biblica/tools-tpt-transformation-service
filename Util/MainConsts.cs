@@ -48,11 +48,6 @@ namespace TptMain.Util
         public const double MAX_AGE_CHECK_DIVISOR = 10.0;
 
         /// <summary>
-        /// Milliseconds per second.
-        /// </summary>
-        public const int MILLISECONDS_PER_SECOND = 1000;
-
-        /// <summary>
         /// Default project prefix, should a language prefix not be detectable or usable.
         /// </summary>
         public const string DEFAULT_PROJECT_PREFIX = "Default";

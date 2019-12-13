@@ -90,32 +90,25 @@ namespace TptMain.Jobs
                 _previewJob.DateStarted = DateTime.UtcNow;
                 _jobManager.TryUpdateJob(_previewJob);
 
-                TaskStatus? templateStatus = null;
                 if (!IsJobCanceled)
                 {
-                    var idmlTask = Task.Run(() =>
-                    {
-                        _templateManager.DownloadTemplateFile(_previewJob,
-                            new FileInfo(Path.Combine(_jobManager.IdmlDirectory.FullName, $"preview-{_previewJob.Id}.idml")));
-                    },
-                    _cancellationTokenSource.Token);
-
-                    idmlTask.Wait();
-                    templateStatus = idmlTask.Status;
-                }
-
-                TaskStatus? pdfStatus = null;
-                if (!IsJobCanceled)
-                {
-                    var pdfTask = Task.Run(
-                        () => _scriptRunner.RunScript(_previewJob),
+                    _templateManager.DownloadTemplateFile(_previewJob,
+                        new FileInfo(Path.Combine(_jobManager.IdmlDirectory.FullName,
+                            $"preview-{_previewJob.Id}.idml")),
                         _cancellationTokenSource.Token);
-
-                    pdfTask.Wait();
-                    pdfStatus = pdfTask.Status;
                 }
 
-                _logger.LogInformation($"Job finished: {_previewJob.Id} (IDML status: {templateStatus}, PDF status: {pdfStatus}).");
+                if (!IsJobCanceled)
+                {
+                    _scriptRunner.RunScript(_previewJob,
+                        _cancellationTokenSource.Token);
+                }
+
+                _logger.LogInformation($"Job finished: {_previewJob.Id}.");
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogDebug(ex, $"Can't run job: {_previewJob.Id} (cancelled, ignoring).");
             }
             catch (Exception ex)
             {
@@ -139,6 +132,10 @@ namespace TptMain.Jobs
                 _logger.LogInformation($"Canceling job: {_previewJob.Id}");
                 _cancellationTokenSource.Cancel();
                 _logger.LogInformation($"Job canceled: {_previewJob.Id}");
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogDebug(ex, $"Can't cancel job: {_previewJob.Id} (cancelled, ignoring).");
             }
             catch (Exception ex)
             {

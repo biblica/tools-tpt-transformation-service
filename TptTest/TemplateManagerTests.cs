@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using TptMain.Http;
 using TptMain.InDesign;
 using TptMain.Models;
@@ -87,6 +88,9 @@ namespace TptTest
             mockManager.Setup(managerItem =>
                     managerItem.DownloadTemplateFile(It.IsAny<PreviewJob>(), It.IsAny<FileInfo>()))
                 .CallBase();
+            mockManager.Setup(managerItem =>
+                    managerItem.DownloadTemplateFile(It.IsAny<PreviewJob>(), It.IsAny<FileInfo>(), It.IsAny<CancellationToken?>()))
+                .CallBase();
 
             // create local mocks & placeholders
             Mock<WebRequest> mockWebRequest = new Mock<WebRequest>(MockBehavior.Strict);
@@ -151,6 +155,9 @@ namespace TptTest
                     _mockRequestFactory.Object);
             mockManager.Setup(managerItem =>
                     managerItem.DownloadTemplateFile(It.IsAny<PreviewJob>(), It.IsAny<FileInfo>()))
+                .CallBase();
+            mockManager.Setup(managerItem =>
+                    managerItem.DownloadTemplateFile(It.IsAny<PreviewJob>(), It.IsAny<FileInfo>(), It.IsAny<CancellationToken?>()))
                 .CallBase();
 
             // create local mocks & placeholders

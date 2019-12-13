@@ -140,11 +140,12 @@ namespace TptTest
             var isTaskRun = false;
             _mockTemplateManager.Setup(managerItem =>
                 managerItem.DownloadTemplateFile(testPreviewJob,
-                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName))))
+                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)),
+                    It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                runnerItem.RunScript(testPreviewJob))
-                .Callback<PreviewJob>(jobItem =>
+                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, CancellationToken?>((jobItem, tokenItem) =>
                 {
                     isTaskRun = true;
                 })
@@ -161,10 +162,10 @@ namespace TptTest
             // assert: check calls & results
             _mockTemplateManager.Verify(managerItem =>
                 managerItem.DownloadTemplateFile(testPreviewJob,
-                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName))),
+                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(isTaskRun); // task was run
@@ -210,14 +211,20 @@ namespace TptTest
             var isTaskRun = false;
             _mockTemplateManager.Setup(managerItem =>
                 managerItem.DownloadTemplateFile(testPreviewJob,
-                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName))))
+                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                runnerItem.RunScript(testPreviewJob))
-                .Callback<PreviewJob>(jobItem =>
+                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, CancellationToken?>((jobItem, tokenItem) =>
                 {
                     isTaskRun = true;
-                    Thread.Sleep(TimeSpan.FromSeconds(5));
+                    if (tokenItem != null)
+                    {
+                        while (!((CancellationToken)tokenItem).IsCancellationRequested)
+                        {
+                            Thread.Sleep(TimeSpan.FromMilliseconds(100));
+                        }
+                    }
                 })
                 .Verifiable();
             _mockJobManager.Setup(managerItem =>
@@ -239,27 +246,29 @@ namespace TptTest
 
             // cancel
             mockWorkflow.Object.CancelJob();
+            workThread.Join(TimeSpan.FromSeconds(1));
+            Assert.IsFalse(workThread.IsAlive);
 
             // assert: check calls & results
             _mockTemplateManager.Verify(managerItem =>
                 managerItem.DownloadTemplateFile(testPreviewJob,
-                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName))),
+                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(mockWorkflow.Object.IsJobCanceled); // job wasn't cancelled
 
             // assert: check job updates
-            Assert.AreEqual(2, jobUpdates.Count); // job was updated 2 times
+            Assert.AreEqual(3, jobUpdates.Count); // job was updated 3 times
             Assert.IsFalse(jobUpdates.Any(jobItem => jobItem.IsError)); // no errors
-            Assert.AreEqual(2, jobUpdates.Sum(jobItem => (jobItem.IsStarted ? 1 : 0))); // both have start flags
-            Assert.AreEqual(0, jobUpdates.Sum(jobItem => (jobItem.IsCompleted ? 1 : 0))); // none has completed flags
-            Assert.AreEqual(1, jobUpdates.Sum(jobItem => (jobItem.IsCancelled ? 1 : 0))); // one is cancelled
-            Assert.AreEqual(2, jobUpdates.Sum(jobItem => (jobItem.DateStarted != null ? 1 : 0))); // both have start times
-            Assert.AreEqual(0, jobUpdates.Sum(jobItem => (jobItem.DateCompleted != null ? 1 : 0))); // none has completed times
-            Assert.AreEqual(1, jobUpdates.Sum(jobItem => (jobItem.DateCancelled != null ? 1 : 0))); // one is cancelled
+            Assert.AreEqual(3, jobUpdates.Sum(jobItem => (jobItem.IsStarted ? 1 : 0))); // all have start flags
+            Assert.AreEqual(1, jobUpdates.Sum(jobItem => (jobItem.IsCompleted ? 1 : 0))); // one has completed flags
+            Assert.AreEqual(2, jobUpdates.Sum(jobItem => (jobItem.IsCancelled ? 1 : 0))); // two are cancelled
+            Assert.AreEqual(3, jobUpdates.Sum(jobItem => (jobItem.DateStarted != null ? 1 : 0))); // all have start times
+            Assert.AreEqual(1, jobUpdates.Sum(jobItem => (jobItem.DateCompleted != null ? 1 : 0))); // one has completed times
+            Assert.AreEqual(2, jobUpdates.Sum(jobItem => (jobItem.DateCancelled != null ? 1 : 0))); // two are cancelled
         }
 
         /// <summary>
@@ -288,7 +297,7 @@ namespace TptTest
             IList<PreviewJob> jobUpdates = new List<PreviewJob>();
             _mockTemplateManager.Setup(managerItem =>
                 managerItem.DownloadTemplateFile(testPreviewJob,
-                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName))))
+                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockJobManager.Setup(managerItem =>
                     managerItem.TryUpdateJob(testPreviewJob))
@@ -301,10 +310,10 @@ namespace TptTest
             // assert: check calls & results
             _mockTemplateManager.Verify(managerItem =>
                 managerItem.DownloadTemplateFile(testPreviewJob,
-                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName))),
+                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsFalse(mockWorkflow.Object.IsJobCanceled); // job wasn't cancelled
@@ -347,11 +356,11 @@ namespace TptTest
             var isTaskRun = false;
             _mockTemplateManager.Setup(managerItem =>
                     managerItem.DownloadTemplateFile(testPreviewJob,
-                        It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName))))
+                        It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                    runnerItem.RunScript(testPreviewJob))
-                .Callback<PreviewJob>(jobItem =>
+                    runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, CancellationToken?>((jobItem, tokenItem) =>
                 {
                     isTaskRun = true;
                     throw new IOException();
@@ -368,10 +377,10 @@ namespace TptTest
             // assert: check calls & results
             _mockTemplateManager.Verify(managerItem =>
                 managerItem.DownloadTemplateFile(testPreviewJob,
-                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName))),
+                    It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(isTaskRun); // task was run

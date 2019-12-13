@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TptMain.Models;
 using TptMain.Util;
@@ -54,7 +55,7 @@ namespace TptMain.InDesign
         /// <summary>
         /// IDS request timeout in seconds (configured).
         /// </summary>
-        private readonly int _idsTimeoutInSec;
+        private readonly int _idsTimeoutInMSec;
 
         /// <summary>
         /// Preview script (JSX) path (configured).
@@ -86,15 +87,16 @@ namespace TptMain.InDesign
                 ServicePortTypeClient.EndpointConfiguration.Service,
                 _configuration[IdsUriKey]
                 ?? throw new ArgumentNullException(IdsUriKey));
-            _idsTimeoutInSec = int.Parse(_configuration[IdsTimeoutInSecKey]
-                ?? throw new ArgumentNullException(IdsTimeoutInSecKey));
+            _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(_configuration[IdsTimeoutInSecKey]
+                ?? throw new ArgumentNullException(IdsTimeoutInSecKey)))
+                .TotalMilliseconds;
             _idsPreviewScriptDirectory = new DirectoryInfo((_configuration[IdsPreviewScriptDirKey]
                 ?? throw new ArgumentNullException(IdsPreviewScriptDirKey)));
             _idsPreviewScriptNameFormat = (_configuration[IdsPreviewScriptNameFormatKey]
                 ?? throw new ArgumentNullException(IdsPreviewScriptNameFormatKey));
 
-            _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
-            _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromSeconds(_idsTimeoutInSec);
+            _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
+            _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
             _defaultScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
                 string.Format(_idsPreviewScriptNameFormat, MainConsts.DEFAULT_PROJECT_PREFIX)));
 
@@ -102,10 +104,20 @@ namespace TptMain.InDesign
         }
 
         /// <summary>
-        /// Kick off async request to start typesetting preview generation.
+        /// Execute typesetting preview generation synchronously.
         /// </summary>
         /// <param name="inputJob">Input preview job (required).</param>
         public virtual void RunScript(PreviewJob inputJob)
+        {
+            this.RunScript(inputJob, null);
+        }
+
+        /// <summary>
+        /// Execute typesetting preview generation synchronously, with optional cancellation.
+        /// </summary>
+        /// <param name="inputJob">Input preview job (required).</param>
+        /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
+        public virtual void RunScript(PreviewJob inputJob, CancellationToken? cancellationToken)
         {
             _logger.LogDebug($"RunScriptAsync() - inputJob.Id={inputJob.Id}.");
             var scriptRequest = new RunScriptRequest();
@@ -137,7 +149,16 @@ namespace TptMain.InDesign
             bookFormatArg.value = Convert.ToString(inputJob.BookFormat);
 
             scriptParameters.scriptArgs = scriptArgs.ToArray();
-            _serviceClient.RunScript(scriptRequest);
+
+            if (cancellationToken == null)
+            {
+                _serviceClient.RunScript(scriptRequest);
+            }
+            else
+            {
+                _serviceClient.RunScriptAsync(scriptRequest)
+                    .Wait(_idsTimeoutInMSec, (CancellationToken)cancellationToken);
+            }
         }
 
         /// <summary>

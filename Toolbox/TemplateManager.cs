@@ -3,8 +3,10 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipelines;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using TptMain.Http;
 using TptMain.Models;
 using TptMain.Util;
@@ -68,18 +70,31 @@ namespace TptMain.Toolbox
 
             _templateUri = (_configuration[ToolboxTemplateServerUriKey]
                 ?? throw new ArgumentNullException(ToolboxTemplateServerUriKey));
-            _templateTimeoutInMSec = int.Parse(_configuration[ToolboxTemplateTimeoutInSecKey]
-                ?? throw new ArgumentNullException(ToolboxTemplateTimeoutInSecKey))
-                * MainConsts.MILLISECONDS_PER_SECOND;
+            _templateTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(_configuration[ToolboxTemplateTimeoutInSecKey]
+                ?? throw new ArgumentNullException(
+                    ToolboxTemplateTimeoutInSecKey)))
+                .TotalMilliseconds;
         }
 
         /// <summary>
-        /// Gets a task that retrieves a template file based on input job specifics.
+        /// Synchronously downloads template file based on input job specifics.
         /// </summary>
         /// <param name="inputJob">Input job (required).</param>
         /// <param name="outputFile">Output file (required).</param>
         /// <returns></returns>
         public virtual void DownloadTemplateFile(PreviewJob inputJob, FileInfo outputFile)
+        {
+            this.DownloadTemplateFile(inputJob, outputFile, null);
+        }
+
+        /// <summary>
+        /// Synchronously downloads template file based on input job specifics, with optional cancellation.
+        /// </summary>
+        /// <param name="inputJob">Input job (required).</param>
+        /// <param name="outputFile">Output file (required).</param>
+        /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
+        /// <returns></returns>
+        public virtual void DownloadTemplateFile(PreviewJob inputJob, FileInfo outputFile, CancellationToken? cancellationToken)
         {
             _logger.LogDebug($"DownloadTemplateFile() inputJob.Id={inputJob.Id}, outputFile={outputFile}.");
             var webRequest = _requestFactory.CreateWebRequest(
@@ -87,9 +102,33 @@ namespace TptMain.Toolbox
                 HttpMethod.Get.Method,
                 _templateTimeoutInMSec);
 
-            using var inputStream = webRequest.GetResponse().GetResponseStream();
-            using var outputStream = outputFile.OpenWrite();
-            inputStream?.CopyTo(outputStream);
+            if (cancellationToken == null)
+            {
+                using var inputStream = webRequest.GetResponse().GetResponseStream();
+                using var outputStream = outputFile.OpenWrite();
+                inputStream?.CopyTo(outputStream);
+            }
+            else
+            {
+                var workCancellationToken = (CancellationToken)cancellationToken;
+
+                // web response
+                var webRequestTask = webRequest.GetResponseAsync();
+                webRequestTask.Wait(_templateTimeoutInMSec, workCancellationToken);
+                if (webRequestTask.IsCanceled)
+                    return;
+
+                // input stream
+                using var webResponse = webRequestTask.Result;
+                using var inputStream = webResponse.GetResponseStream();
+
+                // output stream
+                using var outputStream = outputFile.OpenWrite();
+
+                // copy
+                inputStream?.CopyToAsync(outputStream, workCancellationToken)
+                    .Wait(_templateTimeoutInMSec, workCancellationToken);
+            }
         }
 
         /// <summary>

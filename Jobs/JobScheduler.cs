@@ -11,7 +11,24 @@ namespace TptMain.Jobs
     /// <summary>
     /// Job execution scheduler.
     ///
-    /// As C# uses a system-wide thread pool, this class makes sure that parallelism is bounded by a configuration value.
+    /// As C# uses a system-wide thread pool, this class makes sure that parallelism is bounded by configuration
+    /// without regularly creating threads.
+    ///
+    /// Jobs submitted to the scheduler are either active or pending, as follows:
+    /// - Active jobs are those currently being executed.
+    /// - Pending jobs are those that aren't yet being executed. They may be waiting on other jobs to complete or
+    /// be there in the instant between being enqueued and the Wait() or Take() in RunScheduler() returning.
+    /// 
+    /// _jobQueue keeps track of pending jobs. _jobMap keeps track of both active and pending jobs to enable tracking
+    /// them down for cancellation by the user.
+    /// 
+    /// This may also be accomplished more simply for pending jobs (only) by non-destructively iterating the queue, but
+    /// there also must be a way to cancel active jobs, necessitating either this map or a different container for
+    /// just active jobs.
+    /// 
+    /// With the map there ends up being a single, efficient approach for jobs of either kind, vs one cancellation approach
+    /// for pending and another for active jobs. The net complexity and performance win is therefore with the paired queue
+    /// and map.
     /// </summary>
     public class JobScheduler : IDisposable
     {
@@ -43,7 +60,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Pending preview jobs.
         /// </summary>
-        private readonly BlockingCollection<JobWorkflow> _jobList;
+        private readonly BlockingCollection<JobWorkflow> _jobQueue;
 
         /// <summary>
         /// Active and pending preview jobs.
@@ -75,7 +92,7 @@ namespace TptMain.Jobs
             _maxConcurrentJobs = int.Parse(_configuration[MaxConcurrentJobsKey]
                 ?? throw new ArgumentNullException(MaxConcurrentJobsKey));
             _taskSemaphore = new SemaphoreSlim(_maxConcurrentJobs);
-            _jobList = new BlockingCollection<JobWorkflow>();
+            _jobQueue = new BlockingCollection<JobWorkflow>();
             _jobMap = new ConcurrentDictionary<string, JobWorkflow>();
 
             _tokenSource = new CancellationTokenSource();
@@ -98,9 +115,9 @@ namespace TptMain.Jobs
                 while (true)
                 {
                     _taskSemaphore.Wait();
-                    var nextEntry = _jobList.Take();
+                    var nextEntry = _jobQueue.Take();
 
-                    // handle preemptive cancelation
+                    // handle preemptive cancellation
                     if (nextEntry.IsJobCanceled)
                     {
                         _jobMap.Remove(nextEntry.Job.Id);
@@ -147,7 +164,7 @@ namespace TptMain.Jobs
         {
             _logger.LogDebug($"AddEntry() - nextEntry.Job.Id={nextEntry.Job.Id}.");
 
-            _jobList.Add(nextEntry);
+            _jobQueue.Add(nextEntry);
             _jobMap[nextEntry.Job.Id] = nextEntry;
         }
 
@@ -176,7 +193,7 @@ namespace TptMain.Jobs
             _schedulerThread.Interrupt();
             _schedulerThread.Join();
 
-            while (_jobList.TryTake(out var nextEntry))
+            while (_jobQueue.TryTake(out var nextEntry))
             {
                 nextEntry.CancelJob();
             }
