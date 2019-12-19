@@ -2,8 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <RootNamespace>tools_tpt_transformation_service</RootNamespace>
+    <RootNamespace>TptMain</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="TptTest\**" />
+    <Content Remove="TptTest\**" />
+    <EmbeddedResource Remove="TptTest\**" />
+    <None Remove="TptTest\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.0.0" />
