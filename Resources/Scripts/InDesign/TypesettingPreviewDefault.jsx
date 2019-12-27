@@ -9,7 +9,7 @@ var idmlDir = 'C:\\Work\\IDML\\';
 var pdfDir = 'C:\\Work\\PDF\\';
 
 // Set project input dir and output file
-var txtDir = idttDir + projectName + '\\';
+var txtDir = idttDir + bookFormat + '\\' + projectName + '\\';
 var bookPath = idmlDir + 'preview-' + jobId + '.indb';
 var pdfPath = pdfDir + 'preview-' + jobId + '.pdf';
 
@@ -36,18 +36,18 @@ for (var ctr = 0;
     var doc = app.open(idmlDir + 'preview-' + jobId + '.idml');
     doc.preflightOptions.preflightOff = true;
 
-    // Identify starting points
-    var spread = doc.spreads[1];
-    var masterPages = doc.masterSpreads[0].pages;
-    var masterLeftTextFrame = masterPages[0].textFrames.firstItem();
-    var masterRightTextFrame = masterPages[1].textFrames.firstItem();
-    var lastTextFrame = doc.pages.lastItem().textFrames.lastItem();
-
     // Place text
     var layer = doc.layers.lastItem();
     var pageItem = layer.pageItems.lastItem();
     var placement = pageItem.place(txtFile);
     var story = placement[0];
+
+    // Identify starting points for new pages
+    var spread = doc.spreads[1];
+    var masterPages = doc.masterSpreads[0].pages;
+    var masterLeftTextFrame = masterPages[0].textFrames.firstItem();
+    var masterRightTextFrame = masterPages[1].textFrames.firstItem();
+    var lastTextFrame = doc.pages.lastItem().textFrames.lastItem();
 
     // Add spreads and connect to provide the right amount of space for text
     while (lastTextFrame.contents.length > 0) {

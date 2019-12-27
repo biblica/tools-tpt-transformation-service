@@ -134,19 +134,19 @@ namespace TptMain.InDesign
             scriptArgs.Add(jobIdArg);
 
             jobIdArg.name = "jobId";
-            jobIdArg.value = Convert.ToString(inputJob.Id);
+            jobIdArg.value = inputJob.Id;
 
             var projectNameArg = new IDSPScriptArg();
             scriptArgs.Add(projectNameArg);
 
             projectNameArg.name = "projectName";
-            projectNameArg.value = Convert.ToString(inputJob.ProjectName);
+            projectNameArg.value = inputJob.ProjectName;
 
             var bookFormatArg = new IDSPScriptArg();
             scriptArgs.Add(bookFormatArg);
 
             bookFormatArg.name = "bookFormat";
-            bookFormatArg.value = Convert.ToString(inputJob.BookFormat);
+            bookFormatArg.value = inputJob.BookFormat.ToString();
 
             scriptParameters.scriptArgs = scriptArgs.ToArray();
 
