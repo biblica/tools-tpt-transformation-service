@@ -209,7 +209,7 @@ namespace TptMain.Jobs
                         }
                     }
                 }
-                foreach (var fileItem in Directory.EnumerateFiles(_idmlDirectory.FullName, "preview-*.idml"))
+                foreach (var fileItem in Directory.EnumerateFiles(_idmlDirectory.FullName, "preview-*.i*"))
                 {
                     var foundFile = new FileInfo(fileItem);
                     if (foundFile.CreationTimeUtc < checkTime)
