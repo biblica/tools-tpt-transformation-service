@@ -7,7 +7,7 @@
   },
   "InDesign": {
     "ServerUri": "http://172.31.10.90:9876/service",
-    "TimeoutInSec": "600",
+    "TimeoutInSec": "3600",
     "PreviewScriptDirectory": "C:\\Work\\JSX",
     "PreviewScriptNameFormat": "TypesettingPreview{0}.jsx"
   },

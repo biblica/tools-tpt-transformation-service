@@ -36,49 +36,58 @@ for (var ctr = 0;
     var doc = app.open(idmlDir + 'preview-' + jobId + '.idml');
     doc.preflightOptions.preflightOff = true;
 
-    // Place text
-    var layer = doc.layers.lastItem();
-    var pageItem = layer.pageItems.lastItem();
-    var placement = pageItem.place(txtFile);
-    var story = placement[0];
+    try {
+        // Place text
+        var layer = doc.layers.lastItem();
+        var pageItem = layer.pageItems.lastItem();
+        var placement = pageItem.place(txtFile);
+        var story = placement[0];
 
-    // Identify starting points for new pages
-    var spread = doc.spreads[1];
-    var masterPages = doc.masterSpreads[0].pages;
-    var masterLeftTextFrame = masterPages[0].textFrames.firstItem();
-    var masterRightTextFrame = masterPages[1].textFrames.firstItem();
-    var lastTextFrame = doc.pages.lastItem().textFrames.lastItem();
+        // Identify starting points for new pages
+        var spread = doc.spreads[1];
+        var masterPages = doc.masterSpreads[0].pages;
+        var masterLeftTextFrame = masterPages[0].textFrames.firstItem();
+        var masterRightTextFrame = masterPages[1].textFrames.firstItem();
+        var lastTextFrame = doc.pages.lastItem().textFrames.lastItem();
 
-    // Add spreads and connect to provide the right amount of space for text
-    while (lastTextFrame.contents.length > 0) {
-        var priorLastTF = lastTextFrame.previousTextFrame;
-        priorLastTF.nextTextFrame = null;
-        lastTextFrame.previousTextFrame = null;
+        // Add spreads and connect to provide the right amount of space for text
+        while (lastTextFrame.contents.length > 0) {
+            var priorLastTF = lastTextFrame.previousTextFrame;
 
-        var newSpread = doc.spreads.add(LocationOptions.AFTER, spread);
-        var newLeftTf = masterLeftTextFrame.duplicate(newSpread.pages[0]);
-        var newRightTf = masterRightTextFrame.duplicate(newSpread.pages[1]);
+            priorLastTF.nextTextFrame = null;
+            lastTextFrame.previousTextFrame = null;
 
-        priorLastTF.nextTextFrame = newLeftTf;
-        newLeftTf.nextTextFrame = newRightTf;
-        lastTextFrame.previousTextFrame = newRightTf;
+            var newSpread = doc.spreads.add(LocationOptions.AFTER, spread);
+            var newLeftTf = masterLeftTextFrame.duplicate(newSpread.pages[0]);
+            var newRightTf = masterRightTextFrame.duplicate(newSpread.pages[1]);
 
-        spread = newSpread;
-    }
+            priorLastTF.nextTextFrame = newLeftTf;
+            newLeftTf.nextTextFrame = newRightTf;
+            lastTextFrame.previousTextFrame = newRightTf;
 
-    for (var p = doc.pages.length - 1; p >= 0; p--) {
-        if (doc.pages[p].textFrames[0].contents.length == 0) {
-            doc.pages[p].remove()
+            spread = newSpread;
         }
+
+        for (var p = doc.pages.length - 1; p > 0; p--) {
+            if (doc.pages[p].textFrames[0].contents.length == 0) {
+                doc.pages[p].remove()
+            }
+        }
+        doc.preflightOptions.preflightOff = false;
+
+        // Save INDD file
+        doc.save(docPath);
+        doc.close(SaveOptions.YES);
+
+        // Add to book
+        book.bookContents.add(docPath);
+        book.save()
+    } catch (ex) {
+        alert("Can't create document: " + docPath
+            + ", project: " + projectName
+            + ", format: " + bookFormat
+            + ", cause: " + ex);
     }
-    doc.preflightOptions.preflightOff = false;
-
-    // Save INDD file
-    doc.save(docPath);
-    doc.close(SaveOptions.YES);
-
-    // Add to book
-    book.bookContents.add(docPath);
 }
 
 // Save book & export to PDF
