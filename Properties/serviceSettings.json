@@ -11,6 +11,17 @@
     "PreviewScriptDirectory": "C:\\Work\\JSX",
     "PreviewScriptNameFormat": "TypesettingPreview{0}.jsx"
   },
+  "Paratext": {
+    "API": {
+      "Username": "",
+      "Password": "",
+      "AllowedMemberRoles": [
+        "pt_administrator",
+        "pt_consultant",
+        "pt_translator"
+      ]
+    }
+  },
   "Docs": {
     "MaxAgeInSec": "86400",
     "IDML": {
