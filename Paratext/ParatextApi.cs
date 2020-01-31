@@ -14,6 +14,9 @@ using TptMain.Paratext.Models;
 
 namespace TptMain.Paratext
 {
+    /// <summary>
+    /// Paratext API request wrapper class used for handling requests tot he Paratext Registry API and the responses that come back.
+    /// </summary>
     public class ParatextApi : IDisposable
     {
         /// <summary>
@@ -29,7 +32,7 @@ namespace TptMain.Paratext
         /// <summary>
         /// HTTP Client used to make calls against the Paratext Registry API.
         /// </summary>
-        private readonly HttpClient _httpClient;
+        private readonly HttpClient _httpClient = new HttpClient();
 
         /// <summary>
         /// The Paratext project member roles that are allowed access to the typesetting preview of projects.
@@ -39,7 +42,7 @@ namespace TptMain.Paratext
         /// <summary>
         /// Cache for API responses to reduce load and time on API requests.
         /// 
-        /// MemoryCache is thread safe. 
+        /// MemoryCache is thread safe.
         /// </summary>
         private readonly MemoryCache _apiCache = MemoryCache.Default;
 
@@ -51,27 +54,47 @@ namespace TptMain.Paratext
         /// <summary>
         /// How long cached items have until they expire in seconds.
         /// </summary>
-        private const double CacheItemAgeInSec = 15;
+        private readonly double _cacheItemAgeInSec;
 
         /// <summary>
         /// Cache Key for accessing or storing Paratext projects.
         /// </summary>
-        private const string ProjectsCacheKey = "Projects";
+        public const string ProjectsCacheKey = "Projects";
+
+        /// <summary>
+        /// Paratext Server URI param key.
+        /// </summary>
+        public const string ParatextApiServerUriKey = "Paratext:API:ServerUri";
 
         /// <summary>
         /// Paratext API Username param key.
         /// </summary>
-        private const string ParatextApiUsernameKey = "Paratext:API:Username";
+        public const string ParatextApiUsernameKey = "Paratext:API:Username";
 
         /// <summary>
         /// Paratext API Password param key.
         /// </summary>
-        private const string ParatextApiPasswordKey = "Paratext:API:Password";
+        public const string ParatextApiPasswordKey = "Paratext:API:Password";
+
+        /// <summary>
+        /// Paratext API ProjectCacheAgeInSec param key.
+        /// </summary>
+        public const string ParatextApiProjectCacheAgeInSecKey = "Paratext:API:ProjectCacheAgeInSec";
 
         /// <summary>
         /// Paratext API Password param key.
         /// </summary>
-        private const string ParatextApiAllowedMemberRolesKey = "Paratext:API:AllowedMemberRoles";
+        public const string ParatextApiAllowedMemberRolesKey = "Paratext:API:AllowedMemberRoles";
+
+        /// <summary>
+        /// HTTP Client getter for consistent usage.
+        /// </summary>
+        public virtual HttpClient HttpClient => _httpClient;
+
+        /// <summary>
+        /// API Cache for consistent usage.
+        /// </summary>
+        public virtual MemoryCache ApiCache => _apiCache;
 
         /// <summary>
         /// Paratext API ctor. Initialized using ASP.NET Dependency Injection.
@@ -86,22 +109,27 @@ namespace TptMain.Paratext
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _httpClient = new HttpClient();
-            _httpClient.BaseAddress = new Uri("https://registry.paratext.org/api8/");
+            // Setup HttpClient
+            _httpClient.BaseAddress = new Uri(_configuration.GetValue<string>(ParatextApiServerUriKey));
+
             // Set Auth header
             _httpClient.DefaultRequestHeaders.Authorization = ParatextApi.CreateBasicAuthHeader(
-                _configuration.GetValue<String>(ParatextApiUsernameKey), _configuration.GetValue<String>(ParatextApiPasswordKey));
+                _configuration.GetValue<string>(ParatextApiUsernameKey), _configuration.GetValue<string>(ParatextApiPasswordKey));
 
             // Member roles that are allowed access to generating previews.
-            _allowedMemberRoles = _configuration.GetSection(ParatextApiAllowedMemberRolesKey).Get<List<MemberRole>>();
+            var section = _configuration.GetSection(ParatextApiAllowedMemberRolesKey);
+            _allowedMemberRoles = section.Get<List<MemberRole>>();
             _ = _allowedMemberRoles ?? throw new ArgumentException($"Configuration parameter '{ParatextApiAllowedMemberRolesKey}'");
+
+            // Age of project cache items in seconds
+            _cacheItemAgeInSec = _configuration.GetValue<double>(ParatextApiProjectCacheAgeInSecKey);
         }
 
         /// <summary>
         /// Checks if user is authorized on a Paratext project to generate a typesetting preview. If the user isn't authorized, the job will be marked as such.
         /// </summary>
         /// <param name="previewJob">Preview job that contains user and the project to check if user is authorized.</param>
-        public void IsUserAuthorizedOnProject(PreviewJob previewJob)
+        public virtual void IsUserAuthorizedOnProject(PreviewJob previewJob)
         {
             // Validate input
             _ = previewJob ?? throw new ArgumentException(nameof(previewJob));
@@ -120,7 +148,7 @@ namespace TptMain.Paratext
         /// <param name="user">User to validate if authorized.</param>
         /// <param name="projectShortname">Shortname of the project to validate against.</param>
         /// <returns>True: User is authorized on specified project; False, otherwise.</returns>
-        public async Task<Boolean> IsUserAuthorizedOnProject(string user, string projectShortname)
+        public virtual async Task<Boolean> IsUserAuthorizedOnProject(string user, string projectShortname)
         {
             _logger.LogDebug($"Looking if user '{user}' is authorized to generate a typesetting preview for project 'projectShortname'");
 
@@ -142,7 +170,7 @@ namespace TptMain.Paratext
         /// </summary>
         /// <param name="projectName">Paratext project shortname (EG: usNIV11).</param>
         /// <returns>Project members who are allowed to create typesetting previews.</returns>
-        public async Task<List<ProjectMember>> GetAllowedProjectMembersAsync(String projectName)
+        public virtual async Task<List<ProjectMember>> GetAllowedProjectMembersAsync(String projectName)
         {
             _logger.LogDebug($"Getting members of PT project '{projectName}'");
 
@@ -154,7 +182,7 @@ namespace TptMain.Paratext
 
             // Request project members from API.
             var allowedProjectMembers = new List<ProjectMember>();
-            using (var projectMembersResponse = await _httpClient.GetAsync($"projects/{projectId}/members"))
+            using (var projectMembersResponse = await HttpClient.GetAsync($"projects/{projectId}/members"))
             {
                 if (projectMembersResponse.IsSuccessStatusCode)
                 {
@@ -186,7 +214,7 @@ namespace TptMain.Paratext
         /// Async method for retrieving available Paratext projects.
         /// </summary>
         /// <returns>Available projects.</returns>
-        public async Task<List<Project>> GetParatextProjectsAsync()
+        public virtual async Task<List<Project>> GetParatextProjectsAsync()
         {
             _logger.LogDebug($"Getting list of Paratext projects");
             
@@ -201,7 +229,7 @@ namespace TptMain.Paratext
             {
 
                 // First, attempt to retrieve cached version of Paratext projects
-                projectsList = (List<Project>)_apiCache.Get(ProjectsCacheKey);
+                projectsList = (List<Project>)ApiCache.Get(ProjectsCacheKey);
                 if (projectsList != null)
                 {
                     _logger.LogDebug($"Retrieved cached version of Paratext projects response");
@@ -209,7 +237,7 @@ namespace TptMain.Paratext
                 }
 
                 // Request projects from API 
-                using (var projectsResponse = await _httpClient.GetAsync("projects"))
+                using (var projectsResponse = await HttpClient.GetAsync("projects"))
                 {
                     if (projectsResponse.IsSuccessStatusCode)
                     {
@@ -218,7 +246,7 @@ namespace TptMain.Paratext
                         var content = await projectsResponse.Content.ReadAsStringAsync();
                         projectsList = JsonConvert.DeserializeObject<List<Project>>(content);
 
-                        _apiCache.Set(ProjectsCacheKey, projectsList, CreateDefaultCacheItemPolicy());
+                        ApiCache.Set(ProjectsCacheKey, projectsList, CreateDefaultCacheItemPolicy());
                     }
                     else
                     {
@@ -238,7 +266,7 @@ namespace TptMain.Paratext
         /// </summary>
         /// <param name="shortname">The shortname of the project to find.</param>
         /// <returns>The associated Paratext project's ID.</returns>
-        private async Task<string> GetProjectIdFromShortname(string shortname)
+        public virtual async Task<string> GetProjectIdFromShortname(string shortname)
         {
             // Validate input
             _ = shortname ?? throw new ArgumentException(nameof(shortname));
@@ -257,9 +285,9 @@ namespace TptMain.Paratext
         /// Create a default CacheItemPolicy for caching API responses.
         /// </summary>
         /// <returns>Default CacheItemPolicy for caching API responses.</returns>
-        private static CacheItemPolicy CreateDefaultCacheItemPolicy() => new CacheItemPolicy
+        private CacheItemPolicy CreateDefaultCacheItemPolicy() => new CacheItemPolicy
         {
-            AbsoluteExpiration = DateTimeOffset.UtcNow.AddSeconds(CacheItemAgeInSec)
+            AbsoluteExpiration = DateTimeOffset.UtcNow.AddSeconds(_cacheItemAgeInSec)
         };
 
         /// <summary>

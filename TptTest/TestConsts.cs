@@ -18,6 +18,11 @@ namespace TptTest
         public const string TEST_PROJECT_NAME = "testProjectName";
 
         /// <summary>
+        /// Test project name.
+        /// </summary>
+        public const string TEST_USER = "Chaddington";
+
+        /// <summary>
         /// Test HTTP method.
         /// </summary>
         public static readonly string TestHttpMethodName = HttpMethod.Get.Method;

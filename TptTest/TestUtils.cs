@@ -25,6 +25,7 @@ namespace TptTest
             {
                 Id = Guid.Empty.ToString(),
                 ProjectName = TestConsts.TEST_PROJECT_NAME,
+                User = TestConsts.TEST_USER,
                 BookFormat = BookFormat.cav,
                 FontSizeInPts = 123.4f,
                 FontLeadingInPts = 234.5f,
