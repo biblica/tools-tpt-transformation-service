@@ -134,30 +134,42 @@ namespace TptMain.InDesign
             scriptArgs.Add(jobIdArg);
 
             jobIdArg.name = "jobId";
-            jobIdArg.value = Convert.ToString(inputJob.Id);
+            jobIdArg.value = inputJob.Id;
 
             var projectNameArg = new IDSPScriptArg();
             scriptArgs.Add(projectNameArg);
 
             projectNameArg.name = "projectName";
-            projectNameArg.value = Convert.ToString(inputJob.ProjectName);
+            projectNameArg.value = inputJob.ProjectName;
 
             var bookFormatArg = new IDSPScriptArg();
             scriptArgs.Add(bookFormatArg);
 
             bookFormatArg.name = "bookFormat";
-            bookFormatArg.value = Convert.ToString(inputJob.BookFormat);
+            bookFormatArg.value = inputJob.BookFormat.ToString();
 
             scriptParameters.scriptArgs = scriptArgs.ToArray();
 
+            RunScriptResponse scriptResponse;
             if (cancellationToken == null)
             {
-                _serviceClient.RunScript(scriptRequest);
+                scriptResponse = _serviceClient.RunScript(scriptRequest);
             }
             else
             {
-                _serviceClient.RunScriptAsync(scriptRequest)
-                    .Wait(_idsTimeoutInMSec, (CancellationToken)cancellationToken);
+                var scriptTask = _serviceClient.RunScriptAsync(scriptRequest);
+                scriptTask.Wait(_idsTimeoutInMSec, (CancellationToken)cancellationToken);
+
+                scriptResponse = scriptTask.Result;
+            }
+
+            // check for result w/errors
+            if (scriptResponse != null
+                && scriptResponse.errorNumber != 0)
+            {
+                throw new ScriptException(
+                    $"Can't execute script (error number: {scriptResponse.errorNumber}, message: {scriptResponse.errorString}).",
+                    null);
             }
         }
 
@@ -182,6 +194,22 @@ namespace TptMain.InDesign
             return scriptFile.Exists
                 ? scriptFile
                 : _defaultScriptFile;
+        }
+    }
+
+    /// <summary>
+    /// Basic exception for IDS script errors.
+    /// </summary>
+    public class ScriptException : ApplicationException
+    {
+        /// <summary>
+        /// Basic ctor.
+        /// </summary>
+        /// <param name="messageText">Message text (optional, may be null).</param>
+        /// <param name="causeEx">Cause exception (optional, may be null).</param>
+        public ScriptException(string messageText, Exception causeEx)
+            : base(messageText, causeEx)
+        {
         }
     }
 }
