@@ -194,7 +194,7 @@ namespace TptMain.Jobs
                 _logger.LogDebug("Checking document files...");
                 var checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
 
-                foreach (var fileItem in Directory.EnumerateFiles(_pdfDirectory.FullName, "preview-*.pdf"))
+                foreach (var fileItem in Directory.EnumerateFiles(_pdfDirectory.FullName, "preview-*.*"))
                 {
                     var foundFile = new FileInfo(fileItem);
                     if (foundFile.CreationTimeUtc < checkTime)
@@ -209,7 +209,7 @@ namespace TptMain.Jobs
                         }
                     }
                 }
-                foreach (var fileItem in Directory.EnumerateFiles(_idmlDirectory.FullName, "preview-*.idml"))
+                foreach (var fileItem in Directory.EnumerateFiles(_idmlDirectory.FullName, "preview-*.*"))
                 {
                     var foundFile = new FileInfo(fileItem);
                     if (foundFile.CreationTimeUtc < checkTime)

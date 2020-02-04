@@ -25,6 +25,7 @@ namespace TptMain
         public Startup(IConfiguration configuration)
         {
             _configuration = configuration;
+
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -52,11 +53,8 @@ namespace TptMain
             {
                 app.UseDeveloperExceptionPage();
             }
-
             app.UseRouting();
-
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
