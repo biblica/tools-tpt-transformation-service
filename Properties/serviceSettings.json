@@ -11,6 +11,19 @@
     "PreviewScriptDirectory": "C:\\Work\\JSX",
     "PreviewScriptNameFormat": "TypesettingPreview{0}.jsx"
   },
+  "Paratext": {
+    "API": {
+      "ServerUri": "https://registry.paratext.org/api8/",
+      "Username": "",
+      "Password": "",
+      "ProjectCacheAgeInSec": 30,
+      "AllowedMemberRoles": [
+        "pt_administrator",
+        "pt_consultant",
+        "pt_translator"
+      ]
+    }
+  },
   "Docs": {
     "MaxAgeInSec": "86400",
     "IDML": {

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using TptMain.InDesign;
 using TptMain.Models;
+using TptMain.Paratext;
 using TptMain.Toolbox;
 using TptMain.Util;
 
@@ -59,6 +60,11 @@ namespace TptMain.Jobs
         private readonly TemplateManager _templateManager;
 
         /// <summary>
+        /// Paratext API service used to authorize user access.
+        /// </summary>
+        private readonly ParatextApi _paratextApi;
+
+        /// <summary>
         /// Job scheduler service (injected).
         /// </summary>
         private readonly JobScheduler _jobScheduler;
@@ -106,6 +112,7 @@ namespace TptMain.Jobs
         /// <param name="previewContext">Job preview context (persistence; required).</param>
         /// <param name="scriptRunner">Script runner (required).</param>
         /// <param name="templateManager">Template manager (required).</param>
+        /// <param name="paratextApi">Paratext API for verifiying user authorization on projects (required).</param>
         /// <param name="jobScheduler">Job scheduler (required).</param>
         public JobManager(
             ILogger<JobManager> logger,
@@ -113,6 +120,7 @@ namespace TptMain.Jobs
             PreviewContext previewContext,
             ScriptRunner scriptRunner,
             TemplateManager templateManager,
+            ParatextApi paratextApi,
             JobScheduler jobScheduler)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -120,6 +128,7 @@ namespace TptMain.Jobs
             _previewContext = previewContext ?? throw new ArgumentNullException(nameof(previewContext));
             _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
+            _paratextApi = paratextApi ?? throw new ArgumentNullException(nameof(paratextApi));
             _jobScheduler = jobScheduler ?? throw new ArgumentNullException(nameof(jobScheduler));
 
             _idmlDirectory = new DirectoryInfo(_configuration[IdmlDocDirKey]
@@ -256,7 +265,7 @@ namespace TptMain.Jobs
                 _previewContext.PreviewJobs.Add(inputJob);
                 _previewContext.SaveChanges();
 
-                _jobScheduler.AddEntry(new JobWorkflow(_logger, this, _scriptRunner, _templateManager, inputJob));
+                _jobScheduler.AddEntry(new JobWorkflow(_logger, this, _scriptRunner, _templateManager, _paratextApi, inputJob));
 
                 outputJob = inputJob;
                 return true;

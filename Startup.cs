@@ -8,6 +8,7 @@ using TptMain.Http;
 using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
+using TptMain.Paratext;
 using TptMain.Projects;
 using TptMain.Toolbox;
 
@@ -38,6 +39,7 @@ namespace TptMain
 
             services.AddSingleton<ScriptRunner>();
             services.AddSingleton<JobManager>();
+            services.AddSingleton<ParatextApi>();
             services.AddSingleton<JobScheduler>();
             services.AddSingleton<ProjectManager>();
             services.AddSingleton<TemplateManager>();
