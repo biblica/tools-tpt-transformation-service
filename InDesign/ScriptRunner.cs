@@ -70,7 +70,7 @@ namespace TptMain.InDesign
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
-        /// <param name="configuration">System configuration2 (required).</param>
+        /// <param name="configuration">System configuration (required).</param>
         public ScriptRunner(ILogger<ScriptRunner> logger,
             IConfiguration configuration)
         {
