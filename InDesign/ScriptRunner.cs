@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using TptMain.Models;
 using TptMain.Util;
 
@@ -43,11 +42,6 @@ namespace TptMain.InDesign
         private readonly ILogger<ScriptRunner> _logger;
 
         /// <summary>
-        /// Configuration (injected).
-        /// </summary>
-        private readonly IConfiguration _configuration;
-
-        /// <summary>
         /// IDS server client (injected).
         /// </summary>
         private readonly ServicePortTypeClient _serviceClient;
@@ -76,23 +70,23 @@ namespace TptMain.InDesign
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
-        /// <param name="configuration">System configuration (required).</param>
+        /// <param name="configuration">System configuration2 (required).</param>
         public ScriptRunner(ILogger<ScriptRunner> logger,
             IConfiguration configuration)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             _serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
-                _configuration[IdsUriKey]
+                configuration[IdsUriKey]
                 ?? throw new ArgumentNullException(IdsUriKey));
-            _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(_configuration[IdsTimeoutInSecKey]
+            _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(configuration[IdsTimeoutInSecKey]
                 ?? throw new ArgumentNullException(IdsTimeoutInSecKey)))
                 .TotalMilliseconds;
-            _idsPreviewScriptDirectory = new DirectoryInfo((_configuration[IdsPreviewScriptDirKey]
+            _idsPreviewScriptDirectory = new DirectoryInfo((configuration[IdsPreviewScriptDirKey]
                 ?? throw new ArgumentNullException(IdsPreviewScriptDirKey)));
-            _idsPreviewScriptNameFormat = (_configuration[IdsPreviewScriptNameFormatKey]
+            _idsPreviewScriptNameFormat = (configuration[IdsPreviewScriptNameFormatKey]
                 ?? throw new ArgumentNullException(IdsPreviewScriptNameFormatKey));
 
             _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
@@ -101,15 +95,6 @@ namespace TptMain.InDesign
                 string.Format(_idsPreviewScriptNameFormat, MainConsts.DEFAULT_PROJECT_PREFIX)));
 
             _logger.LogDebug("ScriptRunner()");
-        }
-
-        /// <summary>
-        /// Execute typesetting preview generation synchronously.
-        /// </summary>
-        /// <param name="inputJob">Input preview job (required).</param>
-        public virtual void RunScript(PreviewJob inputJob)
-        {
-            this.RunScript(inputJob, null);
         }
 
         /// <summary>

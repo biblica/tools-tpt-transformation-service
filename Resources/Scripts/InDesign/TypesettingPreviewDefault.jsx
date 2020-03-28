@@ -20,9 +20,13 @@ book.automaticPagination = true;
 // Find & sort source documents to read
 var txtFolder = new Folder(txtDir);
 var txtFiles1 = txtFolder.getFiles("books-*.txt");
-txtFiles1.sort(function (f1, f2) { return f1.name.localeCompare(f2.name); });
+txtFiles1.sort(function (f1, f2) {
+    return f1.name.localeCompare(f2.name);
+});
 var txtFiles2 = txtFolder.getFiles("book-*.txt");
-txtFiles2.sort(function (f1, f2) { return f1.name.localeCompare(f2.name); });
+txtFiles2.sort(function (f1, f2) {
+    return f1.name.localeCompare(f2.name);
+});
 var txtFiles = txtFiles1.concat(txtFiles2);
 
 // Create IDS document for each source, then add to book
@@ -81,7 +85,7 @@ for (var ctr = 0;
 
         // Add to book
         book.bookContents.add(docPath);
-        book.save()
+        book.save();
     } catch (ex) {
         alert("Can't create document: " + docPath
             + ", project: " + projectName
@@ -91,8 +95,8 @@ for (var ctr = 0;
 }
 
 // Save book & export to PDF
-book.save()
+book.save();
 book.exportFile(ExportFormat.PDF_TYPE, pdfPath);
 
 // Close & exit
-book.close(SaveOptions.YES)
+book.close(SaveOptions.YES);

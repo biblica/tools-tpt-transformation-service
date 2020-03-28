@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using TptMain.Http;
@@ -33,14 +32,9 @@ namespace TptMain.Toolbox
         private readonly ILogger<TemplateManager> _logger;
 
         /// <summary>
-        /// System configuration (injected).
-        /// </summary>
-        private readonly IConfiguration _configuration;
-
-        /// <summary>
         /// Web request factory.
         /// </summary>
-        private WebRequestFactory _requestFactory;
+        private readonly WebRequestFactory _requestFactory;
 
         /// <summary>
         /// URI for Toolbox template service.
@@ -64,14 +58,14 @@ namespace TptMain.Toolbox
             WebRequestFactory requestFactory)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _requestFactory = requestFactory ?? throw new ArgumentNullException(nameof(requestFactory));
 
-            _templateUri = (_configuration[ToolboxTemplateServerUriKey]
-                ?? throw new ArgumentNullException(ToolboxTemplateServerUriKey));
-            _templateTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(_configuration[ToolboxTemplateTimeoutInSecKey]
-                ?? throw new ArgumentNullException(
-                    ToolboxTemplateTimeoutInSecKey)))
+            _templateUri = (configuration[ToolboxTemplateServerUriKey]
+                            ?? throw new ArgumentNullException(ToolboxTemplateServerUriKey));
+            _templateTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(configuration[ToolboxTemplateTimeoutInSecKey]
+                                                                         ?? throw new ArgumentNullException(
+                                                                             ToolboxTemplateTimeoutInSecKey)))
                 .TotalMilliseconds;
         }
 
@@ -135,7 +129,7 @@ namespace TptMain.Toolbox
         /// </summary>
         /// <param name="inputJob">Preview job (required).</param>
         /// <returns>Template-specific query string.</returns>
-        public static string ToQueryString(PreviewJob inputJob)
+        private static string ToQueryString(PreviewJob inputJob)
         {
             IDictionary<string, string> queryMap = new SortedDictionary<string, string>
             {

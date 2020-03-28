@@ -34,7 +34,7 @@ namespace TptMain.Controllers
             ILogger<ProjectDetailsController> logger,
             ProjectManager projectManager)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _projectManager = projectManager ?? throw new ArgumentNullException(nameof(projectManager));
 
             _logger.LogDebug("ProjectDetailsController()");

@@ -31,7 +31,7 @@ namespace TptMain.Controllers
             ILogger<PreviewFileController> logger,
             JobManager jobManager)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); ;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
 
             _logger.LogDebug("PreviewFileController()");
