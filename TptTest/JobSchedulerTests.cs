@@ -46,10 +46,9 @@ namespace TptTest
         [TestMethod]
         public void InstantiateTest()
         {
-            var jobScheduler =
-                new JobScheduler(
-                    _mockLogger.Object,
-                    _testConfiguration);
+            new JobScheduler(
+                _mockLogger.Object,
+                _testConfiguration);
             _testConfiguration.AssertIfNotAllKeysChecked();
         }
     }

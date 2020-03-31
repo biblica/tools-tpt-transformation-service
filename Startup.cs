@@ -8,6 +8,7 @@ using TptMain.Http;
 using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
+using TptMain.Paratext;
 using TptMain.Projects;
 using TptMain.Toolbox;
 
@@ -25,6 +26,7 @@ namespace TptMain
         public Startup(IConfiguration configuration)
         {
             _configuration = configuration;
+
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -37,6 +39,7 @@ namespace TptMain
 
             services.AddSingleton<ScriptRunner>();
             services.AddSingleton<JobManager>();
+            services.AddSingleton<ParatextApi>();
             services.AddSingleton<JobScheduler>();
             services.AddSingleton<ProjectManager>();
             services.AddSingleton<TemplateManager>();
@@ -52,11 +55,8 @@ namespace TptMain
             {
                 app.UseDeveloperExceptionPage();
             }
-
             app.UseRouting();
-
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

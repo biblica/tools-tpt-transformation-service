@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
+﻿using System.Net.Http;
 
 namespace TptTest
 {
@@ -16,6 +13,11 @@ namespace TptTest
         /// Test project name.
         /// </summary>
         public const string TEST_PROJECT_NAME = "testProjectName";
+
+        /// <summary>
+        /// Test project name.
+        /// </summary>
+        public const string TEST_USER = "Chaddington";
 
         /// <summary>
         /// Test HTTP method.

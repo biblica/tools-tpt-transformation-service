@@ -38,6 +38,11 @@ namespace TptMain.Models
         public string ProjectName { get; set; }
 
         /// <summary>
+        /// The user requesting the job.
+        /// </summary>
+        public string User { get; set; }
+
+        /// <summary>
         /// Whether the job was submitted or not.
         /// </summary>
         public bool IsSubmitted => this.DateSubmitted != null;

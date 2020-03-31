@@ -6,6 +6,9 @@ using System.IO;
 
 namespace TptMain
 {
+    /// <summary>
+    /// Main driver class for the service.
+    /// </summary>
     public class Program
     {
         public static void Main(string[] args)
@@ -18,7 +21,7 @@ namespace TptMain
         /// </summary>
         /// <param name="args">Program arguments array.</param>
         /// <returns>The HostBuilder</returns>
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
+        private static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
             .UseWindowsService()
             .ConfigureAppConfiguration((hostingContext, config) =>

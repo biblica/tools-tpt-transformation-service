@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using TptMain.Models;
 using TptMain.Util;
 
@@ -43,11 +42,6 @@ namespace TptMain.InDesign
         private readonly ILogger<ScriptRunner> _logger;
 
         /// <summary>
-        /// Configuration (injected).
-        /// </summary>
-        private readonly IConfiguration _configuration;
-
-        /// <summary>
         /// IDS server client (injected).
         /// </summary>
         private readonly ServicePortTypeClient _serviceClient;
@@ -81,18 +75,18 @@ namespace TptMain.InDesign
             IConfiguration configuration)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             _serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
-                _configuration[IdsUriKey]
+                configuration[IdsUriKey]
                 ?? throw new ArgumentNullException(IdsUriKey));
-            _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(_configuration[IdsTimeoutInSecKey]
+            _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(configuration[IdsTimeoutInSecKey]
                 ?? throw new ArgumentNullException(IdsTimeoutInSecKey)))
                 .TotalMilliseconds;
-            _idsPreviewScriptDirectory = new DirectoryInfo((_configuration[IdsPreviewScriptDirKey]
+            _idsPreviewScriptDirectory = new DirectoryInfo((configuration[IdsPreviewScriptDirKey]
                 ?? throw new ArgumentNullException(IdsPreviewScriptDirKey)));
-            _idsPreviewScriptNameFormat = (_configuration[IdsPreviewScriptNameFormatKey]
+            _idsPreviewScriptNameFormat = (configuration[IdsPreviewScriptNameFormatKey]
                 ?? throw new ArgumentNullException(IdsPreviewScriptNameFormatKey));
 
             _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
@@ -101,15 +95,6 @@ namespace TptMain.InDesign
                 string.Format(_idsPreviewScriptNameFormat, MainConsts.DEFAULT_PROJECT_PREFIX)));
 
             _logger.LogDebug("ScriptRunner()");
-        }
-
-        /// <summary>
-        /// Execute typesetting preview generation synchronously.
-        /// </summary>
-        /// <param name="inputJob">Input preview job (required).</param>
-        public virtual void RunScript(PreviewJob inputJob)
-        {
-            this.RunScript(inputJob, null);
         }
 
         /// <summary>
@@ -134,30 +119,42 @@ namespace TptMain.InDesign
             scriptArgs.Add(jobIdArg);
 
             jobIdArg.name = "jobId";
-            jobIdArg.value = Convert.ToString(inputJob.Id);
+            jobIdArg.value = inputJob.Id;
 
             var projectNameArg = new IDSPScriptArg();
             scriptArgs.Add(projectNameArg);
 
             projectNameArg.name = "projectName";
-            projectNameArg.value = Convert.ToString(inputJob.ProjectName);
+            projectNameArg.value = inputJob.ProjectName;
 
             var bookFormatArg = new IDSPScriptArg();
             scriptArgs.Add(bookFormatArg);
 
             bookFormatArg.name = "bookFormat";
-            bookFormatArg.value = Convert.ToString(inputJob.BookFormat);
+            bookFormatArg.value = inputJob.BookFormat.ToString();
 
             scriptParameters.scriptArgs = scriptArgs.ToArray();
 
+            RunScriptResponse scriptResponse;
             if (cancellationToken == null)
             {
-                _serviceClient.RunScript(scriptRequest);
+                scriptResponse = _serviceClient.RunScript(scriptRequest);
             }
             else
             {
-                _serviceClient.RunScriptAsync(scriptRequest)
-                    .Wait(_idsTimeoutInMSec, (CancellationToken)cancellationToken);
+                var scriptTask = _serviceClient.RunScriptAsync(scriptRequest);
+                scriptTask.Wait(_idsTimeoutInMSec, (CancellationToken)cancellationToken);
+
+                scriptResponse = scriptTask.Result;
+            }
+
+            // check for result w/errors
+            if (scriptResponse != null
+                && scriptResponse.errorNumber != 0)
+            {
+                throw new ScriptException(
+                    $"Can't execute script (error number: {scriptResponse.errorNumber}, message: {scriptResponse.errorString}).",
+                    null);
             }
         }
 
@@ -182,6 +179,22 @@ namespace TptMain.InDesign
             return scriptFile.Exists
                 ? scriptFile
                 : _defaultScriptFile;
+        }
+    }
+
+    /// <summary>
+    /// Basic exception for IDS script errors.
+    /// </summary>
+    public class ScriptException : ApplicationException
+    {
+        /// <summary>
+        /// Basic ctor.
+        /// </summary>
+        /// <param name="messageText">Message text (optional, may be null).</param>
+        /// <param name="causeEx">Cause exception (optional, may be null).</param>
+        public ScriptException(string messageText, Exception causeEx)
+            : base(messageText, causeEx)
+        {
         }
     }
 }
