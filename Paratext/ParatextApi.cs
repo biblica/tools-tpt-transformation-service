@@ -49,7 +49,7 @@ namespace TptMain.Paratext
         /// <summary>
         /// Semaphore using to handle thread safety when gathering projects.
         /// </summary>
-        static SemaphoreSlim _projectsSemaphore = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim ProjectsSemaphore = new SemaphoreSlim(1, 1);
 
         /// <summary>
         /// How long cached items have until they expire in seconds.
@@ -186,14 +186,14 @@ namespace TptMain.Paratext
             {
                 if (projectMembersResponse.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation($"Successfully got PT project members response");
+                    _logger.LogInformation("Successfully got PT project members response");
 
                     // Read content and deserialize
                     var content = await projectMembersResponse.Content.ReadAsStringAsync();
                     var projectMembersList = JsonConvert.DeserializeObject<List<ProjectMember>>(content);
 
                     // Filter out each member that is allowed access to the project based on their role
-                    foreach (ProjectMember member in projectMembersList)
+                    foreach (var member in projectMembersList)
                     {
                         if (_allowedMemberRoles.Contains(member.Role))
                         {
@@ -216,15 +216,15 @@ namespace TptMain.Paratext
         /// <returns>Available projects.</returns>
         public virtual async Task<List<Project>> GetParatextProjectsAsync()
         {
-            _logger.LogDebug($"Getting list of Paratext projects");
-            
+            _logger.LogDebug("Getting list of Paratext projects");
+
             List<Project> projectsList = null;
 
             // Asynchronously wait to enter the Semaphore. If no-one has been granted access to the Semaphore, code execution will proceed, 
             // otherwise this thread waits here until the semaphore is released. 
             //
             // The projects request is one we'll use repeatedly, so we'll ensure we're retrieving and caching in a threadsafe manner.
-            await _projectsSemaphore.WaitAsync();
+            await ProjectsSemaphore.WaitAsync();
             try
             {
 
@@ -232,7 +232,7 @@ namespace TptMain.Paratext
                 projectsList = (List<Project>)ApiCache.Get(ProjectsCacheKey);
                 if (projectsList != null)
                 {
-                    _logger.LogDebug($"Retrieved cached version of Paratext projects response");
+                    _logger.LogDebug("Retrieved cached version of Paratext projects response");
                     return projectsList;
                 }
 
@@ -241,7 +241,7 @@ namespace TptMain.Paratext
                 {
                     if (projectsResponse.IsSuccessStatusCode)
                     {
-                        _logger.LogInformation($"Successfully got Paratext projects response");
+                        _logger.LogInformation("Successfully got Paratext projects response");
 
                         var content = await projectsResponse.Content.ReadAsStringAsync();
                         projectsList = JsonConvert.DeserializeObject<List<Project>>(content);
@@ -253,9 +253,10 @@ namespace TptMain.Paratext
                         throw new HttpRequestException($"Got an error HTTP response retrieving projects. HTTP status code: '{projectsResponse.StatusCode}'. Phrase: '{projectsResponse.ReasonPhrase}'");
                     }
                 }
-            } finally
+            }
+            finally
             {
-                _projectsSemaphore.Release();
+                ProjectsSemaphore.Release();
             }
 
             return projectsList;
@@ -271,7 +272,7 @@ namespace TptMain.Paratext
             // Validate input
             _ = shortname ?? throw new ArgumentException(nameof(shortname));
 
-            List<Project> projects = await GetParatextProjectsAsync();
+            var projects = await GetParatextProjectsAsync();
 
             // Find project with given short name
             var foundProject = projects.Find(project => project.Identification_ShortName.Equals(shortname, StringComparison.InvariantCultureIgnoreCase));

@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -56,10 +55,9 @@ namespace TptTest
         [TestMethod]
         public void InstantiateTest()
         {
-            var scriptRunner =
-                new ScriptRunner(
-                    _mockLogger.Object,
-                    _testConfiguration);
+            new ScriptRunner(
+                _mockLogger.Object,
+                _testConfiguration);
             _testConfiguration.AssertIfNotAllKeysChecked();
         }
     }

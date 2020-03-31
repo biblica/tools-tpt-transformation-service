@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using TptMain.Http;
 using TptMain.InDesign;
 using TptMain.Jobs;
@@ -75,7 +74,7 @@ namespace TptTest
             configKeys[ParatextApi.ParatextApiUsernameKey] = ParatextApiTests.TEST_PT_API_USERNAME;
             configKeys[ParatextApi.ParatextApiPasswordKey] = ParatextApiTests.TEST_PT_API_PASSWORD;
             configKeys[ParatextApi.ParatextApiProjectCacheAgeInSecKey] = ParatextApiTests.TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC.ToString();
-            for (int i = 0; i < ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES.Count; i++)
+            for (var i = 0; i < ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES.Count; i++)
             {
                 configKeys[ParatextApi.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
             }
@@ -138,14 +137,13 @@ namespace TptTest
         [TestMethod]
         public void InstantiateTest()
         {
-            var jobWorkflow =
-                new JobWorkflow(
-                    _mockJobManagerLogger.Object,
-                    _mockJobManager.Object,
-                    _mockScriptRunner.Object,
-                    _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
-                    TestUtils.CreateTestPreviewJob());
+            new JobWorkflow(
+                _mockJobManagerLogger.Object,
+                _mockJobManager.Object,
+                _mockScriptRunner.Object,
+                _mockTemplateManager.Object,
+                _mockParatextApi.Object,
+                TestUtils.CreateTestPreviewJob());
         }
 
         /// <summary>
@@ -172,7 +170,7 @@ namespace TptTest
                 workflowItem.IsJobCanceled).CallBase();
 
             // setup mocks
-            _mockParatextApi.Setup(paratextApi => 
+            _mockParatextApi.Setup(paratextApi =>
                 paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
                 .Verifiable();
 
@@ -279,7 +277,7 @@ namespace TptTest
 
             // execute
             // execute: start check in background thread, then cancel from test thread.
-            Thread workThread = new Thread(() =>
+            var workThread = new Thread(() =>
                 mockWorkflow.Object.RunJob())
             { IsBackground = true };
             workThread.Start();

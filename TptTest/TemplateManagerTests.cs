@@ -1,15 +1,12 @@
 using System;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Threading;
 using TptMain.Http;
-using TptMain.InDesign;
 using TptMain.Models;
 using TptMain.Toolbox;
 
@@ -65,10 +62,9 @@ namespace TptTest
         [TestMethod]
         public void InstantiateTest()
         {
-            var templateManager =
-                new TemplateManager(_mockLogger.Object,
-                    _testConfiguration,
-                    _mockRequestFactory.Object);
+            new TemplateManager(_mockLogger.Object,
+                _testConfiguration,
+                _mockRequestFactory.Object);
             _testConfiguration.AssertIfNotAllKeysChecked();
         }
 
@@ -93,11 +89,11 @@ namespace TptTest
                 .CallBase();
 
             // create local mocks & placeholders
-            Mock<WebRequest> mockWebRequest = new Mock<WebRequest>(MockBehavior.Strict);
-            Mock<WebResponse> mockWebResponse = new Mock<WebResponse>(MockBehavior.Strict);
-            FileInfo testInputFile = new FileInfo(
+            var mockWebRequest = new Mock<WebRequest>(MockBehavior.Strict);
+            var mockWebResponse = new Mock<WebResponse>(MockBehavior.Strict);
+            var testInputFile = new FileInfo(
                 @"Resources\test-template.idml");
-            FileInfo testOutputFile = new FileInfo($"{Guid.NewGuid().ToString()}.idml");
+            var testOutputFile = new FileInfo($"{Guid.NewGuid().ToString()}.idml");
             using Stream testInputStream = testInputFile.OpenRead();
 
             // setup mocks
@@ -161,11 +157,9 @@ namespace TptTest
                 .CallBase();
 
             // create local mocks & placeholders
-            Mock<WebRequest> mockWebRequest = new Mock<WebRequest>(MockBehavior.Strict);
-            Mock<WebResponse> mockWebResponse = new Mock<WebResponse>(MockBehavior.Strict);
-            FileInfo testInputFile = new FileInfo(
-                @"Resources\test-template.idml");
-            FileInfo testOutputFile = new FileInfo($"{Guid.NewGuid().ToString()}.idml");
+            var mockWebRequest = new Mock<WebRequest>(MockBehavior.Strict);
+            var mockWebResponse = new Mock<WebResponse>(MockBehavior.Strict);
+            var testOutputFile = new FileInfo($"{Guid.NewGuid().ToString()}.idml");
 
             // setup mocks
             _mockRequestFactory.Setup(factoryItem =>

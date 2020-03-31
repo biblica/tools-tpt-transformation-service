@@ -17,7 +17,7 @@ namespace TptMain.Jobs
     /// <summary>
     /// Job manager for handling typesetting preview job request management and execution.
     /// </summary>
-    public partial class JobManager : IDisposable
+    public class JobManager : IDisposable
     {
         /// <summary>
         /// IDML directory config key.
@@ -38,11 +38,6 @@ namespace TptMain.Jobs
         /// Type-specific logger (injected).
         /// </summary>
         private readonly ILogger<JobManager> _logger;
-
-        /// <summary>
-        /// System configuration (injected).
-        /// </summary>
-        private readonly IConfiguration _configuration;
 
         /// <summary>
         /// Job preview context (persistence; injected).
@@ -100,11 +95,6 @@ namespace TptMain.Jobs
         public DirectoryInfo IdmlDirectory => _idmlDirectory;
 
         /// <summary>
-        /// Preview PDF storage directory.
-        /// </summary>
-        public DirectoryInfo PdfDirectory => _pdfDirectory;
-
-        /// <summary>
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
@@ -112,7 +102,7 @@ namespace TptMain.Jobs
         /// <param name="previewContext">Job preview context (persistence; required).</param>
         /// <param name="scriptRunner">Script runner (required).</param>
         /// <param name="templateManager">Template manager (required).</param>
-        /// <param name="paratextApi">Paratext API for verifiying user authorization on projects (required).</param>
+        /// <param name="paratextApi">Paratext API for verifying user authorization on projects (required).</param>
         /// <param name="jobScheduler">Job scheduler (required).</param>
         public JobManager(
             ILogger<JobManager> logger,
@@ -124,19 +114,19 @@ namespace TptMain.Jobs
             JobScheduler jobScheduler)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _previewContext = previewContext ?? throw new ArgumentNullException(nameof(previewContext));
             _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _paratextApi = paratextApi ?? throw new ArgumentNullException(nameof(paratextApi));
             _jobScheduler = jobScheduler ?? throw new ArgumentNullException(nameof(jobScheduler));
 
-            _idmlDirectory = new DirectoryInfo(_configuration[IdmlDocDirKey]
-                ?? throw new ArgumentNullException(IdmlDocDirKey));
-            _pdfDirectory = new DirectoryInfo(_configuration[PdfDocDirKey]
-                ?? throw new ArgumentNullException(PdfDocDirKey));
-            _maxDocAgeInSec = int.Parse(_configuration[MaxDocAgeInSecKey]
-                ?? throw new ArgumentNullException(MaxDocAgeInSecKey));
+            _idmlDirectory = new DirectoryInfo(configuration[IdmlDocDirKey]
+                                               ?? throw new ArgumentNullException(IdmlDocDirKey));
+            _pdfDirectory = new DirectoryInfo(configuration[PdfDocDirKey]
+                                              ?? throw new ArgumentNullException(PdfDocDirKey));
+            _maxDocAgeInSec = int.Parse(configuration[MaxDocAgeInSecKey]
+                                        ?? throw new ArgumentNullException(MaxDocAgeInSecKey));
             _jobCheckTimer = new Timer((stateObject) => { CheckPreviewJobs(); }, null,
                  TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
                  TimeSpan.FromSeconds(_maxDocAgeInSec / MainConsts.MAX_AGE_CHECK_DIVISOR));
@@ -189,7 +179,7 @@ namespace TptMain.Jobs
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, $"Can't check preview jobs.");
+                _logger.LogWarning(ex, "Can't check preview jobs.");
             }
         }
 
@@ -238,7 +228,7 @@ namespace TptMain.Jobs
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, $"Can't check document files.");
+                _logger.LogWarning(ex, "Can't check document files.");
             }
         }
 
@@ -334,7 +324,7 @@ namespace TptMain.Jobs
             _logger.LogDebug($"TryUpdateJob() - nextJob={nextJob.Id}.");
             lock (_previewContext)
             {
-                if (TryGetJob(nextJob.Id, out var prevJob))
+                if (IsJobId(nextJob.Id))
                 {
                     _previewContext.Entry(nextJob).State = EntityState.Modified;
                     _previewContext.SaveChanges();
@@ -361,6 +351,20 @@ namespace TptMain.Jobs
             {
                 previewJob = _previewContext.PreviewJobs.Find(jobId);
                 return (previewJob != null);
+            }
+        }
+
+        /// <summary>
+        /// Checks whether a given job exists, based on ID.
+        /// </summary>
+        /// <param name="jobId">Job ID to retrieve (required).</param>
+        /// <returns>True if job exists, false otherwise.</returns>
+        public virtual bool IsJobId(string jobId)
+        {
+            _logger.LogDebug($"IsJobId() - jobId={jobId}.");
+            lock (_previewContext)
+            {
+                return _previewContext.PreviewJobs.Find(jobId) != null;
             }
         }
 

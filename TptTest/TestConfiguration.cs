@@ -3,14 +3,13 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace TptTest
 {
     /// <summary>
     /// Test configuration class.
     /// 
-    /// Used becaused MOQ can't mock extension methods, 
+    /// Used because MOQ can't mock extension methods, 
     /// which is mostly how IConfiguration is used.
     /// </summary>
     class TestConfiguration : IConfiguration
@@ -18,12 +17,12 @@ namespace TptTest
         /// <summary>
         /// Map of allowed keys/values.
         /// </summary>
-        private IDictionary<string, string> _configMap;
+        private readonly IDictionary<string, string> _configMap;
 
         /// <summary>
         /// Set of checked (retrieved) keys.
         /// </summary>
-        private ISet<string> _checkedKeys;
+        private readonly ISet<string> _checkedKeys;
 
         /// <summary>
         /// Read-only accessor for checked keys.
