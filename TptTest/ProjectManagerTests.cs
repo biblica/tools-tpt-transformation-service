@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Collections.Generic;
-using TptMain.InDesign;
 using TptMain.Projects;
 
 namespace TptTest
@@ -53,10 +52,9 @@ namespace TptTest
         [TestMethod]
         public void InstantiateTest()
         {
-            var projectManager =
-                new ProjectManager(
-                    _mockLogger.Object,
-                    _testConfiguration);
+            new ProjectManager(
+                _mockLogger.Object,
+                _testConfiguration);
             _testConfiguration.AssertIfNotAllKeysChecked();
         }
     }

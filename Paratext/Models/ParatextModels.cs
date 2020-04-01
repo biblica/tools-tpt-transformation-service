@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
 
-/// <summary>
-/// This namespace holds all the classes used for serializing and deserializing PT API requests and responses.
-/// </summary>
 namespace TptMain.Paratext.Models
 {
     /// <summary>

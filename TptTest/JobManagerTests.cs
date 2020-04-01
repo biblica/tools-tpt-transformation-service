@@ -93,7 +93,7 @@ namespace TptTest
             configKeys[ParatextApi.ParatextApiUsernameKey] = ParatextApiTests.TEST_PT_API_USERNAME;
             configKeys[ParatextApi.ParatextApiPasswordKey] = ParatextApiTests.TEST_PT_API_PASSWORD;
             configKeys[ParatextApi.ParatextApiProjectCacheAgeInSecKey] = ParatextApiTests.TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC.ToString();
-            for (int i = 0; i < ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES.Count; i++)
+            for (var i = 0; i < ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES.Count; i++)
             {
                 configKeys[ParatextApi.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
             }
@@ -150,15 +150,14 @@ namespace TptTest
         public void InstantiateTest()
         {
             // ctor
-            var jobManager =
-                new JobManager(
-                    _mockLogger.Object,
-                    _testConfiguration,
-                    _mockContext.Object,
-                    _mockScriptRunner.Object,
-                    _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
-                    _mockJobScheduler.Object);
+            new JobManager(
+                _mockLogger.Object,
+                _testConfiguration,
+                _mockContext.Object,
+                _mockScriptRunner.Object,
+                _mockTemplateManager.Object,
+                _mockParatextApi.Object,
+                _mockJobScheduler.Object);
         }
     }
 }

@@ -20,9 +20,13 @@ book.automaticPagination = true;
 // Find & sort source documents to read
 var txtFolder = new Folder(txtDir);
 var txtFiles1 = txtFolder.getFiles("books-*.txt");
-txtFiles1.sort(function (f1, f2) { return f1.name.localeCompare(f2.name); });
+txtFiles1.sort(function (f1, f2) {
+    return f1.name.localeCompare(f2.name);
+});
 var txtFiles2 = txtFolder.getFiles("book-*.txt");
-txtFiles2.sort(function (f1, f2) { return f1.name.localeCompare(f2.name); });
+txtFiles2.sort(function (f1, f2) {
+    return f1.name.localeCompare(f2.name);
+});
 var txtFiles = txtFiles1.concat(txtFiles2);
 
 // Create IDS document for each source, then add to book
@@ -41,14 +45,14 @@ for (var ctr = 0;
         if (doc.paragraphStyles[i].basedOn === "[No Paragraph Style]") {
             doc.paragraphStyles[i].composer = "Adobe World-Ready Paragraph Composer";
             doc.paragraphStyles[i].appliedLanguage = app.languagesWithVendors.itemByName("Arabic");
-            doc.paragraphStyles[i].appliedFont = "Adobe Arabic"
-            doc.paragraphStyles[i].paragraphDirection = ParagraphDirectionOptions.RIGHT_TO_LEFT_DIRECTION
+            doc.paragraphStyles[i].appliedFont = "Adobe Arabic";
+            doc.paragraphStyles[i].paragraphDirection = ParagraphDirectionOptions.RIGHT_TO_LEFT_DIRECTION;
         }
         if (doc.paragraphStyles[i].name === "DefaultHeading") {
             doc.paragraphStyles[i].composer = "Adobe World-Ready Paragraph Composer";
             doc.paragraphStyles[i].appliedLanguage = app.languagesWithVendors.itemByName("Arabic");
-            doc.paragraphStyles[i].appliedFont = "Adobe Arabic"
-            doc.paragraphStyles[i].paragraphDirection = ParagraphDirectionOptions.RIGHT_TO_LEFT_DIRECTION
+            doc.paragraphStyles[i].appliedFont = "Adobe Arabic";
+            doc.paragraphStyles[i].paragraphDirection = ParagraphDirectionOptions.RIGHT_TO_LEFT_DIRECTION;
         }
     }
     for (var i = 1; i < doc.characterStyles.count(); i++) {
@@ -93,7 +97,7 @@ for (var ctr = 0;
 
         for (var p = doc.pages.length - 1; p > 0; p--) {
             if (doc.pages[p].textFrames[0].contents.length == 0) {
-                doc.pages[p].remove()
+                doc.pages[p].remove();
             }
         }
         doc.preflightOptions.preflightOff = false;
@@ -114,8 +118,8 @@ for (var ctr = 0;
 }
 
 // Save book & export to PDF
-book.save()
+book.save();
 book.exportFile(ExportFormat.PDF_TYPE, pdfPath);
 
 // Close & exit
-book.close(SaveOptions.YES)
+book.close(SaveOptions.YES);

@@ -1,5 +1,4 @@
-﻿
-// Get job ID & project name from script args
+﻿// Get job ID & project name from script args
 var jobId = app.scriptArgs.getValue("jobId");
 var projectName = app.scriptArgs.getValue("projectName");
 var bookFormat = app.scriptArgs.getValue("bookFormat");
@@ -21,9 +20,13 @@ book.automaticPagination = true;
 // Find & sort source documents to read
 var txtFolder = new Folder(txtDir);
 var txtFiles1 = txtFolder.getFiles("books-*.txt");
-txtFiles1.sort(function (f1, f2) { return f1.name.localeCompare(f2.name); });
+txtFiles1.sort(function (f1, f2) {
+    return f1.name.localeCompare(f2.name);
+});
 var txtFiles2 = txtFolder.getFiles("book-*.txt");
-txtFiles2.sort(function (f1, f2) { return f1.name.localeCompare(f2.name); });
+txtFiles2.sort(function (f1, f2) {
+    return f1.name.localeCompare(f2.name);
+});
 var txtFiles = txtFiles1.concat(txtFiles2);
 
 // Create IDS document for each source, then add to book
@@ -42,12 +45,12 @@ for (var ctr = 0;
         if (doc.paragraphStyles[i].basedOn === "[No Paragraph Style]") {
             doc.paragraphStyles[i].composer = "Adobe World-Ready Paragraph Composer";
             doc.paragraphStyles[i].appliedLanguage = app.languagesWithVendors.itemByName("Japanese");
-            doc.paragraphStyles[i].appliedFont = "MS Gothic"
+            doc.paragraphStyles[i].appliedFont = "MS Gothic";
         }
         if (doc.paragraphStyles[i].name === "DefaultHeading") {
             doc.paragraphStyles[i].composer = "Adobe World-Ready Paragraph Composer";
             doc.paragraphStyles[i].appliedLanguage = app.languagesWithVendors.itemByName("Japanese");
-            doc.paragraphStyles[i].appliedFont = "MS Gothic"
+            doc.paragraphStyles[i].appliedFont = "MS Gothic";
         }
     }
     for (var i = 1; i < doc.characterStyles.count(); i++) {
@@ -117,4 +120,4 @@ book.save()
 book.exportFile(ExportFormat.PDF_TYPE, pdfPath);
 
 // Close & exit
-book.close(SaveOptions.YES)
+book.close(SaveOptions.YES);

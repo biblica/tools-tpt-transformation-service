@@ -22,9 +22,9 @@ namespace TptTest
         public const string TEST_PT_API_USERNAME = "JohnSmith";
         public const string TEST_PT_API_PASSWORD = "ComplexPassword1!";
         public const double TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC = 1;
-        public static readonly List<MemberRole> TEST_PT_API_ALLOWED_MEMBER_ROLES = new List<MemberRole> () {
+        public static readonly List<MemberRole> TEST_PT_API_ALLOWED_MEMBER_ROLES = new List<MemberRole>() {
             MemberRole.pt_administrator,
-            MemberRole.pt_consultant 
+            MemberRole.pt_consultant
         };
         public static readonly MemberRole INVALID_MEMBER_ROLE = MemberRole.pt_write_note;
 
@@ -78,7 +78,7 @@ namespace TptTest
             configKeys[ParatextApi.ParatextApiUsernameKey] = ParatextApiTests.TEST_PT_API_USERNAME;
             configKeys[ParatextApi.ParatextApiPasswordKey] = ParatextApiTests.TEST_PT_API_PASSWORD;
             configKeys[ParatextApi.ParatextApiProjectCacheAgeInSecKey] = ParatextApiTests.TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC.ToString();
-            for (int i = 0; i < ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES.Count; i++)
+            for (var i = 0; i < ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES.Count; i++)
             {
                 configKeys[ParatextApi.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
             }
@@ -207,9 +207,9 @@ namespace TptTest
             // setup HTTP call and response from Paratext for retrieving project members
             _mockHttpMessageHandlerSetup
                 .ReturnsAsync(new HttpResponseMessage()
-                    {
-                        StatusCode = System.Net.HttpStatusCode.OK,
-                        Content = new StringContent($@"[
+                {
+                    StatusCode = System.Net.HttpStatusCode.OK,
+                    Content = new StringContent($@"[
                               {{
                                 ""role"": ""{validRole}"",
                                 ""userId"": ""gDK89teGJLa5FeXvs"",
@@ -221,7 +221,7 @@ namespace TptTest
                                 ""username"": ""{invalidUser}""
                               }}
                         ]")
-                    })
+                })
                .Verifiable();
 
             // setup functions that should work normally
