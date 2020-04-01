@@ -1,0 +1,49 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=_CHANGE_ME;Trusted_Connection=True;MultipleActiveResultSets=true"
+  },
+  "Jobs": {
+    "MaxConcurrent": "4"
+  },
+  "InDesign": {
+    "ServerUri": "http://172.31.10.90:9876/service",
+    "TimeoutInSec": "3600",
+    "PreviewScriptDirectory": "C:\\Work\\JSX",
+    "PreviewScriptNameFormat": "TypesettingPreview{0}.jsx"
+  },
+  "Paratext": {
+    "API": {
+      "ServerUri": "https://registry.paratext.org/api8/",
+      "Username": "",
+      "Password": "",
+      "ProjectCacheAgeInSec": 30,
+      "AllowedMemberRoles": [
+        "pt_administrator",
+        "pt_consultant",
+        "pt_translator"
+      ]
+    }
+  },
+  "Docs": {
+    "MaxAgeInSec": "86400",
+    "IDML": {
+      "Directory": "C:\\Work\\IDML"
+    },
+    "IDTT": {
+      "Directory": "C:\\Work\\IDTT",
+      "CheckIntervalInSec": "120"
+    },
+    "Paratext": {
+      "Directory": "C:\\Work\\Paratext"
+    },
+    "PDF": {
+      "Directory": "C:\\Work\\PDF"
+    }
+  },
+  "Toolbox": {
+    "Template": {
+      "ServerUri": "http://172.31.10.175:3000/idtt/template/create",
+      "TimeoutInSec": "600"
+    }
+  }
+}

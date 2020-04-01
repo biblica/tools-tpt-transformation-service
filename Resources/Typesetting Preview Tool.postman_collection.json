@@ -1,0 +1,234 @@
+{
+	"info": {
+		"_postman_id": "666ad1f5-f8aa-432e-98cc-f43046a80974",
+		"name": "Typesetting Preview Tool",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Preview Jobs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://10.20.2.4:9875/api/PreviewJobs/dcb10035-73d2-4943-ae3f-e637f91f1153",
+					"protocol": "http",
+					"host": [
+						"10",
+						"20",
+						"2",
+						"4"
+					],
+					"port": "9875",
+					"path": [
+						"api",
+						"PreviewJobs",
+						"dcb10035-73d2-4943-ae3f-e637f91f1153"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Get Preview Jobs",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://10.20.2.4:9875/api/PreviewJobs/81b849e8-4fad-4870-a0f2-2f3cf5c62a6c",
+							"protocol": "http",
+							"host": [
+								"10",
+								"20",
+								"2",
+								"4"
+							],
+							"port": "9875",
+							"path": [
+								"api",
+								"PreviewJobs",
+								"81b849e8-4fad-4870-a0f2-2f3cf5c62a6c"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Server",
+							"value": "Microsoft-IIS/10.0"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 28 Oct 2019 03:50:30 GMT"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"id\": \"81b849e8-4fad-4870-a0f2-2f3cf5c62a6c\",\n    \"dateSubmitted\": \"2019-10-28T03:49:35.590241Z\",\n    \"dateStarted\": \"2019-10-28T03:49:36.0034986Z\",\n    \"dateCompleted\": \"2019-10-28T03:49:37.6720261Z\",\n    \"dateCancelled\": null,\n    \"projectName\": \"spaNVI15\",\n    \"isSubmitted\": true,\n    \"isStarted\": true,\n    \"isCompleted\": true,\n    \"isCancelled\": false,\n    \"isError\": true\n}"
+				}
+			]
+		},
+		{
+			"name": "Delete Preview Job",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://10.20.2.4:9875/api/PreviewJobs/59e2b17d-a905-4ad3-82af-c8919e1ff10d",
+					"protocol": "http",
+					"host": [
+						"10",
+						"20",
+						"2",
+						"4"
+					],
+					"port": "9875",
+					"path": [
+						"api",
+						"PreviewJobs",
+						"59e2b17d-a905-4ad3-82af-c8919e1ff10d"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Preview Job",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"projectName\": \"spaNVI15\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://10.20.2.4:9875/api/PreviewJobs",
+					"protocol": "http",
+					"host": [
+						"10",
+						"20",
+						"2",
+						"4"
+					],
+					"port": "9875",
+					"path": [
+						"api",
+						"PreviewJobs"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Create Preview Job",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"projectName\": \"spaNVI15\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://10.20.2.4:9875/api/PreviewJobs",
+							"protocol": "http",
+							"host": [
+								"10",
+								"20",
+								"2",
+								"4"
+							],
+							"port": "9875",
+							"path": [
+								"api",
+								"PreviewJobs"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Location",
+							"value": "http://10.20.2.4:9875/api/PreviewJobs/81b849e8-4fad-4870-a0f2-2f3cf5c62a6c"
+						},
+						{
+							"key": "Server",
+							"value": "Microsoft-IIS/10.0"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 28 Oct 2019 03:49:36 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "295"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"id\": \"81b849e8-4fad-4870-a0f2-2f3cf5c62a6c\",\n    \"dateSubmitted\": \"2019-10-28T03:49:35.590241Z\",\n    \"dateStarted\": \"2019-10-28T03:49:36.0034986Z\",\n    \"dateCompleted\": null,\n    \"dateCancelled\": null,\n    \"projectName\": \"spaNVI15\",\n    \"isSubmitted\": true,\n    \"isStarted\": true,\n    \"isCompleted\": false,\n    \"isCancelled\": false,\n    \"isError\": false\n}"
+				}
+			]
+		},
+		{
+			"name": "Download Preview File",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://10.20.2.4:9875/api/PreviewFile/04771c76-8730-446d-b6dd-ffac76287e90",
+					"protocol": "http",
+					"host": [
+						"10",
+						"20",
+						"2",
+						"4"
+					],
+					"port": "9875",
+					"path": [
+						"api",
+						"PreviewFile",
+						"04771c76-8730-446d-b6dd-ffac76287e90"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
