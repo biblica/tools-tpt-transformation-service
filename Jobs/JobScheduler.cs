@@ -43,16 +43,6 @@ namespace TptMain.Jobs
         private readonly ILogger<JobScheduler> _logger;
 
         /// <summary>
-        /// System configuration (injected).
-        /// </summary>
-        private readonly IConfiguration _configuration;
-
-        /// <summary>
-        /// Max concurrent jobs (configured).
-        /// </summary>
-        private readonly int _maxConcurrentJobs;
-
-        /// <summary>
         /// Semaphore for tracking max concurrent tasks.
         /// </summary>
         private readonly SemaphoreSlim _taskSemaphore;
@@ -87,11 +77,10 @@ namespace TptMain.Jobs
             IConfiguration configuration)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _maxConcurrentJobs = int.Parse(_configuration[MaxConcurrentJobsKey]
-                ?? throw new ArgumentNullException(MaxConcurrentJobsKey));
-            _taskSemaphore = new SemaphoreSlim(_maxConcurrentJobs);
+            _taskSemaphore = new SemaphoreSlim(int.Parse(configuration[MaxConcurrentJobsKey]
+                                                         ?? throw new ArgumentNullException(MaxConcurrentJobsKey)));
             _jobQueue = new BlockingCollection<JobWorkflow>();
             _jobMap = new ConcurrentDictionary<string, JobWorkflow>();
 

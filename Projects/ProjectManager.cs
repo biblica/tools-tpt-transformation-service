@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using TptMain.Models;
 using TptMain.Util;
@@ -13,12 +14,17 @@ namespace TptMain.Projects
     /// <summary>
     /// Project manager, provider of Paratext project details.
     /// </summary>
-    public class ProjectManager
+    public class ProjectManager : IDisposable
     {
         /// <summary>
         /// IDTT directory config key.
         /// </summary>
         private const string IdttDirKey = "Docs:IDTT:Directory";
+
+        /// <summary>
+        /// Paratext directory config key.
+        /// </summary>
+        private const string ParatextDirKey = "Docs:Paratext:Directory";
 
         /// <summary>
         /// IDTT check interval config key.
@@ -31,19 +37,14 @@ namespace TptMain.Projects
         private readonly ILogger<ProjectManager> _logger;
 
         /// <summary>
-        /// System configuration (injected).
-        /// </summary>
-        private readonly IConfiguration _configuration;
-
-        /// <summary>
         /// IDTT directory (configured).
         /// </summary>
         private readonly DirectoryInfo _idttDirectory;
 
         /// <summary>
-        /// IDTT check interval, in seconds (configured).
+        /// Paratext directory (configured).
         /// </summary>
-        private readonly int _idttCheckIntervalInSec;
+        private readonly DirectoryInfo _paratextDirectory;
 
         /// <summary>
         /// IDTT check timer.
@@ -65,19 +66,24 @@ namespace TptMain.Projects
             IConfiguration configuration)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _idttDirectory = new DirectoryInfo(_configuration[IdttDirKey]
-                ?? throw new ArgumentNullException(IdttDirKey));
-            _idttCheckIntervalInSec = int.Parse(_configuration[IdttCheckIntervalInSecKey]
-                ?? throw new ArgumentNullException(IdttCheckIntervalInSecKey));
+            _idttDirectory = new DirectoryInfo(configuration[IdttDirKey]
+                                               ?? throw new ArgumentNullException(IdttDirKey));
+            _paratextDirectory = new DirectoryInfo(configuration[ParatextDirKey]
+                                                   ?? throw new ArgumentNullException(ParatextDirKey));
             _projectCheckTimer = new Timer((stateObject) => { CheckProjectFiles(); }, null,
                 TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
-                TimeSpan.FromSeconds(_idttCheckIntervalInSec));
+                TimeSpan.FromSeconds(int.Parse(configuration[IdttCheckIntervalInSecKey]
+                                               ?? throw new ArgumentNullException(IdttCheckIntervalInSecKey))));
 
             if (!Directory.Exists(_idttDirectory.FullName))
             {
                 Directory.CreateDirectory(_idttDirectory.FullName);
+            }
+            if (!Directory.Exists(_paratextDirectory.FullName))
+            {
+                Directory.CreateDirectory(_paratextDirectory.FullName);
             }
             _logger.LogDebug("ProjectManager()");
         }
@@ -94,22 +100,36 @@ namespace TptMain.Projects
                     _logger.LogDebug("Checking IDTT files...");
 
                     IDictionary<string, ProjectDetails> newProjectDetails = new SortedDictionary<string, ProjectDetails>();
-                    foreach (var directoryItem in Directory.EnumerateDirectories(_idttDirectory.FullName))
+                    foreach (var projectDir in _paratextDirectory.GetDirectories())
                     {
-                        var dateTime = DateTime.MinValue;
-                        foreach (var fileItem in Directory.EnumerateFiles(directoryItem))
+                        var sfmFiles = projectDir.GetFiles("*.SFM");
+                        if (sfmFiles.Length > 0)
                         {
-                            var lastWriteTime = File.GetLastWriteTimeUtc(fileItem);
-                            if (lastWriteTime > dateTime)
+                            var projectName = projectDir.Name;
+                            var formatDirs = new[] {
+                                new DirectoryInfo(
+                                    Path.Join(_idttDirectory.FullName,
+                                        BookFormat.cav.ToString(),
+                                        projectName)),
+                                new DirectoryInfo(
+                                    Path.Join(_idttDirectory.FullName,
+                                        BookFormat.tbotb.ToString(),
+                                        projectName))
+                            };
+
+                            if (formatDirs.All(dirItem => dirItem.Exists))
                             {
-                                dateTime = lastWriteTime;
+                                newProjectDetails[projectName] = new ProjectDetails
+                                {
+                                    ProjectName = projectName,
+                                    ProjectUpdated =
+                                        formatDirs
+                                            .Select(dirItem => dirItem.LastWriteTimeUtc)
+                                            .Aggregate(DateTime.MinValue,
+                                                (lastTimeUtc, writeTimeUtc) =>
+                                                    writeTimeUtc > lastTimeUtc ? writeTimeUtc : lastTimeUtc)
+                                };
                             }
-                        }
-                        if (dateTime > DateTime.MinValue)
-                        {
-                            var projectName = Path.GetFileName(directoryItem);
-                            newProjectDetails[projectName] = new ProjectDetails
-                            { ProjectName = projectName, ProjectUpdated = dateTime };
                         }
                     }
 
@@ -118,7 +138,7 @@ namespace TptMain.Projects
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, $"Can't check IDTT files.");
+                    _logger.LogWarning(ex, "Can't check IDTT files.");
                 }
             }
         }
@@ -141,6 +161,13 @@ namespace TptMain.Projects
                 projectDetails = _projectDetails;
                 return (projectDetails.Count > 0);
             }
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _logger.LogDebug("Dispose().");
+            _projectCheckTimer.Dispose();
         }
     }
 }

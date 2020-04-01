@@ -7,21 +7,37 @@
   },
   "InDesign": {
     "ServerUri": "http://172.31.10.90:9876/service",
-    "TimeoutInSec": "600",
+    "TimeoutInSec": "3600",
     "PreviewScriptDirectory": "C:\\Work\\JSX",
     "PreviewScriptNameFormat": "TypesettingPreview{0}.jsx"
+  },
+  "Paratext": {
+    "API": {
+      "ServerUri": "https://registry.paratext.org/api8/",
+      "Username": "",
+      "Password": "",
+      "ProjectCacheAgeInSec": 30,
+      "AllowedMemberRoles": [
+        "pt_administrator",
+        "pt_consultant",
+        "pt_translator"
+      ]
+    }
   },
   "Docs": {
     "MaxAgeInSec": "86400",
     "IDML": {
       "Directory": "C:\\Work\\IDML"
     },
-    "PDF": {
-      "Directory": "C:\\Work\\PDF"
-    },
     "IDTT": {
       "Directory": "C:\\Work\\IDTT",
       "CheckIntervalInSec": "120"
+    },
+    "Paratext": {
+      "Directory": "C:\\Work\\Paratext"
+    },
+    "PDF": {
+      "Directory": "C:\\Work\\PDF"
     }
   },
   "Toolbox": {

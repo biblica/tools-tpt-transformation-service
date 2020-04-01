@@ -2,9 +2,9 @@
 using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using TptMain.InDesign;
 using TptMain.Models;
+using TptMain.Paratext;
 using TptMain.Toolbox;
 
 namespace TptMain.Jobs
@@ -35,6 +35,11 @@ namespace TptMain.Jobs
         private readonly TemplateManager _templateManager;
 
         /// <summary>
+        /// Paratext API service used to authorize user access.
+        /// </summary>
+        private readonly ParatextApi _paratextApi;
+
+        /// <summary>
         /// Preview job.
         /// </summary>
         private readonly PreviewJob _previewJob;
@@ -61,19 +66,23 @@ namespace TptMain.Jobs
         /// <param name="jobManager">Job manager constructing this entry (required).</param>
         /// <param name="scriptRunner">Script runner for IDS calls (required).</param>
         /// <param name="templateManager">Template manager for IDML retrieval (required).</param>
+        /// <param name="paratextApi">Paratext API for verifiying user authorization on projects (required).</param>
         /// <param name="previewJob">Job to be executed (required).</param>
         public JobWorkflow(
             ILogger<JobManager> logger,
             JobManager jobManager,
             ScriptRunner scriptRunner,
             TemplateManager templateManager,
-            PreviewJob previewJob)
+            ParatextApi paratextApi,
+            PreviewJob previewJob
+            )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
             _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _previewJob = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
+            _paratextApi = paratextApi ?? throw new ArgumentNullException(nameof(paratextApi));
 
             _cancellationTokenSource = new CancellationTokenSource();
             _logger.LogDebug("JobEntry()");
@@ -89,6 +98,11 @@ namespace TptMain.Jobs
                 _logger.LogInformation($"Job started: {_previewJob.Id}");
                 _previewJob.DateStarted = DateTime.UtcNow;
                 _jobManager.TryUpdateJob(_previewJob);
+
+                if (!IsJobCanceled)
+                {
+                    _paratextApi.IsUserAuthorizedOnProject(_previewJob);
+                }
 
                 if (!IsJobCanceled)
                 {
