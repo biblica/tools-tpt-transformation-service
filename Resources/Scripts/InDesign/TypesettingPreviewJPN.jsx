@@ -71,13 +71,6 @@ for (var ctr = 0;
         // re-enable the preflight error detection for the typesetters benefit
         doc.preflightOptions.preflightOff = false;
 
-        // remove empty pages
-        for (var p = doc.pages.length - 1; p > 0; p--) {
-            if (doc.pages[p].textFrames[0].contents.length == 0) {
-                doc.pages[p].remove()
-            }
-        }
-
         // Save INDD file
         doc.save(docPath);
         doc.close(SaveOptions.YES);
