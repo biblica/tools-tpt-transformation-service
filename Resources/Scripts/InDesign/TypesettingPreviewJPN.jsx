@@ -1,4 +1,27 @@
-﻿// Get job ID & project name from script args
+﻿///////////////////////////////////////////////////////////////////////////////
+// This is an InDesign Server script used to generate previews of a publishing
+// typeset. 
+// 
+// These previews are intended to:
+// 1) Guide translators by helping them understand what changes during the 
+//    translation process will look like in the typesetting process and to 
+//    resolve surprises early.
+// 2) Give typesetters a jumping off point for new translations.
+// 3) Provide an early draft of a typeset for new translations.
+//
+// This script does require a few arguments to run successfully:
+// 1) jobId: The job GUID that assist in tracking the associated InDesign
+//    template file and to output a PDF with a matching job identifier.
+//    Example: '096e0cf3-8d8a-4d11-b787-cce23ce2bad3'
+// 2) projectName: The Bible translation Paratext project short name used to
+//    locate and load the translation's tagged text content.
+//    Example: 'spaNVI15'
+// 3) bookFormat: The book output format. This impacts which template is used 
+//    when generating a typsetting preview. As-of 2020-04-09, there's only two 
+//    book formats: 'cav' and 'tbotb'.
+///////////////////////////////////////////////////////////////////////////////
+
+// Get job ID & project name from script args
 var jobId = app.scriptArgs.getValue("jobId");
 var projectName = app.scriptArgs.getValue("projectName");
 var bookFormat = app.scriptArgs.getValue("bookFormat");
