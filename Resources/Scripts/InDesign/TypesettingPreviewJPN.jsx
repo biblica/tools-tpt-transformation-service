@@ -1,4 +1,27 @@
-﻿// Get job ID & project name from script args
+﻿///////////////////////////////////////////////////////////////////////////////
+// This is an InDesign Server script used to generate previews of a publishing
+// typeset. 
+// 
+// These previews are intended to:
+// 1) Guide translators by helping them understand what changes during the 
+//    translation process will look like in the typesetting process and to 
+//    resolve surprises early.
+// 2) Give typesetters a jumping off point for new translations.
+// 3) Provide an early draft of a typeset for new translations.
+//
+// This script does require a few arguments to run successfully:
+// 1) jobId: The job GUID that assist in tracking the associated InDesign
+//    template file and to output a PDF with a matching job identifier.
+//    Example: '096e0cf3-8d8a-4d11-b787-cce23ce2bad3'
+// 2) projectName: The Bible translation Paratext project short name used to
+//    locate and load the translation's tagged text content.
+//    Example: 'spaNVI15'
+// 3) bookFormat: The book output format. This impacts which template is used 
+//    when generating a typsetting preview. As-of 2020-04-09, there's only two 
+//    book formats: 'cav' and 'tbotb'.
+///////////////////////////////////////////////////////////////////////////////
+
+// Get job ID & project name from script args
 var jobId = app.scriptArgs.getValue("jobId");
 var projectName = app.scriptArgs.getValue("projectName");
 var bookFormat = app.scriptArgs.getValue("bookFormat");
@@ -18,15 +41,15 @@ var book = app.books.add(bookPath);
 book.automaticPagination = true;
 
 // Find & sort source documents to read
+var sortFunction = function sortFunction(f1, f2) {
+    return f1.name.localeCompare(f2.name);
+}
+
 var txtFolder = new Folder(txtDir);
 var txtFiles1 = txtFolder.getFiles("books-*.txt");
-txtFiles1.sort(function (f1, f2) {
-    return f1.name.localeCompare(f2.name);
-});
+txtFiles1.sort(sortFunction);
 var txtFiles2 = txtFolder.getFiles("book-*.txt");
-txtFiles2.sort(function (f1, f2) {
-    return f1.name.localeCompare(f2.name);
-});
+txtFiles2.sort(sortFunction);
 var txtFiles = txtFiles1.concat(txtFiles2);
 
 // Create IDS document for each source, then add to book
@@ -38,6 +61,8 @@ for (var ctr = 0;
 
     // Load template as starting point
     var doc = app.open(idmlDir + 'preview-' + jobId + '.idml');
+
+    // Turn off the preflight error detection while placing text
     doc.preflightOptions.preflightOff = true;
 
     // Setup doc, composer, etc. for Japanese
@@ -61,43 +86,12 @@ for (var ctr = 0;
     }
 
     try {
-
         // Place text
         var layer = doc.layers.lastItem();
         var pageItem = layer.pageItems.lastItem();
         var placement = pageItem.place(txtFile);
-        var story = placement[0];
 
-        // Identify starting points for new pages
-        var spread = doc.spreads[1];
-        var masterPages = doc.masterSpreads[0].pages;
-        var masterLeftTextFrame = masterPages[0].textFrames.firstItem();
-        var masterRightTextFrame = masterPages[1].textFrames.firstItem();
-        var lastTextFrame = doc.pages.lastItem().textFrames.lastItem();
-
-        // Add spreads and connect to provide the right amount of space for text
-        while (lastTextFrame.contents.length > 0) {
-            var priorLastTF = lastTextFrame.previousTextFrame;
-
-            priorLastTF.nextTextFrame = null;
-            lastTextFrame.previousTextFrame = null;
-
-            var newSpread = doc.spreads.add(LocationOptions.AFTER, spread);
-            var newLeftTf = masterLeftTextFrame.duplicate(newSpread.pages[0]);
-            var newRightTf = masterRightTextFrame.duplicate(newSpread.pages[1]);
-
-            priorLastTF.nextTextFrame = newLeftTf;
-            newLeftTf.nextTextFrame = newRightTf;
-            lastTextFrame.previousTextFrame = newRightTf;
-
-            spread = newSpread;
-        }
-
-        for (var p = doc.pages.length - 1; p > 0; p--) {
-            if (doc.pages[p].textFrames[0].contents.length == 0) {
-                doc.pages[p].remove()
-            }
-        }
+        // re-enable the preflight error detection for the typesetters benefit
         doc.preflightOptions.preflightOff = false;
 
         // Save INDD file
@@ -106,7 +100,7 @@ for (var ctr = 0;
 
         // Add to book
         book.bookContents.add(docPath);
-        book.save()
+        book.save();
     } catch (ex) {
         alert("Can't create document: " + docPath
             + ", project: " + projectName
@@ -116,7 +110,7 @@ for (var ctr = 0;
 }
 
 // Save book & export to PDF
-book.save()
+book.save();
 book.exportFile(ExportFormat.PDF_TYPE, pdfPath);
 
 // Close & exit
