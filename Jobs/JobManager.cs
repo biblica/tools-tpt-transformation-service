@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using TptMain.InDesign;
@@ -22,17 +23,27 @@ namespace TptMain.Jobs
         /// <summary>
         /// IDML directory config key.
         /// </summary>
-        private const string IdmlDocDirKey = "Docs:IDML:Directory";
+        public const string IdmlDocDirKey = "Docs:IDML:Directory";
+
+        /// <summary>
+        /// IDTT directory config key.
+        /// </summary>
+        public const string IdttDocDirKey = "Docs:IDTT:Directory";
 
         /// <summary>
         /// PDF directory config key.
         /// </summary>
-        private const string PdfDocDirKey = "Docs:PDF:Directory";
+        public const string PdfDocDirKey = "Docs:PDF:Directory";
+
+        /// <summary>
+        /// Zip directory config key.
+        /// </summary>
+        public const string ZipDocDirKey = "Docs:Zip:Directory";
 
         /// <summary>
         /// Max document age in seconds config key.
         /// </summary>
-        private const string MaxDocAgeInSecKey = "Docs:MaxAgeInSec";
+        public const string MaxDocAgeInSecKey = "Docs:MaxAgeInSec";
 
         /// <summary>
         /// Type-specific logger (injected).
@@ -70,9 +81,19 @@ namespace TptMain.Jobs
         private readonly DirectoryInfo _idmlDirectory;
 
         /// <summary>
+        /// Tagged Text (IDTT) storage directory (configured).
+        /// </summary>
+        private readonly DirectoryInfo _idttDirectory;
+
+        /// <summary>
         /// Preview PDF storage directory (configured).
         /// </summary>
         private readonly DirectoryInfo _pdfDirectory;
+
+        /// <summary>
+        /// Preview zip storage directory (configured).
+        /// </summary>
+        private readonly DirectoryInfo _zipDirectory;
 
         /// <summary>
         /// Max document (IDML, PDF) age, in seconds (configured).
@@ -123,8 +144,12 @@ namespace TptMain.Jobs
 
             _idmlDirectory = new DirectoryInfo(configuration[IdmlDocDirKey]
                                                ?? throw new ArgumentNullException(IdmlDocDirKey));
+            _idttDirectory = new DirectoryInfo(configuration[IdttDocDirKey]
+                                               ?? throw new ArgumentNullException(IdttDocDirKey));
             _pdfDirectory = new DirectoryInfo(configuration[PdfDocDirKey]
                                               ?? throw new ArgumentNullException(PdfDocDirKey));
+            _zipDirectory = new DirectoryInfo(configuration[ZipDocDirKey]
+                                              ?? throw new ArgumentNullException(ZipDocDirKey));
             _maxDocAgeInSec = int.Parse(configuration[MaxDocAgeInSecKey]
                                         ?? throw new ArgumentNullException(MaxDocAgeInSecKey));
             _jobCheckTimer = new Timer((stateObject) => { CheckPreviewJobs(); }, null,
@@ -138,6 +163,12 @@ namespace TptMain.Jobs
             {
                 Directory.CreateDirectory(_pdfDirectory.FullName);
             }
+
+            if (!Directory.Exists(_zipDirectory.FullName))
+            {
+                Directory.CreateDirectory(_zipDirectory.FullName);
+            }
+
             _logger.LogDebug("JobManager()");
         }
 
@@ -184,51 +215,53 @@ namespace TptMain.Jobs
         }
 
         /// <summary>
-        /// Iterate through preview files and clean up old ones.
+        /// Iterate through generated preview files and clean up old ones.
         /// </summary>
         private void CheckDocFiles()
         {
             try
             {
                 _logger.LogDebug("Checking document files...");
-                var checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
 
-                foreach (var fileItem in Directory.EnumerateFiles(_pdfDirectory.FullName, "preview-*.*"))
-                {
-                    var foundFile = new FileInfo(fileItem);
-                    if (foundFile.CreationTimeUtc < checkTime)
-                    {
-                        try
-                        {
-                            foundFile.Delete();
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, $"Can't delete PDF file (will retry): {fileItem}.");
-                        }
-                    }
-                }
-                foreach (var fileItem in Directory.EnumerateFiles(_idmlDirectory.FullName, "preview-*.*"))
-                {
-                    var foundFile = new FileInfo(fileItem);
-                    if (foundFile.CreationTimeUtc < checkTime)
-                    {
-                        try
-                        {
-                            foundFile.Delete();
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, $"Can't delete IDML file (will retry): {fileItem}.");
-                        }
-                    }
-                }
+                DeleteOldFiles(_pdfDirectory.FullName, $"{MainConsts.PREVIEW_FILENAME_PREFIX}*.*");
+                DeleteOldFiles(_idmlDirectory.FullName, $"{MainConsts.PREVIEW_FILENAME_PREFIX}*.*");
+                DeleteOldFiles(_zipDirectory.FullName, $"{MainConsts.PREVIEW_FILENAME_PREFIX}*.*");
 
                 _logger.LogDebug("...Document files checked.");
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Can't check document files.");
+            }
+        }
+
+        /// <summary>
+        /// Delete files that exceed the configured maximum document age in seconds (_maxDocAgeInSec). The files are based on a provided directory and file search pattern.
+        /// </summary>
+        /// <param name="directory">The source directory containing the files we want to assess for deletion. (required)</param>
+        /// <param name="fileSearchPattern">A file search pattern for filtering out files assess for deletion. EG: "preview-*.zip" (required)</param>
+        private void DeleteOldFiles(string directory, string fileSearchPattern)
+        {
+            // Validate inputs
+            _ = directory ?? throw new ArgumentNullException(nameof(directory));
+            _ = fileSearchPattern ?? throw new ArgumentNullException(nameof(fileSearchPattern));
+
+            var checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
+
+            foreach (var fileItem in Directory.EnumerateFiles(directory, fileSearchPattern))
+            {
+                var foundFile = new FileInfo(fileItem);
+                if (foundFile.CreationTimeUtc < checkTime)
+                {
+                    try
+                    {
+                        foundFile.Delete();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, $"Can't delete file (will retry): {fileItem}.");
+                    }
+                }
             }
         }
 
@@ -373,8 +406,10 @@ namespace TptMain.Jobs
         /// </summary>
         /// <param name="jobId">Job ID of preview to retrieve file for.</param>
         /// <param name="fileStream">File stream if found, null otherwise.</param>
+        /// <param name="archive">Whether or not to return an archive of all the typesetting files or just the PDF itself (optional). 
+        /// True: all typesetting files zipped in an archive. False: Output only the preview PDF itself. . Default: false.</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public virtual bool TryGetPreviewStream(string jobId, out FileStream fileStream)
+        public virtual bool TryGetPreviewStream(string jobId, out FileStream fileStream, bool archive)
         {
             _logger.LogDebug($"TryGetPreviewStream() - jobId={jobId}.");
             lock (_previewContext)
@@ -388,10 +423,80 @@ namespace TptMain.Jobs
                 {
                     try
                     {
-                        fileStream = File.Open(
-                            Path.Combine(_pdfDirectory.FullName, $"preview-{previewJob.Id}.pdf"),
-                            FileMode.Open, FileAccess.Read);
-                        return true;
+                        if (archive)
+                        {
+                            _logger.LogDebug($"Preparing archive for job: {jobId}");
+
+                            // readable string format of book format used for find associated files in directories.
+                            var bookFormatStr = Enum.GetName(typeof(BookFormat), BookFormat.cav);
+
+                            /// Archive all typesetting preview files
+                            // Create the initial zip file.
+                            var zipFilePath = Path.Combine(_zipDirectory.FullName, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.zip");
+
+                            // Return file if it already exists
+                            if (File.Exists(zipFilePath))
+                            {
+                                // Return a stream of the file
+                                fileStream = File.Open(
+                                    zipFilePath,
+                                    FileMode.Open, FileAccess.Read);
+
+                                // Return that we have the necessary file
+                                return true;
+                            }
+
+                            var zip = ZipFile.Open(zipFilePath, ZipArchiveMode.Create);
+
+                            //IDML
+                            //"{{Properties::Docs::IDML::Directory}}\preview-{{PreviewJob::id}}.idml"
+                            var idmlDirectory = $@"{_idmlDirectory}";
+                            var idmlFilePattern = $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.idml";
+                            AddFilesToZip(zip, idmlDirectory, idmlFilePattern, "IDML");
+
+                            //IDTT / TXT
+                            //"{{Properties::Docs::IDTT::Directory}}\{{PreviewJob::bookFormat}}\{{PreviewJob::projectName}}\book*.txt"
+                            var idttDirectory = Path.Combine(_idttDirectory.FullName, bookFormatStr, previewJob.ProjectName);
+                            var idttFilePattern = "book*.txt";
+                            AddFilesToZip(zip, idttDirectory, idttFilePattern, "IDTT");
+
+                            //INDD
+                            //"{{Properties::Docs::IDML::Directory}}\preview-{{PreviewJob::id}}-*.indd"
+                            var inddDirectory = _idmlDirectory.FullName;
+                            var inddFilePattern = $"{ MainConsts.PREVIEW_FILENAME_PREFIX}{ previewJob.Id}-*.indd";
+                            AddFilesToZip(zip, inddDirectory, inddFilePattern, "INDD");
+
+                            //INDB
+                            //"{{Properties::Docs::IDML::Directory}}\preview-{{PreviewJob::id}}.indb"
+                            var indbDirectory = _idmlDirectory.FullName;
+                            var indbFilePattern = $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.indb";
+                            AddFilesToZip(zip, indbDirectory, indbFilePattern, "INDB");
+
+                            //PDF
+                            //"{{Properties::Docs::PDF::Directory}}\preview-{{PreviewJob::id}}.pdf"
+                            var pdfDirectory = _pdfDirectory.FullName;
+                            var pdfFilePattern = $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.pdf";
+                            AddFilesToZip(zip, pdfDirectory, pdfFilePattern, "PDF");
+
+                            // finalize the zip file writing
+                            zip.Dispose();
+
+                            // Return a stream of the file
+                            fileStream = File.Open(
+                                zipFilePath,
+                                FileMode.Open, FileAccess.Read);
+
+                            // Return that we have the necessary file
+                            return true;
+                        }
+                        else
+                        {
+                            // Return the preview PDF
+                            fileStream = File.Open(
+                                Path.Combine(_pdfDirectory.FullName, $"preview-{previewJob.Id}.pdf"),
+                                FileMode.Open, FileAccess.Read);
+                            return true;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -401,6 +506,41 @@ namespace TptMain.Jobs
                         return false;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// A utility function for adding files to a directory in a zip file. The files added are based on a source directory and a file search pattern using wildcards.
+        /// </summary>
+        /// <param name="zipArchive">The zip file to append files to. (required)</param>
+        /// <param name="sourceDirectoryPath">The source directory containing the files we want to add to the zip. (required)</param>
+        /// <param name="sourceFileSearchPattern">A file search pattern for filtering out wanted files in the source directory. EG: "preview-*.*" (required)</param>
+        /// <param name="targetDirectoryInZip">A directory inside of the zip file to stick the found files. (required)</param>
+        private void AddFilesToZip(ZipArchive zipArchive, string sourceDirectoryPath, string sourceFileSearchPattern, string targetDirectoryInZip)
+        {
+            // Validate inputs
+            _= zipArchive ?? throw new ArgumentNullException(nameof(zipArchive));
+            _= sourceDirectoryPath ?? throw new ArgumentNullException(nameof(sourceDirectoryPath));
+            _= sourceFileSearchPattern ?? throw new ArgumentNullException(nameof(sourceFileSearchPattern));
+            _= targetDirectoryInZip ?? throw new ArgumentNullException(nameof(targetDirectoryInZip));
+
+            // ensure we address missing directories
+            if(!Directory.Exists(sourceDirectoryPath)) {
+                _logger.LogWarning($"There's no directory at '${sourceDirectoryPath}'");
+                return;
+            }
+
+            // Add files found using provided directory and file search pattern to the archive.
+            var foundFiles = Directory.GetFiles(sourceDirectoryPath, sourceFileSearchPattern);
+            foreach (var file in foundFiles)
+            {
+                // Add the entry for each file
+                zipArchive.CreateEntryFromFile(file, Path.Combine(targetDirectoryInZip, Path.GetFileName(file)), CompressionLevel.Optimal);
+            }
+
+            if (foundFiles.Length <= 0)
+            {
+                _logger.LogWarning($"There were no files found in the directory '${sourceDirectoryPath}' using the file search pattern '${sourceFileSearchPattern}'");
             }
         }
 
