@@ -6,6 +6,7 @@ using TptMain.InDesign;
 using TptMain.Models;
 using TptMain.Paratext;
 using TptMain.Toolbox;
+using TptMain.Util;
 
 namespace TptMain.Jobs
 {
@@ -108,7 +109,7 @@ namespace TptMain.Jobs
                 {
                     _templateManager.DownloadTemplateFile(_previewJob,
                         new FileInfo(Path.Combine(_jobManager.IdmlDirectory.FullName,
-                            $"preview-{_previewJob.Id}.idml")),
+                            $"{MainConsts.PREVIEW_FILENAME_PREFIX}{_previewJob.Id}.idml")),
                         _cancellationTokenSource.Token);
                 }
 
