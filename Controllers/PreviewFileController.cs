@@ -41,16 +41,30 @@ namespace TptMain.Controllers
         /// GET (read) resource method.
         /// </summary>
         /// <param name="jobId">Job ID (required).</param>
+        /// <param name="archive">Whether or not to return an archive of all the typesetting files or just the PDF itself (optional). 
+        /// True: all typesetting files zipped in an archive. False: Output only the preview PDF itself. . Default: false.</param>
         /// <returns>Preview file stream if found, 404 or other error otherwise.</returns>
         [HttpGet("{jobId}")]
-        public ActionResult Get(string jobId)
+        public ActionResult Get(string jobId, bool archive = false)
         {
             _logger.LogDebug($"Get() - jobId={jobId}.");
-            if (!_jobManager.TryGetPreviewStream(jobId, out var fileStream))
+            if (!_jobManager.TryGetPreviewStream(jobId, out var fileStream, archive))
             {
                 return NotFound();
             }
-            return File(fileStream, "application/pdf", "preview.pdf");
+
+            // Defaults for PDF output
+            var outputMimeType = "application/pdf";
+            var outputExtension = ".pdf";
+
+            // Determine whether or not we're returning an archive.
+            if (archive)
+            {
+                outputMimeType = "application/zip";
+                outputExtension = ".zip";
+            }
+
+            return File(fileStream, outputMimeType, $"preview{outputExtension}");
         }
     }
 }

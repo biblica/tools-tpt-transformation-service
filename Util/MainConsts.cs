@@ -51,5 +51,10 @@ namespace TptMain.Util
         /// Default project prefix, should a language prefix not be detectable or usable.
         /// </summary>
         public const string DEFAULT_PROJECT_PREFIX = "Default";
+
+        /// <summary>
+        /// Preview file name prefix.
+        /// </summary>
+        public const string PREVIEW_FILENAME_PREFIX = "preview-";
     }
 }
