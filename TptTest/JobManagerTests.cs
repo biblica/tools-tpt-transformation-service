@@ -5,26 +5,25 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using TptMain.Http;
 using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
 using TptMain.Paratext;
 using TptMain.Toolbox;
+using TptMain.Util;
 
 namespace TptTest
 {
     [TestClass]
     public class JobManagerTests
     {
-        // test config keys
-        public const string TEST_IDML_DOC_DIR_KEY = "Docs:IDML:Directory";
-        public const string TEST_PDF_DOC_DIR_KEY = "Docs:PDF:Directory";
-        public const string TEST_DOC_MAX_AGE_IN_SEC_KEY = "Docs:MaxAgeInSec";
-
         // test config values
         public const string TEST_IDML_DOC_DIR = "C:\\Work\\IDML";
+        public const string TEST_IDTT_DOC_DIR = "C:\\Work\\IDTT";
         public const string TEST_PDF_DOC_DIR = "C:\\Work\\PDF";
+        public const string TEST_ZIP_DOC_DIR = "C:\\Work\\Zip";
         public const string TEST_DOC_MAX_AGE_IN_SEC = "86400";
 
         /// <summary>
@@ -99,9 +98,11 @@ namespace TptTest
             }
 
             // - JobManager
-            configKeys[TEST_IDML_DOC_DIR_KEY] = TEST_IDML_DOC_DIR;
-            configKeys[TEST_PDF_DOC_DIR_KEY] = TEST_PDF_DOC_DIR;
-            configKeys[TEST_DOC_MAX_AGE_IN_SEC_KEY] = TEST_DOC_MAX_AGE_IN_SEC;
+            configKeys[JobManager.IdmlDocDirKey] = TEST_IDML_DOC_DIR;
+            configKeys[JobManager.IdttDocDirKey] = TEST_IDTT_DOC_DIR;
+            configKeys[JobManager.PdfDocDirKey] = TEST_PDF_DOC_DIR;
+            configKeys[JobManager.ZipDocDirKey] = TEST_ZIP_DOC_DIR;
+            configKeys[JobManager.MaxDocAgeInSecKey] = TEST_DOC_MAX_AGE_IN_SEC;
 
             // - JobScheduler
             configKeys[JobSchedulerTests.TEST_MAX_CONCURRENT_JOBS_KEY] = JobSchedulerTests.TEST_MAX_CONCURRENT_JOBS;
@@ -158,6 +159,61 @@ namespace TptTest
                 _mockTemplateManager.Object,
                 _mockParatextApi.Object,
                 _mockJobScheduler.Object);
+        }
+
+        delegate void TryGetJobCallback(string jobId, out PreviewJob previewJob);     // needed for Callback
+        delegate bool TryGetJobReturns(out PreviewJob previewJob);      // needed for Returns
+
+        /// <summary>
+        /// Test the ability to download an archive of the typesetting files.
+        /// </summary>
+        [TestMethod]
+        public void TestDownloadArchive()
+        {
+
+            // setup service under test
+            var mockJobManager =
+                new Mock<JobManager>(MockBehavior.Strict,
+                    _mockLogger.Object,
+                _testConfiguration,
+                _mockContext.Object,
+                _mockScriptRunner.Object,
+                _mockTemplateManager.Object,
+                _mockParatextApi.Object,
+                _mockJobScheduler.Object);
+
+            var testPreviewJob = TestUtils.CreateTestPreviewJob();
+
+            var expectedZipFileName = $@"{TEST_ZIP_DOC_DIR}\{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.zip";
+
+            // delete the file if it already exists
+            if (File.Exists(expectedZipFileName))
+            {
+                File.Delete(expectedZipFileName);
+            }
+
+            // Mock expected calls for services NOT under test.
+            mockJobManager
+                .Setup(jobManager => jobManager.TryGetJob(testPreviewJob.Id, out It.Ref<PreviewJob>.IsAny))
+                .Callback(new TryGetJobCallback((string testJobId, out PreviewJob previewJob) =>
+                {
+                    previewJob = testPreviewJob;
+                }))
+                .Returns(true);
+
+            // Setup calls for service under test.
+            mockJobManager
+                .Setup(jobManager => jobManager
+                .TryGetPreviewStream(testPreviewJob.Id, out It.Ref<FileStream>.IsAny, true))
+                .CallBase();
+
+            // Test archive creation.
+            var jobManager = mockJobManager.Object;
+
+            // Ensure the file was successfully created and is a zip file.
+            Assert.IsTrue(jobManager.TryGetPreviewStream(testPreviewJob.Id, out var filestream, true), "File not successfully created.");
+            Assert.IsNotNull(filestream, "Filestream not created.");
+            Assert.AreEqual(Path.GetExtension(filestream.Name), ".zip");
         }
     }
 }
