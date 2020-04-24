@@ -14,6 +14,7 @@ using TptMain.Jobs;
 using TptMain.Models;
 using TptMain.Paratext;
 using TptMain.Toolbox;
+using TptMain.Util;
 
 namespace TptTest
 {
@@ -83,9 +84,11 @@ namespace TptTest
             configKeys[JobSchedulerTests.TEST_MAX_CONCURRENT_JOBS_KEY] = JobSchedulerTests.TEST_MAX_CONCURRENT_JOBS;
 
             // - JobManager
-            configKeys[JobManagerTests.TEST_IDML_DOC_DIR_KEY] = JobManagerTests.TEST_IDML_DOC_DIR;
-            configKeys[JobManagerTests.TEST_PDF_DOC_DIR_KEY] = JobManagerTests.TEST_PDF_DOC_DIR;
-            configKeys[JobManagerTests.TEST_DOC_MAX_AGE_IN_SEC_KEY] = JobManagerTests.TEST_DOC_MAX_AGE_IN_SEC;
+            configKeys[JobManager.IdmlDocDirKey] = JobManagerTests.TEST_IDML_DOC_DIR;
+            configKeys[JobManager.IdttDocDirKey] = JobManagerTests.TEST_IDTT_DOC_DIR;
+            configKeys[JobManager.PdfDocDirKey] = JobManagerTests.TEST_PDF_DOC_DIR;
+            configKeys[JobManager.ZipDocDirKey] = JobManagerTests.TEST_ZIP_DOC_DIR;
+            configKeys[JobManager.MaxDocAgeInSecKey] = JobManagerTests.TEST_DOC_MAX_AGE_IN_SEC;
 
             // The InMemoryCollection will snapshot the parameters upon creation, have to first populate the dictionary before passing it.
             _testConfiguration = new ConfigurationBuilder()
@@ -155,7 +158,7 @@ namespace TptTest
             // setup service under test
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
             var testFileInfo = new FileInfo(Path.Combine(
-                JobManagerTests.TEST_IDML_DOC_DIR, $"preview-{testPreviewJob.Id}.idml"));
+                JobManagerTests.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
             var mockWorkflow =
                 new Mock<JobWorkflow>(MockBehavior.Strict,
                     _mockJobManagerLogger.Object,
@@ -229,7 +232,7 @@ namespace TptTest
             // setup service under test
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
             var testFileInfo = new FileInfo(Path.Combine(
-                JobManagerTests.TEST_IDML_DOC_DIR, $"preview-{testPreviewJob.Id}.idml"));
+                JobManagerTests.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
             var mockWorkflow =
                 new Mock<JobWorkflow>(MockBehavior.Strict,
                     _mockJobManagerLogger.Object,
@@ -323,7 +326,7 @@ namespace TptTest
             // setup service under test
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
             var testFileInfo = new FileInfo(Path.Combine(
-                JobManagerTests.TEST_IDML_DOC_DIR, $"preview-{testPreviewJob.Id}.idml"));
+                JobManagerTests.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
             var mockWorkflow =
                 new Mock<JobWorkflow>(MockBehavior.Strict,
                     _mockJobManagerLogger.Object,
@@ -386,7 +389,7 @@ namespace TptTest
             // setup service under test
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
             var testFileInfo = new FileInfo(Path.Combine(
-                JobManagerTests.TEST_IDML_DOC_DIR, $"preview-{testPreviewJob.Id}.idml"));
+                JobManagerTests.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
             var mockWorkflow =
                 new Mock<JobWorkflow>(MockBehavior.Strict,
                     _mockJobManagerLogger.Object,
