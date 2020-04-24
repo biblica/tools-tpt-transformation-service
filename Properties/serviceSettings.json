@@ -38,6 +38,9 @@
     },
     "PDF": {
       "Directory": "C:\\Work\\PDF"
+    },
+    "Zip": {
+      "Directory": "C:\\Work\\Zip"
     }
   },
   "Toolbox": {
