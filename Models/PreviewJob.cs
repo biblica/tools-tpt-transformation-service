@@ -68,9 +68,14 @@ namespace TptMain.Models
         public bool IsError { get; set; }
 
         /// <summary>
-        /// Error text of why error occurred; <c>null</c> otherwise.
+        /// User-friendly message regarding the error; <c>null</c> otherwise.
         /// </summary>
         public string ErrorMessage { get; private set; }
+
+        /// <summary>
+        /// More technical reason as to why the error occurred; <c>null</c> otherwise.
+        /// </summary>
+        public string ErrorDetail { get; private set; }
 
         /// <summary>
         /// Font size in points.
@@ -105,10 +110,14 @@ namespace TptMain.Models
         /// <summary>
         /// Function used for indicating an error occurred and provide a message for the reason.
         /// </summary>
-        /// <param name="errorMessage">Information about why the error occurred. (Required)</param>
-        public void SetError(string errorMessage)
+        /// <param name="errorMessage">User-friendly error message. (Required)</param>
+        /// <param name="errorDetail">Information about why the error occurred. (Required)</param>
+        public void SetError(string errorMessage, string errorDetail)
         {
+            // validate inputs
             this.ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
+            this.ErrorDetail = errorDetail ?? throw new ArgumentNullException(nameof(errorDetail));
+
             this.IsError = true;
         }
 

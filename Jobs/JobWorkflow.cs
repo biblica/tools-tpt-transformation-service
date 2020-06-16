@@ -129,11 +129,11 @@ namespace TptMain.Jobs
             catch (PreviewJobException ex)
             {
                 _logger.LogWarning($"Can't run job: {ex}");
-                _previewJob.SetError($"There was an error when running job (Id='{_previewJob.Id}'). Reason: {ex.Message}");
+                _previewJob.SetError("Can't generate preview.", ex.Message);
             }
             catch (Exception ex)
             {
-                _previewJob.SetError($"There was an error when running job (Id='{_previewJob.Id}'. Reason: '{ex.Message}')");
+                _previewJob.SetError("An internal server error occurred.", ex.Message);
                 _logger.LogWarning(ex, $"Can't run job: {_previewJob.Id}");
             }
             finally
