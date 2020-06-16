@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using TptMain.Exceptions;
 using TptMain.InDesign;
 using TptMain.Models;
 using TptMain.Paratext;
@@ -125,9 +126,14 @@ namespace TptMain.Jobs
             {
                 _logger.LogDebug(ex, $"Can't run job: {_previewJob.Id} (cancelled, ignoring).");
             }
+            catch (PreviewJobException ex)
+            {
+                _logger.LogWarning($"Can't run job: {ex}");
+                _previewJob.SetError($"There was an error when running job (Id='{_previewJob.Id}'). Reason: {ex.Message}");
+            }
             catch (Exception ex)
             {
-                _previewJob.IsError = true;
+                _previewJob.SetError($"There was an error when running job (Id='{_previewJob.Id}'. Reason: '{ex.Message}')");
                 _logger.LogWarning(ex, $"Can't run job: {_previewJob.Id}");
             }
             finally

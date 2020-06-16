@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.Caching;
-using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
+using TptMain.Exceptions;
 using TptMain.Models;
 using TptMain.Paratext.Models;
 
@@ -138,7 +138,7 @@ namespace TptMain.Paratext
 
             if (!isAuthorized)
             {
-                throw new InvalidCredentialException($"User '{previewJob.User}' isn't authorized to generate a typesetting preview for project '{previewJob.ProjectName}'.");
+                throw new PreviewJobException(previewJob, $"User '{previewJob.User}' is unauthorized to generate a typesetting preview for project '{previewJob.ProjectName}'. Authorized Paratext roles: '{String.Join(", ", _allowedMemberRoles)}'");
             }
         }
 

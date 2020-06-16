@@ -303,7 +303,6 @@ namespace TptMain.Jobs
         {
             // identifying information
             previewJob.Id = Guid.NewGuid().ToString();
-            previewJob.IsError = false;
             previewJob.DateSubmitted = DateTime.UtcNow;
             previewJob.DateStarted = null;
             previewJob.DateCompleted = null;
