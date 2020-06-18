@@ -65,7 +65,7 @@ namespace TptMain.Models
         /// <summary>
         /// Whether or not there was an error during job execution.
         /// </summary>
-        public bool IsError { get; set; }
+        public bool IsError { get; set; } = false;
 
         /// <summary>
         /// User-friendly message regarding the error; <c>null</c> otherwise.
@@ -108,6 +108,13 @@ namespace TptMain.Models
         public BookFormat? BookFormat { get; set; }
 
         /// <summary>
+        /// Whether or not to use custom footnotes.
+        /// 
+        /// Note: The footnotes would be pulled from the project's respective Paratext footnote caller sequence.
+        /// </summary>
+        public bool UseCustomFootnotes { get; set; } = false;
+
+        /// <summary>
         /// Function used for indicating an error occurred and provide a message for the reason.
         /// </summary>
         /// <param name="errorMessage">User-friendly error message. (Required)</param>
@@ -119,15 +126,6 @@ namespace TptMain.Models
             this.ErrorDetail = errorDetail ?? throw new ArgumentNullException(nameof(errorDetail));
 
             this.IsError = true;
-        }
-
-        /// <summary>
-        /// PreviewJob constructor. Used for setting defaults.
-        /// </summary>
-        public PreviewJob()
-        {
-            // Set PreviewJob defaults.
-            IsError = false;
         }
     }
 }

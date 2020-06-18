@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading;
 using TptMain.InDesign;
 using TptMain.Models;
-using TptMain.Paratext;
+using TptMain.ParatextProjects;
 using TptMain.Toolbox;
 using TptMain.Util;
 

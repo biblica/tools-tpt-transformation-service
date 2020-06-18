@@ -10,12 +10,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using TptMain.Exceptions;
 using TptMain.Models;
-using TptMain.Paratext.Models;
+using TptMain.ParatextProjects.Models;
 
-namespace TptMain.Paratext
+namespace TptMain.ParatextProjects
 {
     /// <summary>
-    /// Paratext API request wrapper class used for handling requests tot he Paratext Registry API and the responses that come back.
+    /// Paratext API request wrapper class used for handling requests to the Paratext Registry API and the responses that come back.
     /// </summary>
     public class ParatextApi : IDisposable
     {

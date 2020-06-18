@@ -12,7 +12,7 @@ using TptMain.Http;
 using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
-using TptMain.Paratext;
+using TptMain.ParatextProjects;
 using TptMain.Toolbox;
 using TptMain.Util;
 

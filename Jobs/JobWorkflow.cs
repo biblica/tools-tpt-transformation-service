@@ -5,7 +5,7 @@ using System.Threading;
 using TptMain.Exceptions;
 using TptMain.InDesign;
 using TptMain.Models;
-using TptMain.Paratext;
+using TptMain.ParatextProjects;
 using TptMain.Toolbox;
 using TptMain.Util;
 

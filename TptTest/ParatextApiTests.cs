@@ -9,8 +9,8 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using TptMain.Paratext;
-using TptMain.Paratext.Models;
+using TptMain.ParatextProjects;
+using TptMain.ParatextProjects.Models;
 
 namespace TptTest
 {
