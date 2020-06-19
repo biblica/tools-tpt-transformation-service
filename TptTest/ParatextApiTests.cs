@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TptMain.ParatextProjects;
 using TptMain.ParatextProjects.Models;
+using TptMain.Util;
 
 namespace TptTest
 {
@@ -74,13 +75,13 @@ namespace TptTest
             IDictionary<string, string> configKeys = new Dictionary<string, string>();
 
             // - ParatextApi
-            configKeys[ParatextApi.ParatextApiServerUriKey] = ParatextApiTests.TEST_PT_API_SERVER_URI;
-            configKeys[ParatextApi.ParatextApiUsernameKey] = ParatextApiTests.TEST_PT_API_USERNAME;
-            configKeys[ParatextApi.ParatextApiPasswordKey] = ParatextApiTests.TEST_PT_API_PASSWORD;
-            configKeys[ParatextApi.ParatextApiProjectCacheAgeInSecKey] = ParatextApiTests.TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC.ToString();
+            configKeys[ConfigConsts.ParatextApiServerUriKey] = ParatextApiTests.TEST_PT_API_SERVER_URI;
+            configKeys[ConfigConsts.ParatextApiUsernameKey] = ParatextApiTests.TEST_PT_API_USERNAME;
+            configKeys[ConfigConsts.ParatextApiPasswordKey] = ParatextApiTests.TEST_PT_API_PASSWORD;
+            configKeys[ConfigConsts.ParatextApiProjectCacheAgeInSecKey] = ParatextApiTests.TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC.ToString();
             for (var i = 0; i < ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES.Count; i++)
             {
-                configKeys[ParatextApi.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
+                configKeys[ConfigConsts.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
             }
 
             // The InMemoryCollection will snapshot the parameters upon creation, have to first populate the dictionary before passing it.

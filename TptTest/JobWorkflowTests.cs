@@ -47,6 +47,11 @@ namespace TptTest
         private Mock<ParatextApi> _mockParatextApi;
 
         /// <summary>
+        /// Mock Paratext Project Service API.
+        /// </summary>
+        private Mock<ParatextProjectService> _mockParatextProjectService;
+
+        /// <summary>
         /// Test configuration.
         /// </summary>
         private IConfiguration _testConfiguration;
@@ -71,24 +76,25 @@ namespace TptTest
             configKeys[TemplateManagerTests.TEST_TEMPLATE_TIMEOUT_IN_SEC_KEY] = TemplateManagerTests.TEST_TEMPLATE_TIMEOUT_IN_SEC;
 
             // - ParatextApi
-            configKeys[ParatextApi.ParatextApiServerUriKey] = ParatextApiTests.TEST_PT_API_SERVER_URI;
-            configKeys[ParatextApi.ParatextApiUsernameKey] = ParatextApiTests.TEST_PT_API_USERNAME;
-            configKeys[ParatextApi.ParatextApiPasswordKey] = ParatextApiTests.TEST_PT_API_PASSWORD;
-            configKeys[ParatextApi.ParatextApiProjectCacheAgeInSecKey] = ParatextApiTests.TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC.ToString();
+            configKeys[ConfigConsts.ParatextApiServerUriKey] = ParatextApiTests.TEST_PT_API_SERVER_URI;
+            configKeys[ConfigConsts.ParatextApiUsernameKey] = ParatextApiTests.TEST_PT_API_USERNAME;
+            configKeys[ConfigConsts.ParatextApiPasswordKey] = ParatextApiTests.TEST_PT_API_PASSWORD;
+            configKeys[ConfigConsts.ParatextApiProjectCacheAgeInSecKey] = ParatextApiTests.TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC.ToString();
             for (var i = 0; i < ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES.Count; i++)
             {
-                configKeys[ParatextApi.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
+                configKeys[ConfigConsts.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
             }
 
             // - JobScheduler
             configKeys[JobSchedulerTests.TEST_MAX_CONCURRENT_JOBS_KEY] = JobSchedulerTests.TEST_MAX_CONCURRENT_JOBS;
 
             // - JobManager
-            configKeys[JobManager.IdmlDocDirKey] = JobManagerTests.TEST_IDML_DOC_DIR;
-            configKeys[JobManager.IdttDocDirKey] = JobManagerTests.TEST_IDTT_DOC_DIR;
-            configKeys[JobManager.PdfDocDirKey] = JobManagerTests.TEST_PDF_DOC_DIR;
-            configKeys[JobManager.ZipDocDirKey] = JobManagerTests.TEST_ZIP_DOC_DIR;
-            configKeys[JobManager.MaxDocAgeInSecKey] = JobManagerTests.TEST_DOC_MAX_AGE_IN_SEC;
+            configKeys[ConfigConsts.IdmlDocDirKey] = TestConsts.TEST_IDML_DOC_DIR;
+            configKeys[ConfigConsts.IdttDocDirKey] = TestConsts.TEST_IDTT_DOC_DIR;
+            configKeys[ConfigConsts.ParatextDocDirKey] = TestConsts.TEST_PARATEXT_DOC_DIR;
+            configKeys[ConfigConsts.PdfDocDirKey] = TestConsts.TEST_PDF_DOC_DIR;
+            configKeys[ConfigConsts.ZipDocDirKey] = TestConsts.TEST_ZIP_DOC_DIR;
+            configKeys[ConfigConsts.MaxDocAgeInSecKey] = TestConsts.TEST_DOC_MAX_AGE_IN_SEC;
 
             // The InMemoryCollection will snapshot the parameters upon creation, have to first populate the dictionary before passing it.
             _testConfiguration = new ConfigurationBuilder()
@@ -124,14 +130,27 @@ namespace TptTest
             _mockParatextApi = new Mock<ParatextApi>(MockBehavior.Strict,
                 mockParatextApiLogger.Object, _testConfiguration);
 
+            // mock: paratext project service
+            var _mockParatextProjectServiceLogger = new Mock<ILogger<ParatextProjectService>>();
+            _mockParatextProjectService = new Mock<ParatextProjectService>(MockBehavior.Strict,
+                _mockParatextProjectServiceLogger.Object, _testConfiguration);
+
             // mock: job scheduler
             var mockJobSchedulerLogger = new Mock<ILogger<JobScheduler>>();
             var mockJobScheduler = new Mock<JobScheduler>(MockBehavior.Strict,
                 mockJobSchedulerLogger.Object, _testConfiguration);
 
             // mock: job manager
-            _mockJobManager = new Mock<JobManager>(MockBehavior.Strict,
-                _mockJobManagerLogger.Object, _testConfiguration, mockContext.Object, _mockScriptRunner.Object, _mockTemplateManager.Object, _mockParatextApi.Object, mockJobScheduler.Object);
+            _mockJobManager = new Mock<JobManager>(
+                MockBehavior.Strict,
+                _mockJobManagerLogger.Object,
+                _testConfiguration,
+                mockContext.Object,
+                _mockScriptRunner.Object,
+                _mockTemplateManager.Object,
+                _mockParatextApi.Object,
+                _mockParatextProjectService.Object,
+                mockJobScheduler.Object);
         }
 
         /// <summary>
@@ -146,6 +165,7 @@ namespace TptTest
                 _mockScriptRunner.Object,
                 _mockTemplateManager.Object,
                 _mockParatextApi.Object,
+                _mockParatextProjectService.Object,
                 TestUtils.CreateTestPreviewJob());
         }
 
@@ -158,7 +178,7 @@ namespace TptTest
             // setup service under test
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
             var testFileInfo = new FileInfo(Path.Combine(
-                JobManagerTests.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
+                TestConsts.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
             var mockWorkflow =
                 new Mock<JobWorkflow>(MockBehavior.Strict,
                     _mockJobManagerLogger.Object,
@@ -166,7 +186,8 @@ namespace TptTest
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
                     _mockParatextApi.Object,
-                    testPreviewJob);
+                    _mockParatextProjectService.Object,
+                   testPreviewJob);
             mockWorkflow.Setup(workflowItem =>
                 workflowItem.RunJob()).CallBase();
             mockWorkflow.Setup(workflowItem =>
@@ -185,8 +206,8 @@ namespace TptTest
                     It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()))
-                .Callback<PreviewJob, CancellationToken?>((jobItem, tokenItem) =>
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, string[],CancellationToken?>((jobItem, _, tokenItem) =>
                 {
                     isTaskRun = true;
                 })
@@ -206,7 +227,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(isTaskRun); // task was run
@@ -232,7 +253,7 @@ namespace TptTest
             // setup service under test
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
             var testFileInfo = new FileInfo(Path.Combine(
-                JobManagerTests.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
+                TestConsts.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
             var mockWorkflow =
                 new Mock<JobWorkflow>(MockBehavior.Strict,
                     _mockJobManagerLogger.Object,
@@ -240,6 +261,7 @@ namespace TptTest
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
                     _mockParatextApi.Object,
+                    _mockParatextProjectService.Object,
                     testPreviewJob);
             mockWorkflow.Setup(workflowItem =>
                 workflowItem.RunJob()).CallBase();
@@ -260,8 +282,8 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()))
-                .Callback<PreviewJob, CancellationToken?>((jobItem, tokenItem) =>
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, string[], CancellationToken?>((jobItem, _, tokenItem) =>
                 {
                     isTaskRun = true;
                     if (tokenItem != null)
@@ -301,7 +323,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(mockWorkflow.Object.IsJobCanceled); // job wasn't cancelled
@@ -326,7 +348,7 @@ namespace TptTest
             // setup service under test
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
             var testFileInfo = new FileInfo(Path.Combine(
-                JobManagerTests.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
+                TestConsts.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
             var mockWorkflow =
                 new Mock<JobWorkflow>(MockBehavior.Strict,
                     _mockJobManagerLogger.Object,
@@ -334,6 +356,7 @@ namespace TptTest
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
                     _mockParatextApi.Object,
+                    _mockParatextProjectService.Object,
                     testPreviewJob);
             mockWorkflow.Setup(workflowItem =>
                 workflowItem.RunJob()).CallBase();
@@ -364,7 +387,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsFalse(mockWorkflow.Object.IsJobCanceled); // job wasn't cancelled
@@ -389,7 +412,7 @@ namespace TptTest
             // setup service under test
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
             var testFileInfo = new FileInfo(Path.Combine(
-                JobManagerTests.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
+                TestConsts.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
             var mockWorkflow =
                 new Mock<JobWorkflow>(MockBehavior.Strict,
                     _mockJobManagerLogger.Object,
@@ -397,6 +420,7 @@ namespace TptTest
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
                     _mockParatextApi.Object,
+                    _mockParatextProjectService.Object,
                     testPreviewJob);
             mockWorkflow.Setup(workflowItem =>
                 workflowItem.RunJob()).CallBase();
@@ -415,8 +439,8 @@ namespace TptTest
                         It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                    runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()))
-                .Callback<PreviewJob, CancellationToken?>((jobItem, tokenItem) =>
+                    runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, string[], CancellationToken?>((jobItem, _, tokenItem) =>
                 {
                     isTaskRun = true;
                     throw new IOException();
@@ -436,7 +460,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<CancellationToken?>()), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(isTaskRun); // task was run

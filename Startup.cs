@@ -39,6 +39,7 @@ namespace TptMain
             services.AddSingleton<ScriptRunner>();
             services.AddSingleton<JobManager>();
             services.AddSingleton<ParatextApi>();
+            services.AddSingleton<ParatextProjectService>();
             services.AddSingleton<JobScheduler>();
             services.AddSingleton<ProjectManager>();
             services.AddSingleton<TemplateManager>();
