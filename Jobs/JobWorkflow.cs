@@ -126,6 +126,8 @@ namespace TptMain.Jobs
                     {
                         throw new PreviewJobException(_previewJob, "Custom footnotes requested, but aren't specified in the project.");
                     }
+
+                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", customFootnoteMarkers));
                 }
 
                 if (!IsJobCanceled)
