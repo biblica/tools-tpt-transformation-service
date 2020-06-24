@@ -68,6 +68,16 @@ namespace TptMain.Models
         public bool IsError { get; set; }
 
         /// <summary>
+        /// User-friendly message regarding the error; <c>null</c> otherwise.
+        /// </summary>
+        public string ErrorMessage { get; private set; }
+
+        /// <summary>
+        /// More technical reason as to why the error occurred; <c>null</c> otherwise.
+        /// </summary>
+        public string ErrorDetail { get; private set; }
+
+        /// <summary>
         /// Font size in points.
         /// </summary>
         public float? FontSizeInPts { get; set; }
@@ -96,5 +106,28 @@ namespace TptMain.Models
         /// Book format, either TBOTB or CAV.
         /// </summary>
         public BookFormat? BookFormat { get; set; }
+
+        /// <summary>
+        /// Function used for indicating an error occurred and provide a message for the reason.
+        /// </summary>
+        /// <param name="errorMessage">User-friendly error message. (Required)</param>
+        /// <param name="errorDetail">Information about why the error occurred. (Required)</param>
+        public void SetError(string errorMessage, string errorDetail)
+        {
+            // validate inputs
+            this.ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
+            this.ErrorDetail = errorDetail ?? throw new ArgumentNullException(nameof(errorDetail));
+
+            this.IsError = true;
+        }
+
+        /// <summary>
+        /// PreviewJob constructor. Used for setting defaults.
+        /// </summary>
+        public PreviewJob()
+        {
+            // Set PreviewJob defaults.
+            IsError = false;
+        }
     }
 }
