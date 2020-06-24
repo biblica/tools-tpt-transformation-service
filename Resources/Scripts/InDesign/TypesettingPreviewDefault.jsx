@@ -19,12 +19,16 @@
 // 3) bookFormat: The book output format. This impacts which template is used 
 //    when generating a typsetting preview. As-of 2020-04-09, there's only two 
 //    book formats: 'cav' and 'tbotb'.
+// 3) customFootnoteList: List of custom footnotes as a CSV string in the 
+//    order to be used. If not empty, will be used as markers in typesets. 
+//    EG: "a,d,e,ñ,h,Ä"
 ///////////////////////////////////////////////////////////////////////////////
 
 // Get job ID & project name from script args
 var jobId = app.scriptArgs.getValue("jobId");
 var projectName = app.scriptArgs.getValue("projectName");
 var bookFormat = app.scriptArgs.getValue("bookFormat");
+var customFootnotes = app.scriptArgs.getValue("customFootnoteList");
 
 // Set top-level base and output dirs
 var idttDir = 'C:\\Work\\IDTT\\';

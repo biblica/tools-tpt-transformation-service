@@ -7,8 +7,16 @@ namespace TptTest
     /// </summary>
     public static class TestConsts
     {
-        /* Template-related constants & similar. */
+        /* Configuration-related constants */
+        // Configuration values
+        public const string TEST_IDML_DOC_DIR = "C:\\Work\\IDML";
+        public const string TEST_IDTT_DOC_DIR = "C:\\Work\\IDTT";
+        public const string TEST_PARATEXT_DOC_DIR = "C:\\Work\\Paratext";
+        public const string TEST_PDF_DOC_DIR = "C:\\Work\\PDF";
+        public const string TEST_ZIP_DOC_DIR = "C:\\Work\\Zip";
+        public const string TEST_DOC_MAX_AGE_IN_SEC = "86400";
 
+        /* Template-related constants & similar. */
         /// <summary>
         /// Test project name.
         /// </summary>

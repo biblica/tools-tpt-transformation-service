@@ -17,26 +17,6 @@ namespace TptMain.InDesign
     public class ScriptRunner
     {
         /// <summary>
-        /// InDesign server uri config key.
-        /// </summary>
-        private const string IdsUriKey = "InDesign:ServerUri";
-
-        /// <summary>
-        /// InDesign server request timeout config key.
-        /// </summary>
-        private const string IdsTimeoutInSecKey = "InDesign:TimeoutInSec";
-
-        /// <summary>
-        /// InDesign server preview script config key.
-        /// </summary>
-        private const string IdsPreviewScriptDirKey = "InDesign:PreviewScriptDirectory";
-
-        /// <summary>
-        /// InDesign server preview script name format config key.
-        /// </summary>
-        private const string IdsPreviewScriptNameFormatKey = "InDesign:PreviewScriptNameFormat";
-
-        /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
         private readonly ILogger<ScriptRunner> _logger;
@@ -79,15 +59,15 @@ namespace TptMain.InDesign
 
             _serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
-                configuration[IdsUriKey]
-                ?? throw new ArgumentNullException(IdsUriKey));
-            _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(configuration[IdsTimeoutInSecKey]
-                ?? throw new ArgumentNullException(IdsTimeoutInSecKey)))
+                configuration[ConfigConsts.IdsUriKey]
+                ?? throw new ArgumentNullException(ConfigConsts.IdsUriKey));
+            _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(configuration[ConfigConsts.IdsTimeoutInSecKey]
+                ?? throw new ArgumentNullException(ConfigConsts.IdsTimeoutInSecKey)))
                 .TotalMilliseconds;
-            _idsPreviewScriptDirectory = new DirectoryInfo((configuration[IdsPreviewScriptDirKey]
-                ?? throw new ArgumentNullException(IdsPreviewScriptDirKey)));
-            _idsPreviewScriptNameFormat = (configuration[IdsPreviewScriptNameFormatKey]
-                ?? throw new ArgumentNullException(IdsPreviewScriptNameFormatKey));
+            _idsPreviewScriptDirectory = new DirectoryInfo((configuration[ConfigConsts.IdsPreviewScriptDirKey]
+                ?? throw new ArgumentNullException(ConfigConsts.IdsPreviewScriptDirKey)));
+            _idsPreviewScriptNameFormat = (configuration[ConfigConsts.IdsPreviewScriptNameFormatKey]
+                ?? throw new ArgumentNullException(ConfigConsts.IdsPreviewScriptNameFormatKey));
 
             _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
             _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
@@ -101,8 +81,9 @@ namespace TptMain.InDesign
         /// Execute typesetting preview generation synchronously, with optional cancellation.
         /// </summary>
         /// <param name="inputJob">Input preview job (required).</param>
+        /// <param name="footnoteMarkers">Custom footnote markers (optional).</param>
         /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
-        public virtual void RunScript(PreviewJob inputJob, CancellationToken? cancellationToken)
+        public virtual void RunScript(PreviewJob inputJob, string[] footnoteMarkers, CancellationToken? cancellationToken)
         {
             _logger.LogDebug($"RunScriptAsync() - inputJob.Id={inputJob.Id}.");
             var scriptRequest = new RunScriptRequest();
@@ -115,23 +96,13 @@ namespace TptMain.InDesign
 
             IList<IDSPScriptArg> scriptArgs = new List<IDSPScriptArg>();
 
-            var jobIdArg = new IDSPScriptArg();
-            scriptArgs.Add(jobIdArg);
+            AddNewArgToIdsArgs(ref scriptArgs, "jobId", inputJob.Id);
+            AddNewArgToIdsArgs(ref scriptArgs, "projectName", inputJob.ProjectName);
+            AddNewArgToIdsArgs(ref scriptArgs, "bookFormat", inputJob.BookFormat.ToString());
 
-            jobIdArg.name = "jobId";
-            jobIdArg.value = inputJob.Id;
-
-            var projectNameArg = new IDSPScriptArg();
-            scriptArgs.Add(projectNameArg);
-
-            projectNameArg.name = "projectName";
-            projectNameArg.value = inputJob.ProjectName;
-
-            var bookFormatArg = new IDSPScriptArg();
-            scriptArgs.Add(bookFormatArg);
-
-            bookFormatArg.name = "bookFormat";
-            bookFormatArg.value = inputJob.BookFormat.ToString();
+            // build the custom footnotes into a CSV string. EG: "a,d,e,ñ,h,Ä".
+            string customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;
+            AddNewArgToIdsArgs(ref scriptArgs, "customFootnoteList", customFootnotes);
 
             scriptParameters.scriptArgs = scriptArgs.ToArray();
 
@@ -179,6 +150,21 @@ namespace TptMain.InDesign
             return scriptFile.Exists
                 ? scriptFile
                 : _defaultScriptFile;
+        }
+
+        /// <summary>
+        /// Add a new IDS argument to the collection of IDS arguments.
+        /// </summary>
+        /// <param name="scriptArgs">The IDS arguments collection to add to. (required)</param>
+        /// <param name="newArgName">The new argument key name. (required)</param>
+        /// <param name="newArgValue">The new argument value. (optional)</param>
+        private void AddNewArgToIdsArgs(ref IList<IDSPScriptArg> scriptArgs, string newArgName, string newArgValue = null)
+        {
+            var scriptArg = new IDSPScriptArg();
+            scriptArgs.Add(scriptArg);
+
+            scriptArg.name = newArgName.Trim();
+            scriptArg.value = newArgValue;
         }
     }
 

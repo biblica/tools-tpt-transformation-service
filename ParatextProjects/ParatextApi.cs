@@ -10,12 +10,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using TptMain.Exceptions;
 using TptMain.Models;
-using TptMain.Paratext.Models;
+using TptMain.ParatextProjects.Models;
+using TptMain.Util;
 
-namespace TptMain.Paratext
+namespace TptMain.ParatextProjects
 {
     /// <summary>
-    /// Paratext API request wrapper class used for handling requests tot he Paratext Registry API and the responses that come back.
+    /// Paratext API request wrapper class used for handling requests to the Paratext Registry API and the responses that come back.
     /// </summary>
     public class ParatextApi : IDisposable
     {
@@ -62,31 +63,6 @@ namespace TptMain.Paratext
         public const string ProjectsCacheKey = "Projects";
 
         /// <summary>
-        /// Paratext Server URI param key.
-        /// </summary>
-        public const string ParatextApiServerUriKey = "Paratext:API:ServerUri";
-
-        /// <summary>
-        /// Paratext API Username param key.
-        /// </summary>
-        public const string ParatextApiUsernameKey = "Paratext:API:Username";
-
-        /// <summary>
-        /// Paratext API Password param key.
-        /// </summary>
-        public const string ParatextApiPasswordKey = "Paratext:API:Password";
-
-        /// <summary>
-        /// Paratext API ProjectCacheAgeInSec param key.
-        /// </summary>
-        public const string ParatextApiProjectCacheAgeInSecKey = "Paratext:API:ProjectCacheAgeInSec";
-
-        /// <summary>
-        /// Paratext API Password param key.
-        /// </summary>
-        public const string ParatextApiAllowedMemberRolesKey = "Paratext:API:AllowedMemberRoles";
-
-        /// <summary>
         /// HTTP Client getter for consistent usage.
         /// </summary>
         public virtual HttpClient HttpClient => _httpClient;
@@ -110,19 +86,19 @@ namespace TptMain.Paratext
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             // Setup HttpClient
-            _httpClient.BaseAddress = new Uri(_configuration.GetValue<string>(ParatextApiServerUriKey));
+            _httpClient.BaseAddress = new Uri(_configuration.GetValue<string>(ConfigConsts.ParatextApiServerUriKey));
 
             // Set Auth header
             _httpClient.DefaultRequestHeaders.Authorization = ParatextApi.CreateBasicAuthHeader(
-                _configuration.GetValue<string>(ParatextApiUsernameKey), _configuration.GetValue<string>(ParatextApiPasswordKey));
+                _configuration.GetValue<string>(ConfigConsts.ParatextApiUsernameKey), _configuration.GetValue<string>(ConfigConsts.ParatextApiPasswordKey));
 
             // Member roles that are allowed access to generating previews.
-            var section = _configuration.GetSection(ParatextApiAllowedMemberRolesKey);
+            var section = _configuration.GetSection(ConfigConsts.ParatextApiAllowedMemberRolesKey);
             _allowedMemberRoles = section.Get<List<MemberRole>>();
-            _ = _allowedMemberRoles ?? throw new ArgumentException($"Configuration parameter '{ParatextApiAllowedMemberRolesKey}'");
+            _ = _allowedMemberRoles ?? throw new ArgumentException($"Configuration parameter '{ConfigConsts.ParatextApiAllowedMemberRolesKey}'");
 
             // Age of project cache items in seconds
-            _cacheItemAgeInSec = _configuration.GetValue<double>(ParatextApiProjectCacheAgeInSecKey);
+            _cacheItemAgeInSec = _configuration.GetValue<double>(ConfigConsts.ParatextApiProjectCacheAgeInSecKey);
         }
 
         /// <summary>

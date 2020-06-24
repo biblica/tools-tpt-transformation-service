@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TptMain.Paratext.Models
+namespace TptMain.ParatextProjects.Models
 {
     /// <summary>
     /// Enumeration of the available Paratext Project member roles.

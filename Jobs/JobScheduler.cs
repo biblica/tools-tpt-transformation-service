@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using TptMain.Util;
 
 namespace TptMain.Jobs
 {
@@ -32,11 +33,6 @@ namespace TptMain.Jobs
     /// </summary>
     public class JobScheduler : IDisposable
     {
-        /// <summary>
-        /// Max concurrent jobs config key.
-        /// </summary>
-        private const string MaxConcurrentJobsKey = "Jobs:MaxConcurrent";
-
         /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
@@ -79,8 +75,8 @@ namespace TptMain.Jobs
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _taskSemaphore = new SemaphoreSlim(int.Parse(configuration[MaxConcurrentJobsKey]
-                                                         ?? throw new ArgumentNullException(MaxConcurrentJobsKey)));
+            _taskSemaphore = new SemaphoreSlim(int.Parse(configuration[ConfigConsts.MaxConcurrentJobsKey]
+                                                         ?? throw new ArgumentNullException(ConfigConsts.MaxConcurrentJobsKey)));
             _jobQueue = new BlockingCollection<JobWorkflow>();
             _jobMap = new ConcurrentDictionary<string, JobWorkflow>();
 
