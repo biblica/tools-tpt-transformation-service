@@ -1,4 +1,6 @@
-﻿///////////////////////////////////////////////////////////////////////////////
+﻿#include "CustomFootnotes.jsx";
+
+///////////////////////////////////////////////////////////////////////////////
 // This is an InDesign Server script used to generate previews of a publishing
 // typeset. 
 // 
@@ -24,7 +26,7 @@
 //    EG: "a,d,e,ñ,h,Ä"
 ///////////////////////////////////////////////////////////////////////////////
 
-// Get job ID & project name from script args
+// Extract the preview job parameters from the script arguments.
 var jobId = app.scriptArgs.getValue("jobId");
 var projectName = app.scriptArgs.getValue("projectName");
 var bookFormat = app.scriptArgs.getValue("bookFormat");
@@ -40,11 +42,11 @@ var txtDir = idttDir + bookFormat + '\\' + projectName + '\\';
 var bookPath = idmlDir + 'preview-' + jobId + '.indb';
 var pdfPath = pdfDir + 'preview-' + jobId + '.pdf';
 
-// Create book to aggreage individual docs
+// Create book to aggregate individual docs
 var book = app.books.add(bookPath);
 book.automaticPagination = true;
 
-// Find & sort source documents to read
+// Find & sort tagged text documents to read
 var sortFunction = function sortFunction(f1, f2) {
     return f1.name.localeCompare(f2.name);
 }
@@ -57,17 +59,18 @@ txtFiles2.sort(sortFunction);
 var txtFiles = txtFiles1.concat(txtFiles2);
 
 // Create IDS document for each source, then add to book
-for (var ctr = 0;
-    ctr < txtFiles.length;
-    ctr++) {
+for (var ctr = 0; ctr < txtFiles.length; ctr++) {
+
     var txtFile = txtFiles[ctr];
     var docPath = idmlDir + 'preview-' + jobId + '-' + txtFile.name.replace('.txt', '') + '.indd';
 
     // Load template as starting point
     var doc = app.open(idmlDir + 'preview-' + jobId + '.idml');
 
-    // Turn off the preflight error detection while placing text
+    // Optimizations: turning off checking/auto-modifying capabilities to speed up performance
     doc.preflightOptions.preflightOff = true;
+	doc.textPreferences.smartTextReflow = false;
+	doc.textPreferences.deleteEmptyPages = false;
 
     try {
         // Place text
@@ -75,8 +78,19 @@ for (var ctr = 0;
         var pageItem = layer.pageItems.lastItem();
         var placement = pageItem.place(txtFile);
 
+        if (customFootnotes && customFootnotes.trim().length > 0) {
+            throw 'So.... we\'re generating custom stuff';
+            addCustomFootnotes(doc, customFootnotes);
+        }
+
         // re-enable the preflight error detection for the typesetters benefit
         doc.preflightOptions.preflightOff = false;
+		doc.textPreferences.smartTextReflow = true;
+		doc.textPreferences.deleteEmptyPages = true;
+		doc.activeProcess.waitForProcess();
+
+        // Add custom footnotes
+        // TODO handle when there's no footnotes
 
         // Save INDD file
         doc.save(docPath);
