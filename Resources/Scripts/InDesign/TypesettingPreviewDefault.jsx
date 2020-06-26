@@ -70,7 +70,6 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
     // Optimizations: turning off checking/auto-modifying capabilities to speed up performance
     doc.preflightOptions.preflightOff = true;
 	doc.textPreferences.smartTextReflow = false;
-	doc.textPreferences.deleteEmptyPages = false;
 
     try {
         // Place text
@@ -78,19 +77,14 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
         var pageItem = layer.pageItems.lastItem();
         var placement = pageItem.place(txtFile);
 
-        if (customFootnotes && customFootnotes.trim().length > 0) {
-            throw 'So.... we\'re generating custom stuff';
+        // Add custom footnotes
+        if (customFootnotes && customFootnotes.length > 0) {
             addCustomFootnotes(doc, customFootnotes);
         }
 
-        // re-enable the preflight error detection for the typesetters benefit
+        // re-enable the preflight and smart-reflow for the typesetters benefit
         doc.preflightOptions.preflightOff = false;
 		doc.textPreferences.smartTextReflow = true;
-		doc.textPreferences.deleteEmptyPages = true;
-		doc.activeProcess.waitForProcess();
-
-        // Add custom footnotes
-        // TODO handle when there's no footnotes
 
         // Save INDD file
         doc.save(docPath);
