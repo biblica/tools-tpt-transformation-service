@@ -69,7 +69,6 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
 
     // Optimizations: turning off checking/auto-modifying capabilities to speed up performance
     doc.preflightOptions.preflightOff = true;
-	doc.textPreferences.smartTextReflow = false;
 
     try {
         // Place text
@@ -84,7 +83,6 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
 
         // re-enable the preflight and smart-reflow for the typesetters benefit
         doc.preflightOptions.preflightOff = false;
-		doc.textPreferences.smartTextReflow = true;
 
         // Save INDD file
         doc.save(docPath);
@@ -94,10 +92,11 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
         book.bookContents.add(docPath);
         book.save();
     } catch (ex) {
-        alert("Can't create document: " + docPath
-            + ", project: " + projectName
-            + ", format: " + bookFormat
-            + ", cause: " + ex);
+        throw "Can't create document: " + docPath + "\n"
+        + "\tproject: " + projectName + "\n"
+        + "\tformat: " + bookFormat + "\n"
+        + "\tfootnotes: " + customFootnotes + "\n"
+        + "\tcause: " + ex;
     }
 }
 

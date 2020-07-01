@@ -1,47 +1,37 @@
-﻿// Place a table in an (inline) frame and convert its 
-// footnote numbers from Arabic to Roman.
-
-/*-----------------------------------------------------------------------
-
-1. Place an inline table in an inline frame.
-2. Convert Arabic footnote references and numbers to Roman.
-
-To use, place the cursor anywhere in a table and run the script.
-
-The real footnote cues are hidden by a character style, 
-the letters (i.e. the fake cues) are inserted immediately after the real cue.
-
------------------------------------------------------------------------*/
-
-/**
+﻿/**
  * Add custom footnotes to an InDesign document.
  * @param {Document} doc InDesign Document object.
- * @param {string} footnoteMarkers CSV string of footnotes.
+ * @param {string} footnoteMarkers CSV string of footnotes. EG: "'а, б, в, г, д, е, ж, з, и, й, к, л, м, н, о, п, р, с, т, у, ф, х, ц, ч, ш, щ, ы, э, ю, я'" 
  */
 function addCustomFootnotes(doc, footnoteMarkers) {
 
+	// validate the state, version, and input.
 	if (!app.documents.length) exit();
 	if (parseInt(app.version) < 14) {
 		alert('This function works in CC2019 and later');
 		exit();
 	}
 
+	if (!doc) {
+		throw "doc is null";
+	}
+	if (!footnoteMarkers) {
+		throw "footnoteMarkers is null";
+	}
+
 	// These are the symbols used as the new custom footnote markers.
-
-	// Normalizing footnotes. EG: "'а, б, в, г, д, е, ж, з, и, й, к, л, м, н, о, п, р, с, т, у, ф, х, ц, ч, ш, щ, ы, э, ю, я'" -> "абвгдежзийклмнопрстуфхцчшщыэюя"
+	// Normalizing footnotes. EG: "'а, б, в, г, д, е, ж, з, и, й, к, л, м, н, о, п, р, с, т, у, ф, х, ц, ч, ш, щ, ы, э, ю, я'" -> "а,б,в,г,д,е,ж,з,и,й,к,л,м,н,о,п,р,с,т,у,ф,х,ц,ч,ш,щ,ы,э,ю,я"
 	var symbols = footnoteMarkers
-		.replace(/[, ]/g, "");
+		.replace(/[ ]/g, "");
 
-	if (typeof symbols !== 'undefined') {
-		symbols = symbols.split('');
-		symbols.unshift('');
-		var symbolsLe = symbols.length - 1;
+	if (symbols.length > 0) {
+		symbols = symbols.split(',');
+		var symbolsLe = symbols.length;
 	} else {
-		symbols = '';
+		throw "footnoteMarkers has no markers.";
 	}
 
 	var sep = doc.footnoteOptions.separatorText;
-	var table;
 
 	// Style for the custom footnotes. We'll base it 
 	// from the style set in the footnote options.
@@ -51,21 +41,18 @@ function addCustomFootnotes(doc, footnoteMarkers) {
 
 	// The style set in the footnote options, 
 	// applied to the footnote references
-	var footnoteReferenceStyleName = 'Table note reference';
+	var footnoteReferenceStyleName = 'Custom footnote reference';
 
 	// The style used for the fake numbers in the notes
-	var footnoteNumberStyleName = 'Table note number';
+	var footnoteNumberStyleName = 'Custom footnote number';
 
 	// The style that hides the real footnote references and numbers
-	var hideStyleName = 'hide';
-
-	// Object style for inline tables
-	var objectStyleName = 'Inline table';
+	var hideStyleName = 'Hide original footnote';
 
 	function addMissingStyles() {
 
 		var fnoteStyle = doc.footnoteOptions.footnoteTextStyle;
-		var fnoteStyleName = fnoteStyle.name.replace(/[\[\]]/g, '') + ' table';
+		var fnoteStyleName = fnoteStyle.name.replace(/[\[\]]/g, '') + ' custom';
 		if (!doc.paragraphStyles.item(fnoteStyleName).isValid) {
 			doc.paragraphStyles.add({
 				name: fnoteStyleName,
@@ -101,61 +88,16 @@ function addCustomFootnotes(doc, footnoteMarkers) {
 			});
 		}
 
-		if (!doc.objectStyles.item(objectStyleName).isValid) {
-			doc.objectStyles.add({
-				name: objectStyleName,
-				basedOn: doc.objectStyles[2],
-				enableStroke: false,
-				strokeWeight: 0,
-				enableAnchoredObjectOptions: true,
-				anchoredObjectSettings: {
-					anchoredPosition: AnchorPosition.INLINE_POSITION
-				},
-				enableTextFrameAutoSizingOptions: true,
-				textFramePreferences: {
-					autoSizingType: AutoSizingTypeEnum.HEIGHT_ONLY,
-					autoSizingReferencePoint: AutoSizingReferenceEnum.TOP_CENTER_POINT
-				}
-			});
-		};
-
 		footnoteStyleName = doc.paragraphStyles.item(fnoteStyleName);
 		footnoteNumberStyleName = doc.characterStyles.item(footnoteNumberStyleName);
 		hideStyleName = doc.characterStyles.item(hideStyleName);
-		objectStyleName = doc.objectStyles.item(objectStyleName);
 	}
-
-	//-------------------------------------------------------------------------
-	// Converted some PHP code to JS to convert numbers to letters. Found at 
-	// http://studiokoi.com/blog/article/converting_numbers_to_letters_quickly_in_php
-
-	function numberToLetter(num) {
-		num -= 1;
-		var letter = String.fromCharCode(num % 26 + 97);
-		if (num >= 26) {
-			letter = numberToLetter(Math.floor(num / 26)) + letter;
-		}
-		return letter;
-	}
-
 
 	function numberToSymbol(n) {
-		function numToSymbol(x, sym) {
-			var s = '';
-			sym = sym || symbols[symbolsLe];
-			for (var i = 0; i < x; i++) {
-				s += sym;
-			}
-			return s;
-		}
-		return numToSymbol(Math.floor(n / symbolsLe), symbols[n % symbolsLe]) + symbols[n % symbolsLe];
+		return symbols[n % symbolsLe];
 	}
 
-
 	function getCue(n) {
-		if (!symbols.length) {
-			return numberToLetter(n);
-		}
 		return numberToSymbol(n);
 	}
 
@@ -184,17 +126,16 @@ function addCustomFootnotes(doc, footnoteMarkers) {
 
 		var i, ix;
 		var txt;
-		//var fn = frame.parentStory.footnotes.everyItem().getElements();
 		var fn = table.footnotes.everyItem().getElements();
 
-		// 1. The table itself. Insert the letters and add their style,
+		// 1. The content itself. Insert the letters and add their style,
 		// and apply the hiding style to the cues.
 
 		for (i = fn.length - 1; i >= 0; i--) {
 			ix = fn[i].storyOffset.index;
 			txt = fn[i].storyOffset.parent.texts[0];
 			txt.insertionPoints[ix + 1].appliedCharacterStyle = footnoteReferenceStyleName;
-			txt.insertionPoints[ix + 1].contents = getCue(i + 1);
+			txt.insertionPoints[ix + 1].contents = getCue(i);
 			txt.characters[ix].appliedCharacterStyle = hideStyleName;
 		}
 
@@ -205,12 +146,11 @@ function addCustomFootnotes(doc, footnoteMarkers) {
 		fn = table.findGrep();
 		for (i = fn.length - 1; i >= 0; i--) {
 			fn[i].texts[0].applyParagraphStyle(footnoteStyleName, false);
-			fn[i].insertionPoints[0].contents = getCue(i + 1);// + '\u2002';
+			fn[i].insertionPoints[0].contents = getCue(i);// + '\u2002';
 			fn[i].paragraphs[0].characters[0].appliedCharacterStyle = footnoteNumberStyleName;
 			fn[i].appliedCharacterStyle = hideStyleName;
 		}
 	}
-
 
 	//--------------------------------------------------------------
 	app.scriptPreferences.measurementUnit = MeasurementUnits.POINTS;
