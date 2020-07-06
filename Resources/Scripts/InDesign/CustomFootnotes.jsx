@@ -101,24 +101,6 @@ function addCustomFootnotes(doc, footnoteMarkers) {
 		return numberToSymbol(n);
 	}
 
-	//-------------------------------------------------------------
-	// First undo any lettering, maybe we're updating a frame 
-	// in which a notes were added or removed after the conversion.
-
-	function undoLetters(table) {
-		// Remove the contents of the cue style. InDesign then
-		// removes the character-style instance
-		app.findGrepPreferences = app.changeGrepPreferences = null;
-		app.findGrepPreferences.appliedCharacterStyle = footnoteReferenceStyleName;
-		table.changeGrep();
-
-		// Then delete the note numbers.
-		app.findGrepPreferences.appliedCharacterStyle = null;
-		app.findGrepPreferences.findWhat = '^[a-z].*(?=~F)';
-
-		table.changeGrep();
-	}
-
 	//----------------------------------------------------------
 	// Add the letters at the cues and the numbers.
 
