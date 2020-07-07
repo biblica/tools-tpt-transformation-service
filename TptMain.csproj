@@ -57,13 +57,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Scripts\InDesign\TypesettingPreviewAR.jsx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Scripts\InDesign\TypesettingPreviewDefault.jsx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Scripts\InDesign\TypesettingPreviewJPN.jsx">
+    <None Update="Resources\Scripts\InDesign\*.jsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
