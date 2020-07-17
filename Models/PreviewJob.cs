@@ -65,7 +65,17 @@ namespace TptMain.Models
         /// <summary>
         /// Whether or not there was an error during job execution.
         /// </summary>
-        public bool IsError { get; set; }
+        public bool IsError { get; set; } = false;
+
+        /// <summary>
+        /// User-friendly message regarding the error; <c>null</c> otherwise.
+        /// </summary>
+        public string ErrorMessage { get; private set; }
+
+        /// <summary>
+        /// More technical reason as to why the error occurred; <c>null</c> otherwise.
+        /// </summary>
+        public string ErrorDetail { get; private set; }
 
         /// <summary>
         /// Font size in points.
@@ -96,5 +106,26 @@ namespace TptMain.Models
         /// Book format, either TBOTB or CAV.
         /// </summary>
         public BookFormat? BookFormat { get; set; }
+
+        /// <summary>
+        /// Whether or not to use custom footnotes.
+        /// 
+        /// Note: The footnotes would be pulled from the project's respective Paratext footnote caller sequence.
+        /// </summary>
+        public bool UseCustomFootnotes { get; set; } = false;
+
+        /// <summary>
+        /// Function used for indicating an error occurred and provide a message for the reason.
+        /// </summary>
+        /// <param name="errorMessage">User-friendly error message. (Required)</param>
+        /// <param name="errorDetail">Information about why the error occurred. (Required)</param>
+        public void SetError(string errorMessage, string errorDetail)
+        {
+            // validate inputs
+            this.ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
+            this.ErrorDetail = errorDetail ?? throw new ArgumentNullException(nameof(errorDetail));
+
+            this.IsError = true;
+        }
     }
 }

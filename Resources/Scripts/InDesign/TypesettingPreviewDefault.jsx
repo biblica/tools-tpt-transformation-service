@@ -1,4 +1,6 @@
-﻿///////////////////////////////////////////////////////////////////////////////
+﻿#include "CustomFootnotes.jsx";
+
+///////////////////////////////////////////////////////////////////////////////
 // This is an InDesign Server script used to generate previews of a publishing
 // typeset. 
 // 
@@ -19,12 +21,16 @@
 // 3) bookFormat: The book output format. This impacts which template is used 
 //    when generating a typsetting preview. As-of 2020-04-09, there's only two 
 //    book formats: 'cav' and 'tbotb'.
+// 3) customFootnoteList: List of custom footnotes as a CSV string in the 
+//    order to be used. If not empty, will be used as markers in typesets. 
+//    EG: "a,d,e,ñ,h,Ä"
 ///////////////////////////////////////////////////////////////////////////////
 
-// Get job ID & project name from script args
+// Extract the preview job parameters from the script arguments.
 var jobId = app.scriptArgs.getValue("jobId");
 var projectName = app.scriptArgs.getValue("projectName");
 var bookFormat = app.scriptArgs.getValue("bookFormat");
+var customFootnotes = app.scriptArgs.getValue("customFootnoteList");
 
 // Set top-level base and output dirs
 var idttDir = 'C:\\Work\\IDTT\\';
@@ -36,11 +42,11 @@ var txtDir = idttDir + bookFormat + '\\' + projectName + '\\';
 var bookPath = idmlDir + 'preview-' + jobId + '.indb';
 var pdfPath = pdfDir + 'preview-' + jobId + '.pdf';
 
-// Create book to aggreage individual docs
+// Create book to aggregate individual docs
 var book = app.books.add(bookPath);
 book.automaticPagination = true;
 
-// Find & sort source documents to read
+// Find & sort tagged text documents to read
 var sortFunction = function sortFunction(f1, f2) {
     return f1.name.localeCompare(f2.name);
 }
@@ -53,16 +59,15 @@ txtFiles2.sort(sortFunction);
 var txtFiles = txtFiles1.concat(txtFiles2);
 
 // Create IDS document for each source, then add to book
-for (var ctr = 0;
-    ctr < txtFiles.length;
-    ctr++) {
+for (var ctr = 0; ctr < txtFiles.length; ctr++) {
+
     var txtFile = txtFiles[ctr];
     var docPath = idmlDir + 'preview-' + jobId + '-' + txtFile.name.replace('.txt', '') + '.indd';
 
     // Load template as starting point
     var doc = app.open(idmlDir + 'preview-' + jobId + '.idml');
 
-    // Turn off the preflight error detection while placing text
+    // Optimizations: turning off checking/auto-modifying capabilities to speed up performance
     doc.preflightOptions.preflightOff = true;
 
     try {
@@ -71,7 +76,12 @@ for (var ctr = 0;
         var pageItem = layer.pageItems.lastItem();
         var placement = pageItem.place(txtFile);
 
-        // re-enable the preflight error detection for the typesetters benefit
+        // Add custom footnotes
+        if (customFootnotes && customFootnotes.length > 0) {
+            addCustomFootnotes(doc, customFootnotes);
+        }
+
+        // re-enable the preflight and smart-reflow for the typesetters benefit
         doc.preflightOptions.preflightOff = false;
 
         // Save INDD file
@@ -82,10 +92,11 @@ for (var ctr = 0;
         book.bookContents.add(docPath);
         book.save();
     } catch (ex) {
-        alert("Can't create document: " + docPath
-            + ", project: " + projectName
-            + ", format: " + bookFormat
-            + ", cause: " + ex);
+        throw "Can't create document: " + docPath + "\n"
+        + "\tproject: " + projectName + "\n"
+        + "\tformat: " + bookFormat + "\n"
+        + "\tfootnotes: " + customFootnotes + "\n"
+        + "\tcause: " + ex;
     }
 }
 
