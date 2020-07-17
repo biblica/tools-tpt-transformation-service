@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading;
 using TptMain.InDesign;
 using TptMain.Models;
-using TptMain.Paratext;
+using TptMain.ParatextProjects;
 using TptMain.Toolbox;
 using TptMain.Util;
 
@@ -20,31 +20,6 @@ namespace TptMain.Jobs
     /// </summary>
     public class JobManager : IDisposable
     {
-        /// <summary>
-        /// IDML directory config key.
-        /// </summary>
-        public const string IdmlDocDirKey = "Docs:IDML:Directory";
-
-        /// <summary>
-        /// IDTT directory config key.
-        /// </summary>
-        public const string IdttDocDirKey = "Docs:IDTT:Directory";
-
-        /// <summary>
-        /// PDF directory config key.
-        /// </summary>
-        public const string PdfDocDirKey = "Docs:PDF:Directory";
-
-        /// <summary>
-        /// Zip directory config key.
-        /// </summary>
-        public const string ZipDocDirKey = "Docs:Zip:Directory";
-
-        /// <summary>
-        /// Max document age in seconds config key.
-        /// </summary>
-        public const string MaxDocAgeInSecKey = "Docs:MaxAgeInSec";
-
         /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
@@ -69,6 +44,11 @@ namespace TptMain.Jobs
         /// Paratext API service used to authorize user access.
         /// </summary>
         private readonly ParatextApi _paratextApi;
+
+        /// <summary>
+        /// Paratext Project service used to get information related to local Paratext projects.
+        /// </summary>
+        private readonly ParatextProjectService _paratextProjectService;
 
         /// <summary>
         /// Job scheduler service (injected).
@@ -124,6 +104,7 @@ namespace TptMain.Jobs
         /// <param name="scriptRunner">Script runner (required).</param>
         /// <param name="templateManager">Template manager (required).</param>
         /// <param name="paratextApi">Paratext API for verifying user authorization on projects (required).</param>
+        /// <param name="paratextProjectService">Paratext Project service for getting information related to local Paratext projects. (required).</param>
         /// <param name="jobScheduler">Job scheduler (required).</param>
         public JobManager(
             ILogger<JobManager> logger,
@@ -132,6 +113,7 @@ namespace TptMain.Jobs
             ScriptRunner scriptRunner,
             TemplateManager templateManager,
             ParatextApi paratextApi,
+            ParatextProjectService paratextProjectService,
             JobScheduler jobScheduler)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -140,18 +122,19 @@ namespace TptMain.Jobs
             _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _paratextApi = paratextApi ?? throw new ArgumentNullException(nameof(paratextApi));
+            _paratextProjectService = paratextProjectService ?? throw new ArgumentNullException(nameof(paratextProjectService));
             _jobScheduler = jobScheduler ?? throw new ArgumentNullException(nameof(jobScheduler));
 
-            _idmlDirectory = new DirectoryInfo(configuration[IdmlDocDirKey]
-                                               ?? throw new ArgumentNullException(IdmlDocDirKey));
-            _idttDirectory = new DirectoryInfo(configuration[IdttDocDirKey]
-                                               ?? throw new ArgumentNullException(IdttDocDirKey));
-            _pdfDirectory = new DirectoryInfo(configuration[PdfDocDirKey]
-                                              ?? throw new ArgumentNullException(PdfDocDirKey));
-            _zipDirectory = new DirectoryInfo(configuration[ZipDocDirKey]
-                                              ?? throw new ArgumentNullException(ZipDocDirKey));
-            _maxDocAgeInSec = int.Parse(configuration[MaxDocAgeInSecKey]
-                                        ?? throw new ArgumentNullException(MaxDocAgeInSecKey));
+            _idmlDirectory = new DirectoryInfo(configuration[ConfigConsts.IdmlDocDirKey]
+                                               ?? throw new ArgumentNullException(ConfigConsts.IdmlDocDirKey));
+            _idttDirectory = new DirectoryInfo(configuration[ConfigConsts.IdttDocDirKey]
+                                               ?? throw new ArgumentNullException(ConfigConsts.IdttDocDirKey));
+            _pdfDirectory = new DirectoryInfo(configuration[ConfigConsts.PdfDocDirKey]
+                                              ?? throw new ArgumentNullException(ConfigConsts.PdfDocDirKey));
+            _zipDirectory = new DirectoryInfo(configuration[ConfigConsts.ZipDocDirKey]
+                                              ?? throw new ArgumentNullException(ConfigConsts.ZipDocDirKey));
+            _maxDocAgeInSec = int.Parse(configuration[ConfigConsts.MaxDocAgeInSecKey]
+                                        ?? throw new ArgumentNullException(ConfigConsts.MaxDocAgeInSecKey));
             _jobCheckTimer = new Timer((stateObject) => { CheckPreviewJobs(); }, null,
                  TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
                  TimeSpan.FromSeconds(_maxDocAgeInSec / MainConsts.MAX_AGE_CHECK_DIVISOR));
@@ -288,7 +271,17 @@ namespace TptMain.Jobs
                 _previewContext.PreviewJobs.Add(inputJob);
                 _previewContext.SaveChanges();
 
-                _jobScheduler.AddEntry(new JobWorkflow(_logger, this, _scriptRunner, _templateManager, _paratextApi, inputJob));
+                _jobScheduler.AddEntry(
+                    new JobWorkflow(
+                        _logger, 
+                        this, 
+                        _scriptRunner,
+                        _templateManager,
+                        _paratextApi,
+                        _paratextProjectService,
+                        inputJob
+                        )
+                    );
 
                 outputJob = inputJob;
                 return true;
@@ -303,7 +296,6 @@ namespace TptMain.Jobs
         {
             // identifying information
             previewJob.Id = Guid.NewGuid().ToString();
-            previewJob.IsError = false;
             previewJob.DateSubmitted = DateTime.UtcNow;
             previewJob.DateStarted = null;
             previewJob.DateCompleted = null;

@@ -2,9 +2,10 @@
 using System;
 using System.IO;
 using System.Threading;
+using TptMain.Exceptions;
 using TptMain.InDesign;
 using TptMain.Models;
-using TptMain.Paratext;
+using TptMain.ParatextProjects;
 using TptMain.Toolbox;
 using TptMain.Util;
 
@@ -41,6 +42,11 @@ namespace TptMain.Jobs
         private readonly ParatextApi _paratextApi;
 
         /// <summary>
+        /// Paratext Project service used to get information related to local Paratext projects.
+        /// </summary>
+        private readonly ParatextProjectService _paratextProjectService;
+
+        /// <summary>
         /// Preview job.
         /// </summary>
         private readonly PreviewJob _previewJob;
@@ -68,6 +74,7 @@ namespace TptMain.Jobs
         /// <param name="scriptRunner">Script runner for IDS calls (required).</param>
         /// <param name="templateManager">Template manager for IDML retrieval (required).</param>
         /// <param name="paratextApi">Paratext API for verifiying user authorization on projects (required).</param>
+        /// <param name="paratextProjectService">Paratext Project service for getting information related to local Paratext projects. (required).</param>
         /// <param name="previewJob">Job to be executed (required).</param>
         public JobWorkflow(
             ILogger<JobManager> logger,
@@ -75,6 +82,7 @@ namespace TptMain.Jobs
             ScriptRunner scriptRunner,
             TemplateManager templateManager,
             ParatextApi paratextApi,
+            ParatextProjectService paratextProjectService,
             PreviewJob previewJob
             )
         {
@@ -84,6 +92,7 @@ namespace TptMain.Jobs
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _previewJob = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
             _paratextApi = paratextApi ?? throw new ArgumentNullException(nameof(paratextApi));
+            _paratextProjectService = paratextProjectService ?? throw new ArgumentNullException(nameof(paratextProjectService));
 
             _cancellationTokenSource = new CancellationTokenSource();
             _logger.LogDebug("JobEntry()");
@@ -105,6 +114,22 @@ namespace TptMain.Jobs
                     _paratextApi.IsUserAuthorizedOnProject(_previewJob);
                 }
 
+                // Grab the project's footnote markers if configured to do so.
+                string[] customFootnoteMarkers = null;
+                if (!IsJobCanceled && _previewJob.UseCustomFootnotes)
+                {
+                    customFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.ProjectName);
+                    // Throw an error, if custom footnotes are requested but are not available.
+                    // This allows us to set the user's expectations early, rather than waiting
+                    // for a preview.
+                    if (customFootnoteMarkers == null || customFootnoteMarkers.Length == 0)
+                    {
+                        throw new PreviewJobException(_previewJob, "Custom footnotes requested, but aren't specified in the project.");
+                    }
+
+                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", customFootnoteMarkers));
+                }
+
                 if (!IsJobCanceled)
                 {
                     _templateManager.DownloadTemplateFile(_previewJob,
@@ -115,7 +140,8 @@ namespace TptMain.Jobs
 
                 if (!IsJobCanceled)
                 {
-                    _scriptRunner.RunScript(_previewJob,
+                    _scriptRunner.RunScript(_previewJob, 
+                        customFootnoteMarkers,
                         _cancellationTokenSource.Token);
                 }
 
@@ -125,9 +151,14 @@ namespace TptMain.Jobs
             {
                 _logger.LogDebug(ex, $"Can't run job: {_previewJob.Id} (cancelled, ignoring).");
             }
+            catch (PreviewJobException ex)
+            {
+                _logger.LogWarning($"Can't run job: {ex}");
+                _previewJob.SetError("Can't generate preview.", ex.Message);
+            }
             catch (Exception ex)
             {
-                _previewJob.IsError = true;
+                _previewJob.SetError("An internal server error occurred.", ex.Message);
                 _logger.LogWarning(ex, $"Can't run job: {_previewJob.Id}");
             }
             finally

@@ -1,0 +1,112 @@
+﻿<ScriptureText>
+  <Name>amNASV01</Name>
+  <StyleSheet>usfm.sty</StyleSheet>
+  <MinParatextVersion>8.0.100.76</MinParatextVersion>
+  <FullName>New Amharic Standard Version</FullName>
+  <FileNameBookNameForm>41MAT</FileNameBookNameForm>
+  <FileNamePostPart>amNASV01.SFM</FileNamePostPart>
+  <Versification>4</Versification>
+  <Encoding>65001</Encoding>
+  <Language>Amharic</Language>
+  <DefaultFont>Abyssinica SIL</DefaultFont>
+  <DefaultFontSize>14</DefaultFontSize>
+  <Editable>T</Editable>
+  <InitialImportBooksDirectory>C:\My Paratext Projects\amNASBv1</InitialImportBooksDirectory>
+  <NeedsEnglishLanguageFix>No</NeedsEnglishLanguageFix>
+  <NeedsPortugueseLanguageFix>No</NeedsPortugueseLanguageFix>
+  <Guid>3b6ce54d76a633a4ad639378b6fac0ec6607d2f6</Guid>
+  <SegmentOrder>a b c d e f g *</SegmentOrder>
+  <TranslationInfo>Standard::</TranslationInfo>
+  <BiblicalTermsListSetting>Major::BiblicalTerms.xml</BiblicalTermsListSetting>
+  <LanguageIsoCode>am:::</LanguageIsoCode>
+  <ValidCharacters>  
+ * + \ 0 1 2 3 4 5 6 7 8 9 ሀ ሁ ሂ ሃ ሄ ህ ሆ ሇ ለ ሉ ሊ ላ ሌ ል ሎ ሐ ሑ ሒ ሓ ሔ ሕ ሖ መ ሙ ሚ ማ ሜ ም ሞ ሠ ሡ ሢ ሣ ሤ ሥ ሦ ረ ሩ ሪ ራ ሬ ር ሮ ሰ ሱ ሲ ሳ ሴ ስ ሶ ሸ ሹ ሺ ሻ ሼ ሽ ሾ ቀ ቁ ቂ ቃ ቄ ቅ ቆ በ ቡ ቢ ባ ቤ ብ ቦ ተ ቱ ቲ ታ ቴ ት ቶ ቸ ቹ ቺ ቻ ቼ ች ቾ ኀ ኁ ኂ ኃ ኄ ኅ ኆ ነ ኑ ኒ ና ኔ ን ኖ ኘ ኙ ኚ ኛ ኜ ኝ ኞ አ ኡ ኢ ኣ ኤ እ ኦ ከ ኩ ኪ ካ ኬ ክ ኮ ኸ ኹ ኺ ኻ ኼ ኽ ኾ ወ ዉ ዊ ዋ ዌ ው ዎ ዐ ዑ ዒ ዓ ዔ ዕ ዖ ዘ ዙ ዚ ዛ ዜ ዝ ዞ ዠ ዡ ዢ ዣ ዤ ዥ ዦ የ ዩ ዪ ያ ዬ ይ ዮ ደ ዱ ዲ ዳ ዴ ድ ዶ ጀ ጁ ጂ ጃ ጄ ጅ ጆ ገ ጉ ጊ ጋ ጌ ግ ጎ ጠ ጡ ጢ ጣ ጤ ጥ ጦ ጨ ጩ ጪ ጫ ጬ ጭ ጮ ጰ ጱ ጲ ጳ ጴ ጵ ጶ ጸ ጹ ጺ ጻ ጼ ጽ ጾ ፀ ፁ ፂ ፃ ፄ ፅ ፆ ፈ ፉ ፊ ፋ ፌ ፍ ፎ ፐ ፑ ፒ ፓ ፔ ፕ ፖ ዸ ዹ ዺ ዻ ዼ ዽ ዾ ቨ ቩ ቪ ቫ ቬ ቭ ቮ ጧ ኰ ሏ ሗ ሟ ሯ ሷ ሿ ቧ ቷ ቿ ኋ ኗ ኟ ኳ ዟ ፙ ሧ ፘ ቇ ቈ ቊ ቋ ቌ ቍ ቐ ቑ ቒ ቓ ቔ ቕ ቖ ቘ ቚ ቛ ቜ ቝ ቯ ኇ ኈ ኊ ኌ ኍ ኧ ኯ ኲ ኴ ኵ ዀ ዂ ዃ ዄ ዅ ዏ ዧ ዯ ዷ ዿ ጇ ጏ ጐ ጒ ጓ ጔ ጕ ጘ ጙ ጚ ጛ ጜ ጝ ጞ ጟ ጯ ጷ ጿ ፇ ፏ ፚ ፗ ‌ ‍ … , – ። / ? — ፤ . ’ ፣ ” ፡ ፥ ) “ ‘ ! ( [ ] 	ቌ - = ½   ፦ a A b B c C d D e E f F g G h H i I j J k K l L m M n N o O p P q Q r R s S T u U v V w W x X y Y z Z ~ # ® &lt; &gt; © ע ת ש ר ק צ פ ס נ מ ל כ י ט ח ז ב ו ה ד ג א 
+ t</ValidCharacters>
+  <NumberDecimalPoint>.</NumberDecimalPoint>
+  <NumberThousandsSeparator>,</NumberThousandsSeparator>
+  <NumberOrdinals>በ ከ የ</NumberOrdinals>
+  <NumberInitialPunctuation>-+({&lt;[$“</NumberInitialPunctuation>
+  <NumberFinalPunctuation>”)}፣፤፦።&gt;.!?],;</NumberFinalPunctuation>
+  <NumberMedialPunctuation>-/፡፥–…</NumberMedialPunctuation>
+  <NumberOrdinalType>prefix</NumberOrdinalType>
+  <NumberSettingsHaveBeenReviewed>T</NumberSettingsHaveBeenReviewed>
+  <CrossReferenceSettingsHaveBeenReviewed>T</CrossReferenceSettingsHaveBeenReviewed>
+  <RangeIndicator>-</RangeIndicator>
+  <SequenceIndicator>፡| እና |*፡</SequenceIndicator>
+  <ChapterVerseSeparator>፥</ChapterVerseSeparator>
+  <ChapterRangeSeparator>–</ChapterRangeSeparator>
+  <BookSequenceSeparator>፤ </BookSequenceSeparator>
+  <ChapterNumberSeparator>፤ </ChapterNumberSeparator>
+  <ReferenceExtraMaterial>ቊጥ|የ|በ|ከመዝሙር |ከ | ርእስ-50 ተጓ ምብ –| ማብ| ተጓ ምብ| ተጓ ምብ –|*</ReferenceExtraMaterial>
+  <BookSourceForMarkerXt>Abbreviation</BookSourceForMarkerXt>
+  <BookSourceForMarkerR>Abbreviation</BookSourceForMarkerR>
+  <RefsMustMatchVerseSegments>False</RefsMustMatchVerseSegments>
+  <SegmentsMustHaveFinalPunctuation>False</SegmentsMustHaveFinalPunctuation>
+  <NoSpaceBetweenBookAndChapter>False</NoSpaceBetweenBookAndChapter>
+  <Copyright>&lt;p&gt;Holy Bible, New Amharic Standard Version (Addisu Medebegna Tirgum)&lt;/p&gt;&lt;p&gt;Copyright © 2001 by Biblica, Inc.®&lt;/p&gt;&lt;p&gt;Used by permission of Biblica, Inc.® All rights reserved worldwide.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;&lt;p&gt;መጽሐፍ ቅዱስ፥ አዲሱ መደበኛ ትርጒም&lt;/p&gt;&lt;p&gt;የቅጂ መብት © 2001 በ Biblica, Inc.®&lt;/p&gt;&lt;p&gt;ፍቃድ የተሰጠው በ Biblica, Inc.®። መብቱ በሕግ የተጠበቀ።&lt;/p&gt;</Copyright>
+  <Pairs>(/) [/] {/}</Pairs>
+  <ClosedByParagraph>No</ClosedByParagraph>
+  <PoeticStyles>ib iq iq1 iq2 iq3 q q1 q2 q3 q4 qc qr qs qa qac qm qm1 qm2 qm3 b</PoeticStyles>
+  <IntroductionOutlineStyles>io io1 io2 io3 io4</IntroductionOutlineStyles>
+  <ContinueQuotes>Yes</ContinueQuotes>
+  <ContinueInnerQuotes>Yes</ContinueInnerQuotes>
+  <Quotes>“ ”</Quotes>
+  <InnerQuotes>‘ ’</InnerQuotes>
+  <InnerInnerQuotes>“ ”</InnerInnerQuotes>
+  <Continuer>“</Continuer>
+  <InnerContinuer>‘</InnerContinuer>
+  <InnerInnerContinuer>“</InnerInnerContinuer>
+  <VerboseQuotes>No</VerboseQuotes>
+  <QuoteClosesAllQuoteLevels>No</QuoteClosesAllQuoteLevels>
+  <ContinueAt>p pm li  b/m b/mi b/q1 b/q2 b/qm1 b/qm2 b/li1 b/li2 b/li3 b/li4 p/mi pm/qm1 m/mi m/q1 s1/p s1/q1 pmo pm/q1 p/pi3 p/q1 qa/q1</ContinueAt>
+  <AdvancedView>False</AdvancedView>
+  <ValidPunctuation>‌ ‍ _፤_ _–_ !_ ’_ _‘ _( )_ ?_ ”_ _“ ፣_ ።_ ፤_ _/_ …_ - _…_ ፦_ ፥ _… / … ]_ _[ _— . — ._ /_ = “ ፡ ። _~_ :_ %_ _#_ —_ _©_ ፡_ ®_ &gt;_ _&lt; ,_ _*_ _(_ _)_ * *_ ፤</ValidPunctuation>
+  <GuessTranslationsDestinationText>engNIV</GuessTranslationsDestinationText>
+  <ReferenceFinalPunctuation />
+  <CharacterAdvancedView>True</CharacterAdvancedView>
+  <InvalidCharacters />
+  <RepeatableWords>ጐርደድ ከንቱ ልጅ ዞሮ መንታ አዙሮ ማለዳ ጒብ ፉር ማታ ዋና ሙዳ ጠዋት ዳር እመር ቀና ጨው ዘለል በአምሳ ዐልፎ አምሳ ቊል ትንሽ ፈልጎ ወደቀች እንቅልፍ ዘር አለሁ ወዲያው ዋይ ቁና አራት ችም ወጣ ሃያ ሰው አምስት ቀን ጧት ዝቅ ጥሩ ጣል ዕለት በግለሰብ ሦስት ሰባት ጥንድ ልዩ ሁለት ቈረ ከፍ አንድ በቡድን ፊት ለስ አባቴ ስድስት ዐሥር ቶሎ ጥፍ ሰበ ለዚህ ጥር እምቧ ቍል ይህን ኋላ ቦታ እንዲህ መልክ ጥግ ምን ነው የት ያዕቆብ</RepeatableWords>
+  <NonRepeatableWords />
+  <Abbreviations>ኪ.ግ.</Abbreviations>
+  <DateArchived>2014-10-25T18:47:28.493051</DateArchived>
+  <AllowReadAccess>F</AllowReadAccess>
+  <OriginRangeOption>NoteInLastVerse</OriginRangeOption>
+  <AllowSharingWithSLDR>F</AllowSharingWithSLDR>
+  <EncodingConverter />
+  <InterlinearModelText>amCBE01</InterlinearModelText>
+  <InterlinearRelatedLanguages.amCBE01>False</InterlinearRelatedLanguages.amCBE01>
+  <InterlinearExportOnApprove.amCBE01>False</InterlinearExportOnApprove.amCBE01>
+  <FileNamePrePart />
+  <TextEntryFontSizeAdjustment>0</TextEntryFontSizeAdjustment>
+  <GBCId>546a4d985117ad1714205c63</GBCId>
+  <GBCSummary>Amharic(amh), መጽሐፍ ቅዱስ፥ አዲሱ መደበኛ ትርጒም (NASV), Ethiopia, Bible, 2001-06-01, Published, Biblica, amNASV01, dbl: matches, tms</GBCSummary>
+  <AssociatedLexicalProject />
+  <InvalidPunctuation>_-_ -_</InvalidPunctuation>
+  <SentenceFinalAdvancedView>True</SentenceFinalAdvancedView>
+  <SentenceFinalPunctuation>። ! ?</SentenceFinalPunctuation>
+  <MarkersCheckedForFinalPunctuation>ip im imi ipq imq ib iq1 iq2 ie p m pmo pm pmc pmr pi pi1 pi2 pi3 pc mi nb q1 q2 q3 q4 qc qr qa qm qm1 qm2 qm3 b d tr li li1 li2 li3 li4</MarkersCheckedForFinalPunctuation>
+  <MarkersStartingNewSentencesForFinalPunctuation>ip p b is is1 is2 ms1 mr s s1 s2 s3 s4 sr r sp</MarkersStartingNewSentencesForFinalPunctuation>
+  <MarkersSkippedForFinalPunctuation>qs</MarkersSkippedForFinalPunctuation>
+  <CheckFinalPunctuationInFootnotes>No</CheckFinalPunctuationInFootnotes>
+  <CheckFinalPunctuationInCrossRefs>No</CheckFinalPunctuationInCrossRefs>
+  <CheckFinalPunctuationInFigures>No</CheckFinalPunctuationInFigures>
+  <ValidParagraphFinalPunctuationItems>io_። io_! io_? ip_። ip_! ip_? im_። im_! im_? ipi_። ipi_! ipi_? imi_። imi_! imi_? ipq_። ipq_! ipq_? imq_። imq_! imq_? ipr_። ipr_! ipr_? ib_። ib_! ib_? iq_። iq_! iq_? iq1_። iq1_! iq1_? iq2_። iq2_! iq2_? iq3_። iq3_! iq3_? iex_። iex_! iex_? ie_። ie_! ie_? p_። p_! p_? m_። m_! m_? pmo_። pmo_! pmo_? pm_። pm_! pm_? pmc_። pmc_! pmc_? pmr_። pmr_! pmr_? pi_። pi_! pi_? pi1_። pi1_! pi1_? pi2_። pi2_! pi2_? pi3_። pi3_! pi3_? pc_። pc_! pc_? mi_። mi_! mi_? nb_። nb_! nb_? cls_። cls_! cls_? q_። q_! q_? q1_። q1_! q1_? q2_። q2_! q2_? q3_። q3_! q3_? q4_። q4_! q4_? qc_። qc_! qc_? qr_። qr_! qr_? qa_። qa_! qa_? qm_። qm_! qm_? qm1_። qm1_! qm1_? qm2_። qm2_! qm2_? qm3_። qm3_! qm3_? b_። b_! b_? d_። d_! d_? tr_። tr_! tr_? li_። li_! li_? li1_። li1_! li1_? li2_። li2_! li2_? li3_። li3_! li3_? li4_። li4_! li4_? lit_። lit_! lit_? p1_። p1_! p1_? p2_። p2_! p2_? k1_። k1_! k1_? k2_። k2_! k2_? pr_። pr_! pr_? ph_። ph_! ph_? ph1_። ph1_! ph1_? ph2_። ph2_! ph2_? ph3_። ph3_! ph3_? phi_። phi_! phi_? tr1_። tr1_! tr1_? tr2_። tr2_! tr2_? ps_። ps_! ps_? psi_። psi_! psi_? pub_። pub_! pub_? toc_። toc_! toc_? pref_። pref_! pref_? intro_። intro_! intro_? conc_። conc_! conc_? glo_። glo_! glo_? idx_። idx_! idx_? maps_። maps_! maps_? cov_። cov_! cov_? spine_። spine_! spine_? b b_— li1 li1_፤ li2 li2_፤ li3_፤ li4 li4_፤ m m_፣ m_፤ m_፦ mi_፤ mi_፦ tr_# pc_. pmo_፤ pmo_፣ q2_፦ qr_፤ q1_፣ pm_፤ tr pc p_፣ q1_፤ p_፦ q2_፤ p_፤ qc_፣ qc_፤ li4_፣ q3_፤ tr_፤ li2_፦ mi_. q2 d_፤ b_― q2_፣ p li4_፦ qa</ValidParagraphFinalPunctuationItems>
+  <InvalidParagraphFinalPunctuationItems />
+  <HindiUrduNumberGrouping>F</HindiUrduNumberGrouping>
+  <BooksPresent>111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000111000000000000000000000</BooksPresent>
+  <FontFeatures />
+  <HtmlLanguage />
+  <ParatextRegistryId>w5AWYyhrum4HtjEei</ParatextRegistryId>
+  <Visibility>Public</Visibility>
+  <MatchBasedOnStems>F</MatchBasedOnStems>
+  <BibleModuleAssociations />
+  <ValidSentenceFinalPunctCapitalization>? ።</ValidSentenceFinalPunctCapitalization>
+  <InvalidSentenceFinalPunctCapitalization />
+  <ValidUncapitalizedStyles>fqa pc sc p li1 xo</ValidUncapitalizedStyles>
+  <InvalidUncapitalizedStyles />
+  <MarkerAdvancedView>False</MarkerAdvancedView>
+  <NormalizationForm>NFC</NormalizationForm>
+  <UsfmVersion>3</UsfmVersion>
+  <IgnoreWhenFollowedByFinalPunctuationParameter>q/q q1/q1 q1/q2 q2/q2 q2/q1 q2/q3 q3/q3 q3/q2 q3/q4 q4/q4 /q4/q3 li/li li1/li1 li1/li2 li2/li2 li2/li1 li2/li3 li3/li3 li3/li2 li3/li4 li4/li4 li4/li3 qm/qm qm1/qm1 qm1/qm2 qm2/qm2 qm2/qm1 qm2/qm3 qm3/qm3 qm3/qm2 lim/lim lim1/lim1 lim1/lim2 lim2/lim2 lim2/lim1 lim2/lim3 lim3/lim3 lim3/lim2 lim3/lim4 lim4/lim4 lim4/lim3 iq/iq iq1/iq1 iq1/iq2 iq2/iq2 iq2/iq1 iq2/iq3 iq3/iq3 iq3/iq2 ili/ili ili1/ili1 ili1/ili2 ili2/ili2 ili2/ili1</IgnoreWhenFollowedByFinalPunctuationParameter>
+  <Naming PrePart="" PostPart="amNASV01.SFM" BookNameForm="41MAT" />
+</ScriptureText>
