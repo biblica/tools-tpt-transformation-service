@@ -1,0 +1,113 @@
+﻿<ScriptureText>
+  <AdvancedView>True</AdvancedView>
+  <BiblicalTermsListSetting>All::AllBiblicalTerms.xml</BiblicalTermsListSetting>
+  <BookSequenceSeparator>; </BookSequenceSeparator>
+  <BookSourceForMarkerR>LongName</BookSourceForMarkerR>
+  <BookSourceForMarkerXt>ShortName</BookSourceForMarkerXt>
+  <ChapterNumberSeparator>; |s </ChapterNumberSeparator>
+  <ChapterRangeSeparator>–|—</ChapterRangeSeparator>
+  <ChapterVerseSeparator>:</ChapterVerseSeparator>
+  <CharacterAdvancedView>True</CharacterAdvancedView>
+  <ClosedByParagraph>No</ClosedByParagraph>
+  <ContinueAt>p pm p/q1 b/m b/mi b/q1 b/q2 b/qm1 b/qm2 p/mi p/pi1 pm/qm1 m/mi m/q1 s1/p s1/q1 pmo pm/q1 p/pi3 b/li1 b/li2 b/li3 b/li4</ContinueAt>
+  <ContinueInnerQuotes>Yes</ContinueInnerQuotes>
+  <ContinueQuotes>Yes</ContinueQuotes>
+  <Continuer>“</Continuer>
+  <Copyright>&lt;p&gt;The Holy Bible, New International Version® NIV®&lt;/p&gt;&lt;p&gt;Copyright © 1973, 1978, 1984, 2011 by Biblica, Inc.®&lt;/p&gt;&lt;p&gt;Used by Permission of Biblica, Inc.® All rights reserved worldwide.&lt;/p&gt;</Copyright>
+  <CrossReferenceSettingsHaveBeenReviewed>T</CrossReferenceSettingsHaveBeenReviewed>
+  <DefaultFont>Sylfaen</DefaultFont>
+  <DefaultFontSize>12</DefaultFontSize>
+  <Editable>T</Editable>
+  <Encoding>65001</Encoding>
+  <FileNameBookNameForm>41MAT</FileNameBookNameForm>
+  <FileNameForm>41MAT</FileNameForm>
+  <FileNamePostPart>usNIV11.SFM</FileNamePostPart>
+  <FullName>New International Version 2011 (Revised format)</FullName>
+  <Guid>78a9f6124f3440185a6cf8636223a4f858eecd47</Guid>
+  <InitialImportBooksDirectory>C:\My Paratext Projects\engNIV</InitialImportBooksDirectory>
+  <InnerContinuer>‘</InnerContinuer>
+  <InnerInnerContinuer>“</InnerInnerContinuer>
+  <InnerInnerQuotes>“ ”</InnerInnerQuotes>
+  <InnerQuotes>‘ ’</InnerQuotes>
+  <IntroductionOutlineStyles>io io1 io2 io3 io4</IntroductionOutlineStyles>
+  <InvalidSentenceFinalPunctCapitalization />
+  <Language>English</Language>
+  <LanguageIsoCode>en::US:</LanguageIsoCode>
+  <Name>usNIV11</Name>
+  <NeedsEnglishLanguageFix>No</NeedsEnglishLanguageFix>
+  <NeedsPortugueseLanguageFix>No</NeedsPortugueseLanguageFix>
+  <NoSpaceBetweenBookAndChapter>False</NoSpaceBetweenBookAndChapter>
+  <NumberDecimalPoint>.</NumberDecimalPoint>
+  <NumberFinalPunctuation>)}"&gt;.!?:],;—%</NumberFinalPunctuation>
+  <NumberInitialPunctuation>-+"({&lt;[$#</NumberInitialPunctuation>
+  <NumberMedialPunctuation>-/ʼ–—:</NumberMedialPunctuation>
+  <NumberOrdinalType>suffix</NumberOrdinalType>
+  <NumberOrdinals>st nd rd th a b</NumberOrdinals>
+  <NumberSettingsHaveBeenReviewed>T</NumberSettingsHaveBeenReviewed>
+  <NumberThousandsSeparator>,</NumberThousandsSeparator>
+  <Pairs>(/) [/] {/}</Pairs>
+  <PoeticStyles>ib iq iq1 iq2 iq3 q q1 q2 q3 q4 qc qr qs qa qac qm qm1 qm2 qm3 b</PoeticStyles>
+  <QuoteClosesAllQuoteLevels>No</QuoteClosesAllQuoteLevels>
+  <Quotes>“ ”</Quotes>
+  <RangeIndicator>-|–</RangeIndicator>
+  <ReferenceExtraMaterial>verse |verses |Introduction in |the Invitation to |–Acts|see |a|b </ReferenceExtraMaterial>
+  <ReferenceFinalPunctuation />
+  <RefsMustMatchVerseSegments>False</RefsMustMatchVerseSegments>
+  <SegmentOrder>a b c d e f g h i j k l m n o p q r s t u v w x y z aa bb cc dd ee ff gg hh ii jj kk ll mm nn oo pp qq rr ss tt uu vv ww xx yy zz</SegmentOrder>
+  <SegmentsMustHaveFinalPunctuation>False</SegmentsMustHaveFinalPunctuation>
+  <SequenceIndicator>,|, </SequenceIndicator>
+  <StyleSheet>usfm.sty</StyleSheet>
+  <TextEntryFontSizeAdjustment>-1</TextEntryFontSizeAdjustment>
+  <TranslationInfo>Standard::</TranslationInfo>
+  <ValidCharacters>  A a B b D d Ɖ ɖ z E e Ɛ ɛ F f Ƒ ƒ G g Ɣ ɣ H h I i K k p L l M m N n y Ŋ ŋ O o Ɔ ɔ ̀ ́ ̃ P R r S s T t U u V v Ʋ ʋ W w X x Y Z - ' ´ — ‌ ‍ ! " ( ) , . / 0 1 2 3 4 5 6 7 8 9 : ; ? C J Q [ ] c j q ~ – ‘ ’ “ ” … ʼ   
+ * + \ ט ח י ל כ ז ב ﬡ ג ה ד מ ר ק ש ו ת ע ס נ צ פ अ आ इ ई उ ऊ ऋ ए ऐ ओ औ अं क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र ल व श ष स ह क्ष ज्ञ א ® é # © &amp; { } 
+ &gt; &lt; %</ValidCharacters>
+  <ValidPunctuation>- ' ´ — ‌ ‍ /_ ) ‘ ” ! _… ]_ / _[ … _/_ _( —_ )_ ’_ ~ !_ _‘ :_ ?_ ”_ ;_ _“ ._ ,_ _— …_ “ ? ’ '_ ʼ _—_ _/ ʼ_ _~ ,_( .”)_ .”_/_ ’!”_ ’;_ .’”_( !”’”_ _(“ .)—_ ’—_ ?’—_ ,_// —/_ _/~ )— ):_ ?’”_ )—_ _// !”— !’”_ .]_ !”’_ ”?_ .’”)_ ”— ?”’_ -._ …;_/_… …_/_ ?”_( ,_“‘ ,’_‘ ?’”_( ),_“ ”),_ ’…”_( !”)._ .’_‘ ?”)._ ?”— ”)._ :_“‘ ._/_ !’:_ )_/_ )_( ”:_ :_/_‘ .’_/_ ?_/_ ?”—_ —‘ ,’”_ !—_ :_/_“ ?—_ .’”_ ._“ ?”_ ,’_ ,_‘ ’?”_ ?_“ ?_‘ .’_ !”_ ’—/_ ?”)_ :_“ ,”_“ ;_“ .”_ ;/_ .)._ ,_“ ,”_ ?)_ )._ ._( .)_ !”?_ );_ —_“ ?_( ”;_ _(“‘ ”),_“ ,_/_ _“‘ ”—_ ?”’”_ _“… )_“ —“ _“‘“ ),_ .”’”_ ’— ?’_ .”_( ;_/_ ’?_ …?_ ”’?_ ”_( !’_ :_‘ !”_( .”’_ ._‘ ”)_ …._ _:~ – ?— _:_ _# ”_(# :_( !”_“ .®_ ®_ _©_ [ _(# ]_( _~_ _~~ _~~_ _: .’ ,’ _~~~_ ’—_/_ ],_ ~~~ _~~~ _~~~~~~~~ —_/_ . .”,_ }_ },_ _} }._ {,_ {_ .,_ ,,_ ._(“ !— -_ _&amp;_ ])._ ”_“ ).”_ _“( ®)_ .®,_ :[ : .~~_ ?_#_ &gt;—_ _—&lt; %)_ _#_ _~~_#_ _…_</ValidPunctuation>
+  <ValidSentenceFinalPunctCapitalization>: ” - ’ ! ? ʼ ) ; , … / — !’: ): ”) ;/ ] ”), ’; !’ ”; ?’ !” ), ); ?” ,’ ,” ;\0020/ ,\0020/ ~~ …\0020/ )\0020/ . ?— .)— ?’— ’— ?”— —/ !— )— ”— —\0020/ {, } { ®) ® %)</ValidSentenceFinalPunctCapitalization>
+  <ValidUncapitalizedStyles>q3 tl q4 qm1 li3 p nb qc it pc wj qm2 fq q1 ft fqa q2 li2 mi m sc li1 b li4 qt iq1 k mt3 mt2 mt4 ili1 iq2 em ord xt pr</ValidUncapitalizedStyles>
+  <VerboseQuotes>No</VerboseQuotes>
+  <MinParatextVersion>8.0.100.76</MinParatextVersion>
+  <Versification>4</Versification>
+  <GBCId>5a30148e5117ad159e650189</GBCId>
+  <GBCSummary>English(eng), New International Version® NIV®, United States, Bible, 2011-01-01, usNIV11, dbl: matches</GBCSummary>
+  <DBLIncludeFonts>False</DBLIncludeFonts>
+  <InvalidPunctuation>_’ ,</InvalidPunctuation>
+  <FileNamePrePart />
+  <AssociatedLexicalProject />
+  <OriginRangeOption>NoteInLastVerse</OriginRangeOption>
+  <AllowReadAccess>F</AllowReadAccess>
+  <InvalidCharacters />
+  <Abbreviations>pl.</Abbreviations>
+  <SentenceFinalAdvancedView>True</SentenceFinalAdvancedView>
+  <SentenceFinalPunctuation>. ! ? : —</SentenceFinalPunctuation>
+  <MarkersCheckedForFinalPunctuation>ip im imi ipq imq ib iq1 iq2 ie p m pmo pm pmc pmr pi pi1 pi2 pi3 pc mi nb q1 q2 q3 q4 qc qr qa qm qm1 qm2 qm3 b d tr li li1 li2 li3 li4 ph1 ph2</MarkersCheckedForFinalPunctuation>
+  <MarkersStartingNewSentencesForFinalPunctuation>ip p b is is1 is2 ms1 mr s s1 s2 s3 s4 sr r sp</MarkersStartingNewSentencesForFinalPunctuation>
+  <MarkersSkippedForFinalPunctuation>qs qr ord fm</MarkersSkippedForFinalPunctuation>
+  <CheckFinalPunctuationInFootnotes>No</CheckFinalPunctuationInFootnotes>
+  <CheckFinalPunctuationInCrossRefs>No</CheckFinalPunctuationInCrossRefs>
+  <CheckFinalPunctuationInFigures>No</CheckFinalPunctuationInFigures>
+  <ValidParagraphFinalPunctuationItems>io_. io_! io_? io_: io_— ip_. ip_! ip_? ip_: ip_— im_. im_! im_? im_: im_— ipi_. ipi_! ipi_? ipi_: ipi_— imi_. imi_! imi_? imi_: imi_— ipq_. ipq_! ipq_? ipq_: ipq_— imq_. imq_! imq_? imq_: imq_— ipr_. ipr_! ipr_? ipr_: ipr_— ib_. ib_! ib_? ib_: ib_— iq_. iq_! iq_? iq_: iq_— iq1_. iq1_! iq1_? iq1_: iq1_— iq2_. iq2_! iq2_? iq2_: iq2_— iq3_. iq3_! iq3_? iq3_: iq3_— iex_. iex_! iex_? iex_: iex_— ie_. ie_! ie_? ie_: ie_— p_. p_! p_? p_: p_— m_. m_! m_? m_: m_— pmo_. pmo_! pmo_? pmo_: pmo_— pm_. pm_! pm_? pm_: pm_— pmc_. pmc_! pmc_? pmc_: pmc_— pmr_. pmr_! pmr_? pmr_: pmr_— pi_. pi_! pi_? pi_: pi_— pi1_. pi1_! pi1_? pi1_: pi1_— pc_. pc_! pc_? pc_: pc_— mi_. mi_! mi_? mi_: mi_— nb_. nb_! nb_? nb_: nb_— cls_. cls_! cls_? cls_: cls_— q_. q_! q_? q_: q_— q1_. q1_! q1_? q1_: q1_— q2_. q2_! q2_? q2_: q2_— q3_. q3_! q3_? q3_: q3_— q4_. q4_! q4_? q4_: q4_— qc_. qc_! qc_? qc_: qc_— qr_. qr_! qr_? qr_: qr_— qa_. qa_! qa_? qa_: qa_— qm_. qm_! qm_? qm_: qm_— qm1_. qm1_! qm1_? qm1_: qm1_— qm2_. qm2_! qm2_? qm2_: qm2_— qm3_. qm3_! qm3_? qm3_: qm3_— b_. b_! b_? b_: b_— d_. d_! d_? d_: d_— tr_. tr_! tr_? tr_: tr_— li1_. li1_! li1_? li1_: li1_— li2_. li2_! li2_? li2_: li2_— li3_. li3_! li3_? li3_: li3_— li4_. li4_! li4_? li4_: li4_— lit_. lit_! lit_? lit_: lit_— p1_. p1_! p1_? p1_: p1_— p2_. p2_! p2_? p2_: p2_— k1_. k1_! k1_? k1_: k1_— k2_. k2_! k2_? k2_: k2_— pr_. pr_! pr_? pr_: pr_— ph_. ph_! ph_? ph_: ph_— ph1_. ph1_! ph1_? ph1_: ph1_— ph2_. ph2_! ph2_? ph2_: ph2_— ph3_. ph3_! ph3_? ph3_: ph3_— phi_. phi_! phi_? phi_: phi_— tr1_. tr1_! tr1_? tr1_: tr1_— tr2_. tr2_! tr2_? tr2_: tr2_— ps_. ps_! ps_? ps_: ps_— psi_. psi_! psi_? psi_: psi_— pub_. pub_! pub_? pub_: pub_— toc_. toc_! toc_? toc_: toc_— pref_. pref_! pref_? pref_: pref_— intro_. intro_! intro_? intro_: intro_— conc_. conc_! conc_? conc_: conc_— glo_. glo_! glo_? glo_: glo_— idx_. idx_! idx_? idx_: idx_— maps_. maps_! maps_? maps_: maps_— cov_. cov_! cov_? cov_: cov_— spine_. spine_! spine_? spine_: spine_— p_, pc_® mi_® tr li1_# li1_…</ValidParagraphFinalPunctuationItems>
+  <InvalidParagraphFinalPunctuationItems />
+  <InvalidUncapitalizedStyles />
+  <RepeatableWords>Potter Pashhur Prayer 2 Gates had 3 1</RepeatableWords>
+  <NonRepeatableWords />
+  <HindiUrduNumberGrouping>F</HindiUrduNumberGrouping>
+  <ValidMixedCapitalization>BiblicaLogo LivingTheScript TheBooks</ValidMixedCapitalization>
+  <InvalidMixedCapitalization />
+  <MarkerAdvancedView>False</MarkerAdvancedView>
+  <AllowSharingWithSLDR>F</AllowSharingWithSLDR>
+  <EncodingConverter />
+  <BooksPresent>111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000111000010000000000000000</BooksPresent>
+  <FontFeatures />
+  <HtmlLanguage />
+  <ParatextRegistryId>ohZRXXwRihG8BBNLc</ParatextRegistryId>
+  <Visibility>Public</Visibility>
+  <MatchBasedOnStems>F</MatchBasedOnStems>
+  <BibleModuleAssociations />
+  <DateArchived>2017-12-12T17:40:12.707337</DateArchived>
+  <PaOriginalStylesheetName />
+  <DefaultFootnoteCaller>+</DefaultFootnoteCaller>
+  <UsfmVersion>3</UsfmVersion>
+  <ParallelPassagesBooks>000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</ParallelPassagesBooks>
+  <Naming PrePart="" PostPart="usNIV11.SFM" BookNameForm="41MAT" />
+</ScriptureText>

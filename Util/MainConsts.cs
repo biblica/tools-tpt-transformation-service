@@ -56,5 +56,18 @@ namespace TptMain.Util
         /// Preview file name prefix.
         /// </summary>
         public const string PREVIEW_FILENAME_PREFIX = "preview-";
+
+        /// <summary>
+        /// Paratext project settings filename.
+        /// </summary>
+        public const string SETTINGS_FILE_PATH = "Settings.xml";
+
+        /// <summary>
+        /// The filepath of a file known to be in every Paratext project directory. 
+        /// This assists in determining if a directory is a Paratext project directory or not.
+        /// </summary>
+        public const string PARATEXT_PROJECT_KNOWN_FILE_PATH = "ProjectUserAccess.xml";
+
+
     }
 }

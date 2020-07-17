@@ -10,7 +10,7 @@ using TptMain.Http;
 using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
-using TptMain.Paratext;
+using TptMain.ParatextProjects;
 using TptMain.Toolbox;
 using TptMain.Util;
 
@@ -19,13 +19,6 @@ namespace TptTest
     [TestClass]
     public class JobManagerTests
     {
-        // test config values
-        public const string TEST_IDML_DOC_DIR = "C:\\Work\\IDML";
-        public const string TEST_IDTT_DOC_DIR = "C:\\Work\\IDTT";
-        public const string TEST_PDF_DOC_DIR = "C:\\Work\\PDF";
-        public const string TEST_ZIP_DOC_DIR = "C:\\Work\\Zip";
-        public const string TEST_DOC_MAX_AGE_IN_SEC = "86400";
-
         /// <summary>
         /// Mock job manager logger.
         /// </summary>
@@ -62,6 +55,11 @@ namespace TptTest
         private Mock<ParatextApi> _mockParatextApi;
 
         /// <summary>
+        /// Mock Paratext Project Service API.
+        /// </summary>
+        private Mock<ParatextProjectService> _mockParatextProjectService;
+
+        /// <summary>
         /// Mock job scheduler.
         /// </summary>
         private Mock<JobScheduler> _mockJobScheduler;
@@ -88,21 +86,22 @@ namespace TptTest
             configKeys[TemplateManagerTests.TEST_TEMPLATE_TIMEOUT_IN_SEC_KEY] = TemplateManagerTests.TEST_TEMPLATE_TIMEOUT_IN_SEC;
 
             // - ParatextApi
-            configKeys[ParatextApi.ParatextApiServerUriKey] = ParatextApiTests.TEST_PT_API_SERVER_URI;
-            configKeys[ParatextApi.ParatextApiUsernameKey] = ParatextApiTests.TEST_PT_API_USERNAME;
-            configKeys[ParatextApi.ParatextApiPasswordKey] = ParatextApiTests.TEST_PT_API_PASSWORD;
-            configKeys[ParatextApi.ParatextApiProjectCacheAgeInSecKey] = ParatextApiTests.TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC.ToString();
+            configKeys[ConfigConsts.ParatextApiServerUriKey] = ParatextApiTests.TEST_PT_API_SERVER_URI;
+            configKeys[ConfigConsts.ParatextApiUsernameKey] = ParatextApiTests.TEST_PT_API_USERNAME;
+            configKeys[ConfigConsts.ParatextApiPasswordKey] = ParatextApiTests.TEST_PT_API_PASSWORD;
+            configKeys[ConfigConsts.ParatextApiProjectCacheAgeInSecKey] = ParatextApiTests.TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC.ToString();
             for (var i = 0; i < ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES.Count; i++)
             {
-                configKeys[ParatextApi.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
+                configKeys[ConfigConsts.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
             }
 
             // - JobManager
-            configKeys[JobManager.IdmlDocDirKey] = TEST_IDML_DOC_DIR;
-            configKeys[JobManager.IdttDocDirKey] = TEST_IDTT_DOC_DIR;
-            configKeys[JobManager.PdfDocDirKey] = TEST_PDF_DOC_DIR;
-            configKeys[JobManager.ZipDocDirKey] = TEST_ZIP_DOC_DIR;
-            configKeys[JobManager.MaxDocAgeInSecKey] = TEST_DOC_MAX_AGE_IN_SEC;
+            configKeys[ConfigConsts.IdmlDocDirKey] = TestConsts.TEST_IDML_DOC_DIR;
+            configKeys[ConfigConsts.IdttDocDirKey] = TestConsts.TEST_IDTT_DOC_DIR;
+            configKeys[ConfigConsts.ParatextDocDirKey] = TestConsts.TEST_PARATEXT_DOC_DIR;
+            configKeys[ConfigConsts.PdfDocDirKey] = TestConsts.TEST_PDF_DOC_DIR;
+            configKeys[ConfigConsts.ZipDocDirKey] = TestConsts.TEST_ZIP_DOC_DIR;
+            configKeys[ConfigConsts.MaxDocAgeInSecKey] = TestConsts.TEST_DOC_MAX_AGE_IN_SEC;
 
             // - JobScheduler
             configKeys[JobSchedulerTests.TEST_MAX_CONCURRENT_JOBS_KEY] = JobSchedulerTests.TEST_MAX_CONCURRENT_JOBS;
@@ -138,6 +137,11 @@ namespace TptTest
             _mockParatextApi = new Mock<ParatextApi>(MockBehavior.Strict,
                 mockParatextApiLogger.Object, _testConfiguration);
 
+            // mock: paratext project service
+            var _mockParatextProjectServiceLogger = new Mock<ILogger<ParatextProjectService>>();
+            _mockParatextProjectService = new Mock<ParatextProjectService>(MockBehavior.Strict,
+                _mockParatextProjectServiceLogger.Object, _testConfiguration);
+
             // mock: job scheduler
             var mockJobSchedulerLogger = new Mock<ILogger<JobScheduler>>();
             _mockJobScheduler = new Mock<JobScheduler>(MockBehavior.Strict,
@@ -158,6 +162,7 @@ namespace TptTest
                 _mockScriptRunner.Object,
                 _mockTemplateManager.Object,
                 _mockParatextApi.Object,
+                _mockParatextProjectService.Object,
                 _mockJobScheduler.Object);
         }
 
@@ -180,11 +185,12 @@ namespace TptTest
                 _mockScriptRunner.Object,
                 _mockTemplateManager.Object,
                 _mockParatextApi.Object,
+                _mockParatextProjectService.Object,
                 _mockJobScheduler.Object);
 
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
 
-            var expectedZipFileName = $@"{TEST_ZIP_DOC_DIR}\{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.zip";
+            var expectedZipFileName = $@"{TestConsts.TEST_ZIP_DOC_DIR}\{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.zip";
 
             // delete the file if it already exists
             if (File.Exists(expectedZipFileName))
