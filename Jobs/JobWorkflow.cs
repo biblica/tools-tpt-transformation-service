@@ -130,6 +130,20 @@ namespace TptMain.Jobs
                     _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", customFootnoteMarkers));
                 }
 
+                // If we're using the project font (rather than what's in the IDML) pass it as an override.
+                string overrideFont = null;
+                if(!IsJobCanceled && _previewJob.UseProjectFont)
+                {
+                    overrideFont = _paratextProjectService.GetProjectFont(_previewJob.ProjectName);
+
+                    if (String.IsNullOrEmpty(overrideFont))
+                    {
+                        throw new PreviewJobException(_previewJob, "Project font requested, but none was specified in the project.");
+                    }
+
+                    _logger.LogInformation("Project font requested and found. Project font: ", overrideFont);
+                }
+
                 if (!IsJobCanceled)
                 {
                     _templateManager.DownloadTemplateFile(_previewJob,
@@ -142,6 +156,7 @@ namespace TptMain.Jobs
                 {
                     _scriptRunner.RunScript(_previewJob, 
                         customFootnoteMarkers,
+                        overrideFont,
                         _cancellationTokenSource.Token);
                 }
 

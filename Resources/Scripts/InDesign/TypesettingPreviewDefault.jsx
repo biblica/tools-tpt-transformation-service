@@ -27,17 +27,12 @@
 //    EG: "a,d,e,ñ,h,Ä"
 ///////////////////////////////////////////////////////////////////////////////
 
-// TEMPORARY Default values. (remove once the below values are being passed)
-var DEFAULT_PROJECT_FONT = "Adobe Arabic";
-var DEFAULT_USE_PROJECT_FONT = true;
-
 // Extract the preview job parameters from the script arguments.
 var jobId = app.scriptArgs.getValue("jobId");
 var projectName = app.scriptArgs.getValue("projectName");
 var bookFormat = app.scriptArgs.getValue("bookFormat");
 var customFootnotes = app.scriptArgs.getValue("customFootnoteList");
-var projectFont = app.scriptArgs.getValue("projectFont") || DEFAULT_PROJECT_FONT;
-var useProjectFont = app.scriptArgs.getValue("useProjectFont") || DEFAULT_USE_PROJECT_FONT;
+var overrideFont = app.scriptArgs.getValue("overrideFont");
 
 // Set top-level base and output dirs
 var idttDir = 'C:\\Work\\IDTT\\';
@@ -79,8 +74,8 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
 
     try {
         // Update the fonts in the IDML to match the Paratext project.
-        if (DEFAULT_USE_PROJECT_FONT) {
-            updateFont(doc, DEFAULT_PROJECT_FONT);
+        if (typeof overrideFont === 'string' && overrideFont.length) {
+            updateFont(doc, overrideFont);
         }
 
         // Place text

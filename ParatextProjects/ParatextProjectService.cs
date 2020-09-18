@@ -66,5 +66,24 @@ namespace TptMain.ParatextProjects
 
             return footnoteMarkers;
         }
+
+        /// <summary>
+        /// Get the font associated with a Paratext project.
+        /// </summary>
+        /// <param name="projectShortName">The Paratext project's shortname.</param>
+        /// <returns>The font name specified by the Paratext project.</returns>
+        public virtual string GetProjectFont(string projectShortName)
+        {
+            if(String.IsNullOrEmpty(projectShortName))
+            {
+                throw new ArgumentException($"{nameof(projectShortName)} must be a non-empty string.");
+            }
+
+            // Grab the Paratext project settings (for the LDML path).
+            var projectPath = Path.Combine(_paratextDirectory.FullName, projectShortName);
+            var projectSettings = ParatextProjectHelper.GetProjectSettings(projectPath);
+
+            return projectSettings.DefaultFont;
+        }
     }
 }
