@@ -1,0 +1,68 @@
+/**
+ * This function updates font references in specified paragraph and character styles
+ * so that they inherit font settings from the appropriate base style.
+ * @param {InDesignDoc} document An indesign document.
+ * @param {string} projectFont The font which should be applied to the base style.
+ * @param {string} baseParagraphStyleName (Optional) The base style from which other styles should inherit.
+ * @param {[{group: null | string, style: string]} paragraphStylesToClear (Optional) The paragraphStyles (and their enclosing group) to update.
+ * @param {string[]} characterStylesToClear (Optional) The characterStyles to update.
+ **/
+function updateFont(document, projectFont, baseParagraphStyleName, paragraphStylesToClear, characterStylesToClear){
+    // Default values.
+    var BASE_PARAGRAPH_STYLE_NAME = "DefaultParagraph";
+    var PARAGRAPH_STYLES_TO_CLEAR = [{
+        group: null,
+        style: "DefaultHeading",
+     },{
+         group: "Titles",
+         style: "mt1",
+     },{
+         group: "Intros",
+         style: "ip",
+     }]
+    var CHARACTER_STYLES_TO_CLEAR = ["book", "chap"];
+    
+    // Assign defaults if a falsey value is passed. This is a basic implementation of optional parameters.
+    baseParagraphStyleName = baseParagraphStyleName || BASE_PARAGRAPH_STYLE_NAME;
+    paragraphStylesToClear = paragraphStylesToClear || PARAGRAPH_STYLES_TO_CLEAR;
+    characterStylesToClear = characterStylesToClear || CHARACTER_STYLES_TO_CLEAR;
+
+    // Update our base paragraph style and grab a copy for use when telling other styles to inherit from it.
+    var defaultParagraphStyle = document.paragraphStyles.itemByName(baseParagraphStyleName);
+    try {
+        defaultParagraphStyle.appliedFont = projectFont;
+    } catch (e) {
+        throw Error('Failed to update base style.');
+    }
+    
+    // Update all the specified paragraph styles to inherit their font settings.
+    for (var i = 0; i < paragraphStylesToClear.length; i++) {
+        var s = paragraphStylesToClear[i];
+        var style;
+        if (s.group) {
+            style = document.paragraphStyleGroups.itemByName(s.group).paragraphStyles.itemByName(s.style);
+        } else {
+            style = document.paragraphStyles.itemByName(s.style);
+        }
+
+        try {
+            style.appliedFont = null;
+            style.basedOn = defaultParagraphStyle;
+        } catch (e) {
+            throw Error('Failed to update paragraph style.');
+        }
+     }
+ 
+     // Update all the specified character styles to inherit their font settings.
+     for (var i = 0; i < characterStylesToClear.length; i++) {
+        var style = document.characterStyles.itemByName(characterStylesToClear[i]);
+
+        try {    
+            style.appliedFont = null;
+            // We don't have a "DefaultParagraph" equivalent for characterStyles, so for now we set it to the first, which is the de
+            style.basedOn = document.characterStyles.firstItem();
+        } catch (e) {
+            throw Error('Failed to update character style.');
+        }    
+     }
+}
