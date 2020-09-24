@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Drawing;
+using System.Drawing.Text;
 using System.IO;
 using System.Threading;
 using TptMain.Exceptions;
@@ -134,14 +136,16 @@ namespace TptMain.Jobs
                 string overrideFont = null;
                 if(!IsJobCanceled && _previewJob.UseProjectFont)
                 {
-                    overrideFont = _paratextProjectService.GetProjectFont(_previewJob.ProjectName);
+                    string _projectFont = _paratextProjectService.GetProjectFont(_previewJob.ProjectName);
 
-                    if (String.IsNullOrEmpty(overrideFont))
+                    if (String.IsNullOrEmpty(_projectFont))
                     {
-                        throw new PreviewJobException(_previewJob, "Project font requested, but none was specified in the project.");
+                        _logger.LogInformation($"No font specified for project {_previewJob.ProjectName}. IDML font settings will not be modified.");
                     }
-
-                    _logger.LogInformation("Project font requested and found. Project font: ", overrideFont);
+                    else
+                    {
+                        overrideFont = _projectFont;
+                    }
                 }
 
                 if (!IsJobCanceled)
