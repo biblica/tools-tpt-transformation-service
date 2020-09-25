@@ -57,7 +57,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Scripts\InDesign\*.jsx">
+    <None Update="Resources\Scripts\InDesign\*.jsx*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -82,17 +82,6 @@ namespace TptMain.InDesign
         /// </summary>
         /// <param name="inputJob">Input preview job (required).</param>
         /// <param name="footnoteMarkers">Custom footnote markers (optional).</param>
-        /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
-        public virtual void RunScript(PreviewJob inputJob, string[] footnoteMarkers, CancellationToken? cancellationToken)
-        {
-            RunScript(inputJob, footnoteMarkers, null, cancellationToken);
-        }
-
-        /// <summary>
-        /// Execute typesetting preview generation synchronously, with optional cancellation.
-        /// </summary>
-        /// <param name="inputJob">Input preview job (required).</param>
-        /// <param name="footnoteMarkers">Custom footnote markers (optional).</param>
         /// <param name="overrideFont">A font name. If specified, overrides the IDML font settings (optional).</param>
         /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
         public virtual void RunScript(PreviewJob inputJob, string[] footnoteMarkers, string overrideFont, CancellationToken? cancellationToken)

@@ -59,7 +59,8 @@ function updateFont(document, projectFont, baseParagraphStyleName, paragraphStyl
 
         try {
             style.appliedFont = null;
-            // We don't have a "DefaultParagraph" equivalent for characterStyles, so for now we set it to the first, which is the de
+            // We don't have a "DefaultParagraph" equivalent for characterStyles
+            //  so we set it to the first, which is the default character style
             style.basedOn = document.characterStyles.firstItem();
         } catch (e) {
             throw Error("Failed to update character style '" + style.name + "'. " + e.description);
