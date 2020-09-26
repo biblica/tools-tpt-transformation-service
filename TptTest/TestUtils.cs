@@ -28,7 +28,8 @@ namespace TptTest
                 FontLeadingInPts = 234.5f,
                 PageHeightInPts = 345.6f,
                 PageWidthInPts = 456.7f,
-                PageHeaderInPts = 567.8f
+                PageHeaderInPts = 567.8f,
+                UseProjectFont = false
             };
         }
 

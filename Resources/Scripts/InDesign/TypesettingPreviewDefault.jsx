@@ -1,4 +1,5 @@
 ﻿#include "CustomFootnotes.jsx";
+#include "updateFont.jsxinc";
 
 ///////////////////////////////////////////////////////////////////////////////
 // This is an InDesign Server script used to generate previews of a publishing
@@ -31,6 +32,7 @@ var jobId = app.scriptArgs.getValue("jobId");
 var projectName = app.scriptArgs.getValue("projectName");
 var bookFormat = app.scriptArgs.getValue("bookFormat");
 var customFootnotes = app.scriptArgs.getValue("customFootnoteList");
+var overrideFont = app.scriptArgs.getValue("overrideFont");
 
 // Set top-level base and output dirs
 var idttDir = 'C:\\Work\\IDTT\\';
@@ -71,6 +73,11 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
     doc.preflightOptions.preflightOff = true;
 
     try {
+        // Update the fonts in the IDML to match the Paratext project.
+        if (typeof overrideFont === 'string' && overrideFont.length) {
+            updateFont(doc, overrideFont);
+        }
+
         // Place text
         var layer = doc.layers.lastItem();
         var pageItem = layer.pageItems.lastItem();

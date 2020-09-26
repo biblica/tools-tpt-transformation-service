@@ -82,8 +82,9 @@ namespace TptMain.InDesign
         /// </summary>
         /// <param name="inputJob">Input preview job (required).</param>
         /// <param name="footnoteMarkers">Custom footnote markers (optional).</param>
+        /// <param name="overrideFont">A font name. If specified, overrides the IDML font settings (optional).</param>
         /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
-        public virtual void RunScript(PreviewJob inputJob, string[] footnoteMarkers, CancellationToken? cancellationToken)
+        public virtual void RunScript(PreviewJob inputJob, string[] footnoteMarkers, string overrideFont, CancellationToken? cancellationToken)
         {
             _logger.LogDebug($"RunScriptAsync() - inputJob.Id={inputJob.Id}.");
             var scriptRequest = new RunScriptRequest();
@@ -99,6 +100,10 @@ namespace TptMain.InDesign
             AddNewArgToIdsArgs(ref scriptArgs, "jobId", inputJob.Id);
             AddNewArgToIdsArgs(ref scriptArgs, "projectName", inputJob.ProjectName);
             AddNewArgToIdsArgs(ref scriptArgs, "bookFormat", inputJob.BookFormat.ToString());
+            if (!String.IsNullOrEmpty(overrideFont))
+            {
+                AddNewArgToIdsArgs(ref scriptArgs, "overrideFont", overrideFont);
+            }
 
             // build the custom footnotes into a CSV string. EG: "a,d,e,ñ,h,Ä".
             string customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;

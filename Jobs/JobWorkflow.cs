@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Drawing;
+using System.Drawing.Text;
 using System.IO;
 using System.Threading;
 using TptMain.Exceptions;
@@ -130,6 +132,22 @@ namespace TptMain.Jobs
                     _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", customFootnoteMarkers));
                 }
 
+                // If we're using the project font (rather than what's in the IDML) pass it as an override.
+                string overrideFont = null;
+                if(!IsJobCanceled && _previewJob.UseProjectFont)
+                {
+                    string _projectFont = _paratextProjectService.GetProjectFont(_previewJob.ProjectName);
+
+                    if (String.IsNullOrEmpty(_projectFont))
+                    {
+                        _logger.LogInformation($"No font specified for project {_previewJob.ProjectName}. IDML font settings will not be modified.");
+                    }
+                    else
+                    {
+                        overrideFont = _projectFont;
+                    }
+                }
+
                 if (!IsJobCanceled)
                 {
                     _templateManager.DownloadTemplateFile(_previewJob,
@@ -142,6 +160,7 @@ namespace TptMain.Jobs
                 {
                     _scriptRunner.RunScript(_previewJob, 
                         customFootnoteMarkers,
+                        overrideFont,
                         _cancellationTokenSource.Token);
                 }
 
