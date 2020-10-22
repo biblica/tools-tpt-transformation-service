@@ -11,6 +11,7 @@ using TptMain.Models;
 using TptMain.ParatextProjects;
 using TptMain.Projects;
 using TptMain.Toolbox;
+using TptMain.Util;
 
 namespace TptMain
 {
@@ -33,7 +34,7 @@ namespace TptMain
         {
             // In-memory database for tracking typesetting preview jobs
             services.AddDbContext<PreviewContext>(
-                options => options.UseInMemoryDatabase("PreviewJobList"),
+                options => options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection")),
                ServiceLifetime.Singleton);
 
             services.AddSingleton<ScriptRunner>();
