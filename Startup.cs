@@ -11,7 +11,6 @@ using TptMain.Models;
 using TptMain.ParatextProjects;
 using TptMain.Projects;
 using TptMain.Toolbox;
-using TptMain.Util;
 
 namespace TptMain
 {

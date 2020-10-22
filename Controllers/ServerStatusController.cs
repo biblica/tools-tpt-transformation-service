@@ -48,7 +48,8 @@ namespace TptMain.Controllers
             try
             {
                 serverVersion = AssemblyUtil.GetAssemblyVersion();
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, $"We weren't able to retrieve the Server's version.");
             }

@@ -273,8 +273,8 @@ namespace TptMain.Jobs
 
                 _jobScheduler.AddEntry(
                     new JobWorkflow(
-                        _logger, 
-                        this, 
+                        _logger,
+                        this,
                         _scriptRunner,
                         _templateManager,
                         _paratextApi,
@@ -511,13 +511,14 @@ namespace TptMain.Jobs
         private void AddFilesToZip(ZipArchive zipArchive, string sourceDirectoryPath, string sourceFileSearchPattern, string targetDirectoryInZip)
         {
             // Validate inputs
-            _= zipArchive ?? throw new ArgumentNullException(nameof(zipArchive));
-            _= sourceDirectoryPath ?? throw new ArgumentNullException(nameof(sourceDirectoryPath));
-            _= sourceFileSearchPattern ?? throw new ArgumentNullException(nameof(sourceFileSearchPattern));
-            _= targetDirectoryInZip ?? throw new ArgumentNullException(nameof(targetDirectoryInZip));
+            _ = zipArchive ?? throw new ArgumentNullException(nameof(zipArchive));
+            _ = sourceDirectoryPath ?? throw new ArgumentNullException(nameof(sourceDirectoryPath));
+            _ = sourceFileSearchPattern ?? throw new ArgumentNullException(nameof(sourceFileSearchPattern));
+            _ = targetDirectoryInZip ?? throw new ArgumentNullException(nameof(targetDirectoryInZip));
 
             // ensure we address missing directories
-            if(!Directory.Exists(sourceDirectoryPath)) {
+            if (!Directory.Exists(sourceDirectoryPath))
+            {
                 _logger.LogWarning($"There's no directory at '${sourceDirectoryPath}'");
                 return;
             }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace TptMain.Models
+﻿namespace TptMain.Models
 {
     /// <summary>
     /// Server status model class.
