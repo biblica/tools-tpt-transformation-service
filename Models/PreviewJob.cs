@@ -12,8 +12,6 @@ namespace TptMain.Models
         /// </summary>
         public string Id { get; set; }
 
-        public string SomeName { get; set; }
-
         /// <summary>
         /// The <c>DateTime</c> a job was submitted.
         /// </summary>
