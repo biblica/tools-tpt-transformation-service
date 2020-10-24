@@ -1,10 +1,14 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SIL.Linq;
 using System;
 using System.IO;
+using System.Linq;
+using TptMain.Models;
 
 namespace TptMain
 {
@@ -17,19 +21,35 @@ namespace TptMain
         {
             var host = CreateHostBuilder(args).Build();
 
-            // Ensure that the database exists
+            // Ensure that the database exists and handle any dangling jobs.
             using (var scope = host.Services.CreateScope())
             {
-                var services = scope.ServiceProvider;
+                IServiceProvider services = scope.ServiceProvider;
                 try
                 {
-                    var context = services.GetRequiredService<TptMain.Models.PreviewContext>();
+                    PreviewContext context = services.GetRequiredService<PreviewContext>();
                     context.Database.EnsureCreated();
+
+                    // Find any dangling jobs.
+                    IQueryable<PreviewJob> previewJobs = from job in context.PreviewJobs
+                                      where job.DateCompleted == null && job.DateCancelled == null
+                                      select job;
+
+                    // Update dangling jobs to be errored out. They may still be running, but we can't reach them or resume them.
+                    foreach (PreviewJob previewJob in previewJobs)
+                    {
+                        previewJob.SetError("An internal server error occurred.", "Unrecoverable. The system restarted while the job was in progress.");
+                        previewJob.DateCompleted = DateTime.UtcNow;
+                        context.PreviewJobs.Update(previewJob);
+                    }
+
+                    // Persist any job updates.
+                    context.SaveChanges();
                 }
                 catch (Exception ex)
                 {
                     var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred while bringing up the database.");
+                    logger.LogError(ex, "An error occurred while initializing the database.");
                 }
             }
             host.Run();
