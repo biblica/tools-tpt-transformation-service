@@ -33,7 +33,7 @@ namespace TptMain
         {
             // In-memory database for tracking typesetting preview jobs
             services.AddDbContext<PreviewContext>(
-                options => options.UseInMemoryDatabase("PreviewJobList"),
+                options => options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection")),
                ServiceLifetime.Singleton);
 
             services.AddSingleton<ScriptRunner>();

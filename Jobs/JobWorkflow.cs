@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Drawing;
-using System.Drawing.Text;
 using System.IO;
 using System.Threading;
 using TptMain.Exceptions;
@@ -134,7 +132,7 @@ namespace TptMain.Jobs
 
                 // If we're using the project font (rather than what's in the IDML) pass it as an override.
                 string overrideFont = null;
-                if(!IsJobCanceled && _previewJob.UseProjectFont)
+                if (!IsJobCanceled && _previewJob.UseProjectFont)
                 {
                     string _projectFont = _paratextProjectService.GetProjectFont(_previewJob.ProjectName);
 
@@ -158,7 +156,7 @@ namespace TptMain.Jobs
 
                 if (!IsJobCanceled)
                 {
-                    _scriptRunner.RunScript(_previewJob, 
+                    _scriptRunner.RunScript(_previewJob,
                         customFootnoteMarkers,
                         overrideFont,
                         _cancellationTokenSource.Token);
