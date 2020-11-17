@@ -14,7 +14,7 @@ namespace TptMain.Projects
     /// <summary>
     /// Project manager, provider of Paratext project details.
     /// </summary>
-    public class ProjectManager : IDisposable
+    public class ProjectManager : IDisposable, IProjectManager
     {
         /// <summary>
         /// IDTT directory config key.
