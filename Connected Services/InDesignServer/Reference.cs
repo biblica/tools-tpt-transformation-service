@@ -9,8 +9,8 @@
 
 namespace InDesignServer
 {
-    
-    
+
+
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.ServiceModel.ServiceContractAttribute(Namespace="http://localhost:80/Service.wsdl", ConfigurationName="InDesignServer.ServicePortType")]
     public interface ServicePortType
@@ -37,8 +37,9 @@ namespace InDesignServer
         [System.ServiceModel.OperationContractAttribute(Action="", ReplyAction="*")]
         System.Threading.Tasks.Task<InDesignServer.EndSessionResponse> EndSessionAsync(InDesignServer.EndSessionRequest request);
     }
-    
+
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://ns.adobe.com/InDesign/soap/")]
@@ -94,7 +95,7 @@ namespace InDesignServer
                 this.scriptFileField = value;
             }
         }
-        
+
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("scriptArgs", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, Order=3)]
         public IDSPScriptArg[] scriptArgs
@@ -109,8 +110,9 @@ namespace InDesignServer
             }
         }
     }
-    
+
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute(TypeName="IDSP-ScriptArg", Namespace="http://ns.adobe.com/InDesign/soap/")]
@@ -149,8 +151,9 @@ namespace InDesignServer
             }
         }
     }
-    
+
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://ns.adobe.com/InDesign/soap/")]
@@ -174,8 +177,9 @@ namespace InDesignServer
                 this.idField = value;
             }
         }
-        
+
         /// <remarks/>
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=true, Order=1)]
         public Data data
         {
@@ -189,8 +193,9 @@ namespace InDesignServer
             }
         }
     }
-    
+
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://ns.adobe.com/InDesign/soap/")]
@@ -213,8 +218,9 @@ namespace InDesignServer
             }
         }
     }
-    
+
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://ns.adobe.com/InDesign/soap/")]
@@ -286,8 +292,9 @@ namespace InDesignServer
                 this.startField = value;
             }
         }
-        
+
         /// <remarks/>
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=true, Order=4)]
         public Object end
         {
@@ -301,7 +308,8 @@ namespace InDesignServer
             }
         }
     }
-    
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.ServiceModel.MessageContractAttribute(WrapperName="RunScript", WrapperNamespace="http://ns.adobe.com/InDesign/soap/", IsWrapped=true)]
@@ -325,7 +333,8 @@ namespace InDesignServer
             this.runScriptParameters = runScriptParameters;
         }
     }
-    
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.ServiceModel.MessageContractAttribute(WrapperName="RunScriptResponse", WrapperNamespace="http://ns.adobe.com/InDesign/soap/", IsWrapped=true)]
@@ -355,7 +364,8 @@ namespace InDesignServer
             this.scriptResult = scriptResult;
         }
     }
-    
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.ServiceModel.MessageContractAttribute(WrapperName="BeginSession", WrapperNamespace="http://ns.adobe.com/InDesign/soap/", IsWrapped=true)]
@@ -366,7 +376,8 @@ namespace InDesignServer
         {
         }
     }
-    
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.ServiceModel.MessageContractAttribute(WrapperName="BeginSessionResponse", WrapperNamespace="http://ns.adobe.com/InDesign/soap/", IsWrapped=true)]
@@ -386,7 +397,8 @@ namespace InDesignServer
             this.sessionID = sessionID;
         }
     }
-    
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.ServiceModel.MessageContractAttribute(WrapperName="EndSession", WrapperNamespace="http://ns.adobe.com/InDesign/soap/", IsWrapped=true)]
@@ -410,7 +422,8 @@ namespace InDesignServer
             this.sessionID1 = sessionID1;
         }
     }
-    
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     [System.ServiceModel.MessageContractAttribute(WrapperName="Result", WrapperNamespace="http://ns.adobe.com/InDesign/soap/", IsWrapped=true)]
@@ -435,7 +448,8 @@ namespace InDesignServer
     public interface ServicePortTypeChannel : InDesignServer.ServicePortType, System.ServiceModel.IClientChannel
     {
     }
-    
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.1")]
     public partial class ServicePortTypeClient : System.ServiceModel.ClientBase<InDesignServer.ServicePortType>, InDesignServer.ServicePortType
@@ -481,7 +495,7 @@ namespace InDesignServer
         {
         }
         
-        public InDesignServer.RunScriptResponse RunScript(InDesignServer.RunScriptRequest request)
+        public virtual InDesignServer.RunScriptResponse RunScript(InDesignServer.RunScriptRequest request)
         {
             return base.Channel.RunScript(request);
         }

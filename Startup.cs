@@ -17,6 +17,7 @@ namespace TptMain
     /// <summary>
     /// Class used to configure the ASP.NET request services pipeline.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class Startup
     {
         private readonly IConfiguration _configuration;

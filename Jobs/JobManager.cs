@@ -158,7 +158,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Iterate through PDFs and clean up old ones.
         /// </summary>
-        private void CheckPreviewJobs()
+        public virtual void CheckPreviewJobs()
         {
             try
             {

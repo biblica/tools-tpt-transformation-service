@@ -57,10 +57,6 @@ namespace TptMain.InDesign
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _serviceClient = new ServicePortTypeClient(
-                ServicePortTypeClient.EndpointConfiguration.Service,
-                configuration[ConfigConsts.IdsUriKey]
-                ?? throw new ArgumentNullException(ConfigConsts.IdsUriKey));
             _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(configuration[ConfigConsts.IdsTimeoutInSecKey]
                 ?? throw new ArgumentNullException(ConfigConsts.IdsTimeoutInSecKey)))
                 .TotalMilliseconds;
@@ -69,12 +65,30 @@ namespace TptMain.InDesign
             _idsPreviewScriptNameFormat = (configuration[ConfigConsts.IdsPreviewScriptNameFormatKey]
                 ?? throw new ArgumentNullException(ConfigConsts.IdsPreviewScriptNameFormatKey));
 
-            _serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
-            _serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
+            _serviceClient = SetUpInDesignClient(configuration);
+
             _defaultScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
                 string.Format(_idsPreviewScriptNameFormat, MainConsts.DEFAULT_PROJECT_PREFIX)));
 
             _logger.LogDebug("ScriptRunner()");
+        }
+
+        /// <summary>
+        /// This function sets up the InDesign server client.
+        /// </summary>
+        /// <param name="configuration">The configuration to aid setting up the Client.</param>
+        /// <returns>The instanstiated InDesign server client.</returns>
+        public virtual ServicePortTypeClient SetUpInDesignClient(IConfiguration configuration)
+        {
+            var serviceClient = new ServicePortTypeClient(
+                ServicePortTypeClient.EndpointConfiguration.Service,
+                configuration[ConfigConsts.IdsUriKey]
+                    ?? throw new ArgumentNullException(ConfigConsts.IdsUriKey));
+
+            serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
+            serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
+
+            return serviceClient;
         }
 
         /// <summary>

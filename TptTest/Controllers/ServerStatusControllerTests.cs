@@ -31,7 +31,7 @@ namespace TptTest.Controllers
         {
             ActionResult<ServerStatus> result = serverStatusController.Get();
             Assert.IsNotNull(result.Value);
-            var serverStatusResponse = (ServerStatus)result.Value;
+            var serverStatusResponse = result.Value;
 
             Assert.IsNotNull(serverStatusResponse);
         }

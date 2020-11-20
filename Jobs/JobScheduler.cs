@@ -145,7 +145,7 @@ namespace TptMain.Jobs
         /// Adds a new scheduler entry for a job.
         /// </summary>
         /// <param name="nextEntry">SchedulerEntry to add (required).</param>
-        public void AddEntry(JobWorkflow nextEntry)
+        public virtual void AddEntry(JobWorkflow nextEntry)
         {
             _logger.LogDebug($"AddEntry() - nextEntry.Job.Id={nextEntry.Job.Id}.");
 

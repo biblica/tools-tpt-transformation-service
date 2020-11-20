@@ -27,11 +27,6 @@ namespace TptMain.Projects
         private const string ParatextDirKey = "Docs:Paratext:Directory";
 
         /// <summary>
-        /// IDTT check interval config key.
-        /// </summary>
-        private const string IdttCheckIntervalInSecKey = "Docs:IDTT:CheckIntervalInSec";
-
-        /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
         private readonly ILogger<ProjectManager> _logger;
@@ -45,11 +40,6 @@ namespace TptMain.Projects
         /// Paratext directory (configured).
         /// </summary>
         private readonly DirectoryInfo _paratextDirectory;
-
-        /// <summary>
-        /// IDTT check timer.
-        /// </summary>
-        private readonly Timer _projectCheckTimer;
 
         /// <summary>
         /// Found project details.
@@ -72,10 +62,6 @@ namespace TptMain.Projects
                                                ?? throw new ArgumentNullException(IdttDirKey));
             _paratextDirectory = new DirectoryInfo(configuration[ParatextDirKey]
                                                    ?? throw new ArgumentNullException(ParatextDirKey));
-            _projectCheckTimer = new Timer((stateObject) => { CheckProjectFiles(); }, null,
-                TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
-                TimeSpan.FromSeconds(int.Parse(configuration[IdttCheckIntervalInSecKey]
-                                               ?? throw new ArgumentNullException(IdttCheckIntervalInSecKey))));
 
             if (!Directory.Exists(_idttDirectory.FullName))
             {
@@ -91,7 +77,7 @@ namespace TptMain.Projects
         /// <summary>
         /// Inventories project files to build map.
         /// </summary>
-        private void CheckProjectFiles()
+        public virtual void CheckProjectFiles()
         {
             lock (this)
             {
@@ -167,7 +153,6 @@ namespace TptMain.Projects
         public void Dispose()
         {
             _logger.LogDebug("Dispose().");
-            _projectCheckTimer.Dispose();
         }
     }
 }
