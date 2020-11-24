@@ -23,7 +23,7 @@ namespace TptMain.Controllers
         /// <summary>
         /// Project manager (injected).
         /// </summary>
-        private readonly ProjectManager _projectManager;
+        private readonly IProjectManager _projectManager;
 
         /// <summary>
         /// Basic ctor.
@@ -32,7 +32,7 @@ namespace TptMain.Controllers
         /// <param name="projectManager">Project manager (required).</param>
         public ProjectDetailsController(
             ILogger<ProjectDetailsController> logger,
-            ProjectManager projectManager)
+            IProjectManager projectManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _projectManager = projectManager ?? throw new ArgumentNullException(nameof(projectManager));
@@ -45,7 +45,7 @@ namespace TptMain.Controllers
         /// </summary>
         /// <returns>Project details list if found, 404 or other error otherwise.</returns>
         [HttpGet]
-        public ActionResult<IEnumerable<ProjectDetails>> Get()
+        public ActionResult<IList<ProjectDetails>> Get()
         {
             _logger.LogDebug("Get().");
             if (_projectManager.TryGetProjectDetails(out var projectDetails))

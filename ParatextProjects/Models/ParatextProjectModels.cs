@@ -3,6 +3,7 @@
 
     // NOTE: Generated code may require at least .NET Framework 4.5 or .NET Core/Standard 2.0.
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -102,6 +103,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -155,6 +157,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -179,6 +182,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "urn://www.sil.org/ldml/0.1")]
@@ -220,6 +224,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -244,6 +249,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -268,6 +274,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -308,6 +315,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -348,6 +356,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -431,6 +440,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -472,6 +482,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "urn://www.sil.org/ldml/0.1")]
@@ -528,6 +539,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "urn://www.sil.org/ldml/0.1")]
@@ -599,6 +611,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "urn://www.sil.org/ldml/0.1")]
@@ -687,6 +700,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -710,6 +724,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -733,6 +748,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -771,6 +787,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -825,6 +842,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -849,6 +867,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
@@ -874,6 +893,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "urn://www.sil.org/ldml/0.1")]
@@ -930,6 +950,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "urn://www.sil.org/ldml/0.1")]
@@ -955,6 +976,7 @@
     }
 
     /// <remarks/>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "urn://www.sil.org/ldml/0.1")]

@@ -15,6 +15,7 @@ namespace TptMain
     /// <summary>
     /// Main driver class for the service.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class Program
     {
         public static void Main(string[] args)
@@ -60,6 +61,7 @@ namespace TptMain
         /// </summary>
         /// <param name="args">Program arguments array.</param>
         /// <returns>The HostBuilder</returns>
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         private static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
             .UseWindowsService()

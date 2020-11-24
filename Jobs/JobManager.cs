@@ -18,7 +18,7 @@ namespace TptMain.Jobs
     /// <summary>
     /// Job manager for handling typesetting preview job request management and execution.
     /// </summary>
-    public class JobManager : IDisposable
+    public class JobManager : IDisposable, IJobManager
     {
         /// <summary>
         /// Type-specific logger (injected).
@@ -158,7 +158,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Iterate through PDFs and clean up old ones.
         /// </summary>
-        private void CheckPreviewJobs()
+        public virtual void CheckPreviewJobs()
         {
             try
             {

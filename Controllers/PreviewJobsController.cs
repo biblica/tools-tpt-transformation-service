@@ -21,7 +21,7 @@ namespace TptMain.Controllers
         /// <summary>
         /// Job manager (injected).
         /// </summary>
-        private readonly JobManager _jobManager;
+        private readonly IJobManager _jobManager;
 
         /// <summary>
         /// Basic ctor.
@@ -30,7 +30,7 @@ namespace TptMain.Controllers
         /// <param name="jobManager">Job manager (required).</param>
         public PreviewJobsController(
             ILogger<PreviewJobsController> logger,
-            JobManager jobManager)
+            IJobManager jobManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));

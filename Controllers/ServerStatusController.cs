@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using System;
 using TptMain.Models;
-using TptMain.Projects;
 using TptMain.Util;
 
 namespace TptMain.Controllers
@@ -24,8 +23,7 @@ namespace TptMain.Controllers
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
         public ServerStatusController(
-            ILogger<ServerStatusController> logger,
-            ProjectManager projectManager)
+            ILogger<ServerStatusController> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
