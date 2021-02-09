@@ -37,8 +37,8 @@ namespace TptMain
                 options => options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection")),
                ServiceLifetime.Singleton);
 
-            services.AddScoped<IJobManager, JobManager>();
-            services.AddScoped<IProjectManager, ProjectManager>();
+            services.AddSingleton<IJobManager, JobManager>();
+            services.AddSingleton<IProjectManager, ProjectManager>();
 
             services.AddSingleton<ScriptRunner>();
             services.AddSingleton<ParatextApi>();
