@@ -72,17 +72,19 @@ namespace TptMain
             })
             .ConfigureLogging(logging =>
             {
-                logging.ClearProviders();
-                logging.AddConsole();
-                logging.AddEventLog();
+                logging
+                    .ClearProviders()
+                    .AddConsole()
+                    .AddEventLog();
 
-                logging.AddFilter("Microsoft", LogLevel.Warning);
-                logging.AddFilter("System", LogLevel.Warning);
-                logging.AddFilter("LoggingConsoleApp.Program", LogLevel.Debug);
+                logging
+                    .AddFilter("Microsoft", LogLevel.Warning)
+                    .AddFilter("System", LogLevel.Warning)
+                    .AddFilter("LoggingConsoleApp.Program", LogLevel.Debug);
             })
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+            });
     }
 }

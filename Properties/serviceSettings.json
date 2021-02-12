@@ -2,8 +2,15 @@
   "ConnectionStrings": {
     "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=TPTService;Trusted_Connection=True;MultipleActiveResultSets=true"
   },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "System": "Debug",
+      "Microsoft": "Debug"
+    }
+  },
   "Jobs": {
-    "MaxConcurrent": "4"
+    "MaxConcurrent": "1"
   },
   "InDesign": {
     "ServerUri": "http://172.31.10.90:9876/service",
