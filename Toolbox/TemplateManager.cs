@@ -86,7 +86,6 @@ namespace TptMain.Toolbox
         /// <param name="inputJob">Input job (required).</param>
         /// <param name="outputFile">Output file (required).</param>
         /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
-        /// <returns></returns>
         public virtual void DownloadTemplateFile(PreviewJob inputJob, FileInfo outputFile, CancellationToken? cancellationToken)
         {
             _logger.LogDebug($"DownloadTemplateFile() inputJob.Id={inputJob.Id}, outputFile={outputFile}.");

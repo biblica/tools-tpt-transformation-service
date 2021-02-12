@@ -1,13 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using TptMain.Models;
 using TptMain.ParatextProjects;
 using TptMain.Util;
 

@@ -104,15 +104,15 @@ namespace TptTest
             // create mocks
             _mockJobManagerLogger = new Mock<ILogger<JobManager>>();
 
-            // mock: preview context
-            var mockContext = new Mock<PreviewContext>(MockBehavior.Strict,
+            // preview context
+            var _context = new PreviewContext(
                 new DbContextOptionsBuilder<PreviewContext>()
-                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
-                  .Options);
+                    .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                    .Options);
 
             // mock: script runner
             var mockScriptRunnerLogger = new Mock<ILogger<ScriptRunner>>();
-            _mockScriptRunner = new Mock<ScriptRunner>(MockBehavior.Strict,
+            _mockScriptRunner = new Mock<ScriptRunner>(
                 mockScriptRunnerLogger.Object, _testConfiguration);
 
             // mock: web request factory
@@ -142,10 +142,9 @@ namespace TptTest
 
             // mock: job manager
             _mockJobManager = new Mock<JobManager>(
-                MockBehavior.Strict,
                 _mockJobManagerLogger.Object,
                 _testConfiguration,
-                mockContext.Object,
+                _context,
                 _mockScriptRunner.Object,
                 _mockTemplateManager.Object,
                 _mockParatextApi.Object,
@@ -206,8 +205,8 @@ namespace TptTest
                     It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<CancellationToken?>()))
-                .Callback<PreviewJob, string[],CancellationToken?>((jobItem, _, tokenItem) =>
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, string[], string, CancellationToken?>((jobItem, _, __, tokenItem) =>
                 {
                     isTaskRun = true;
                 })
@@ -227,7 +226,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<CancellationToken?>()), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(isTaskRun); // task was run
@@ -282,8 +281,8 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<CancellationToken?>()))
-                .Callback<PreviewJob, string[], CancellationToken?>((jobItem, _, tokenItem) =>
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, string[], string, CancellationToken?>((jobItem, _, __, tokenItem) =>
                 {
                     isTaskRun = true;
                     if (tokenItem != null)
@@ -323,7 +322,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<CancellationToken?>()), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(mockWorkflow.Object.IsJobCanceled); // job wasn't cancelled
@@ -372,6 +371,7 @@ namespace TptTest
             _mockTemplateManager.Setup(managerItem =>
                 managerItem.DownloadTemplateFile(testPreviewJob,
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
+                .CallBase()
                 .Verifiable();
             _mockJobManager.Setup(managerItem =>
                     managerItem.TryUpdateJob(testPreviewJob))
@@ -386,8 +386,6 @@ namespace TptTest
                 managerItem.DownloadTemplateFile(testPreviewJob,
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
-            _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]?>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsFalse(mockWorkflow.Object.IsJobCanceled); // job wasn't cancelled
@@ -404,6 +402,65 @@ namespace TptTest
         }
 
         /// <summary>
+        /// Test the processing of additional preview job options (EG: custom footnotes).
+        /// </summary>
+        [TestMethod]
+        public void TestRunJobCustomOptions()
+        {
+            // set up job with additional options
+            var testPreviewJob = TestUtils.CreateTestPreviewJob();
+            testPreviewJob.UseCustomFootnotes = true;
+            testPreviewJob.UseProjectFont = true;
+
+            // setup service under test
+            var mockWorkflow =
+                new Mock<JobWorkflow>(
+                    _mockJobManagerLogger.Object,
+                    _mockJobManager.Object,
+                    _mockScriptRunner.Object,
+                    _mockTemplateManager.Object,
+                    _mockParatextApi.Object,
+                    _mockParatextProjectService.Object,
+                    testPreviewJob);
+            mockWorkflow.CallBase = true;
+
+            // setup mocks of the expected custom handling
+            _mockParatextApi.Setup(paratextApi =>
+                paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
+                .Verifiable();
+            _mockParatextProjectService.Setup(ptProjectService =>
+                ptProjectService.GetFootnoteCallerSequence(testPreviewJob.ProjectName))
+                .Returns(new string[] { "a", "b"})
+                .Verifiable();
+            _mockParatextProjectService.Setup(ptProjectService =>
+                ptProjectService.GetProjectFont(testPreviewJob.ProjectName))
+                .Returns("Arial")
+                .Verifiable();
+            _mockTemplateManager.Setup(managerItem =>
+                    managerItem.DownloadTemplateFile(testPreviewJob, It.IsAny<FileInfo>(), It.IsAny<CancellationToken?>()))
+                .Verifiable();
+            _mockScriptRunner.Setup(runnerItem =>
+                    runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()))
+                .Verifiable();
+
+            // execute
+            mockWorkflow.Object.RunJob();
+
+            // verify the expected customizations occurred
+            _mockParatextApi.Verify(paratextApi =>
+                paratextApi.IsUserAuthorizedOnProject(testPreviewJob), Times.Once);
+            _mockParatextProjectService.Verify(ptProjectService =>
+                ptProjectService.GetFootnoteCallerSequence(testPreviewJob.ProjectName), Times.Once);
+            _mockParatextProjectService.Verify(ptProjectService =>
+                ptProjectService.GetProjectFont(testPreviewJob.ProjectName), Times.Once);
+            _mockTemplateManager.Verify(managerItem =>
+                    managerItem.DownloadTemplateFile(testPreviewJob, It.IsAny<FileInfo>(), It.IsAny<CancellationToken?>()), Times.Once);
+            _mockScriptRunner.Verify(runnerItem =>
+                    runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()), Times.Once);
+
+        }
+
+        /// <summary>
         /// Tests exceptions are generated from IDS script failures.
         /// </summary>
         [TestMethod]
@@ -414,7 +471,7 @@ namespace TptTest
             var testFileInfo = new FileInfo(Path.Combine(
                 TestConsts.TEST_IDML_DOC_DIR, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.idml"));
             var mockWorkflow =
-                new Mock<JobWorkflow>(MockBehavior.Strict,
+                new Mock<JobWorkflow>(
                     _mockJobManagerLogger.Object,
                     _mockJobManager.Object,
                     _mockScriptRunner.Object,
@@ -422,10 +479,7 @@ namespace TptTest
                     _mockParatextApi.Object,
                     _mockParatextProjectService.Object,
                     testPreviewJob);
-            mockWorkflow.Setup(workflowItem =>
-                workflowItem.RunJob()).CallBase();
-            mockWorkflow.Setup(workflowItem =>
-                workflowItem.IsJobCanceled).CallBase();
+            mockWorkflow.CallBase = true;
 
             // setup mocks
             _mockParatextApi.Setup(paratextApi =>
@@ -439,8 +493,8 @@ namespace TptTest
                         It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                    runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<CancellationToken?>()))
-                .Callback<PreviewJob, string[], CancellationToken?>((jobItem, _, tokenItem) =>
+                    runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, string[], string, CancellationToken?>((jobItem, _, __, tokenItem) =>
                 {
                     isTaskRun = true;
                     throw new IOException();
@@ -460,7 +514,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<CancellationToken?>()), Times.Once);
+                runnerItem.RunScript(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(isTaskRun); // task was run
