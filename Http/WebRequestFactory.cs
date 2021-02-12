@@ -9,6 +9,7 @@ namespace TptMain.Http
     ///
     /// Created to improve testability.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class WebRequestFactory
     {
         /// <summary>

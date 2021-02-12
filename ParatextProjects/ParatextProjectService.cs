@@ -1,13 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Paratext.Data.ProjectSettingsAccess;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading.Tasks;
-using TptMain.ParatextProjects.Models;
 using TptMain.Util;
 
 namespace TptMain.ParatextProjects
@@ -65,6 +59,25 @@ namespace TptMain.ParatextProjects
             var footnoteMarkers = ParatextProjectHelper.ExtractFootnoteMarkers(ldmlPath);
 
             return footnoteMarkers;
+        }
+
+        /// <summary>
+        /// Get the font associated with a Paratext project.
+        /// </summary>
+        /// <param name="projectShortName">The Paratext project's shortname.</param>
+        /// <returns>The font name specified by the Paratext project.</returns>
+        public virtual string GetProjectFont(string projectShortName)
+        {
+            if (String.IsNullOrEmpty(projectShortName))
+            {
+                throw new ArgumentException($"{nameof(projectShortName)} must be a non-empty string.");
+            }
+
+            // Grab the Paratext project settings (for the LDML path).
+            var projectPath = Path.Combine(_paratextDirectory.FullName, projectShortName);
+            var projectSettings = ParatextProjectHelper.GetProjectSettings(projectPath);
+
+            return projectSettings.DefaultFont;
         }
     }
 }

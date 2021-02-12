@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "666ad1f5-f8aa-432e-98cc-f43046a80974",
+		"_postman_id": "96ebe306-7cb0-4534-a31c-f6844c3d65b5",
 		"name": "Typesetting Preview Tool",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -11,9 +11,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api-url}}/api/ProjectDetails",
+					"raw": "{{api-url}}{{api-port}}/api/ProjectDetails",
 					"host": [
-						"{{api-url}}"
+						"{{api-url}}{{api-port}}"
 					],
 					"path": [
 						"api",
@@ -84,7 +84,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"projectName\": \"rusNRTs0\",\n\t\"user\": \"Kent Spielmann\"\n}",
+					"raw": "{\n\t\"projectName\": \"faPCB18\",\n\t\"user\": \"Kent Spielmann\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -92,9 +92,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{api-url}}/api/PreviewJobs",
+					"raw": "{{api-url}}{{api-port}}/api/PreviewJobs",
 					"host": [
-						"{{api-url}}"
+						"{{api-url}}{{api-port}}"
 					],
 					"path": [
 						"api",
@@ -176,15 +176,14 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api-url}}/api/PreviewJobs/30e3292f-0732-441a-afed-259298f73ac3/",
+					"raw": "{{api-url}}{{api-port}}/api/PreviewJobs/{{preview-job_id}}",
 					"host": [
-						"{{api-url}}"
+						"{{api-url}}{{api-port}}"
 					],
 					"path": [
 						"api",
 						"PreviewJobs",
-						"30e3292f-0732-441a-afed-259298f73ac3",
-						""
+						"{{preview-job_id}}"
 					]
 				}
 			},
@@ -243,14 +242,14 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "{{api-url}}/api/PreviewJobs/59e2b17d-a905-4ad3-82af-c8919e1ff10d",
+					"raw": "{{api-url}}{{api-port}}/api/PreviewJobs/{{preview-job_id}}",
 					"host": [
-						"{{api-url}}"
+						"{{api-url}}{{api-port}}"
 					],
 					"path": [
 						"api",
 						"PreviewJobs",
-						"59e2b17d-a905-4ad3-82af-c8919e1ff10d"
+						"{{preview-job_id}}"
 					]
 				}
 			},
@@ -262,18 +261,57 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api-url}}/api/PreviewFile/04771c76-8730-446d-b6dd-ffac76287e90",
+					"raw": "{{api-url}}{{api-port}}/api/PreviewFile/{{preview-job_id}}",
 					"host": [
-						"{{api-url}}"
+						"{{api-url}}{{api-port}}"
 					],
 					"path": [
 						"api",
 						"PreviewFile",
-						"04771c76-8730-446d-b6dd-ffac76287e90"
+						"{{preview-job_id}}"
 					]
 				}
 			},
 			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "56c4a593-0c38-48ff-ae1e-01ad5fe3c3aa",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "736c508a-68e3-445b-ae3c-5c026a4ab006",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "48499a5d-76f1-4b89-87e0-201d3d4e89cf",
+			"key": "api-url",
+			"value": "http://172.31.10.12"
+		},
+		{
+			"id": "9c06e8ee-f06e-4cd7-8e92-0812f3703273",
+			"key": "api-port",
+			"value": ":9875"
+		},
+		{
+			"id": "b72b7dee-1c9a-47f5-80fd-ecd35cb6475a",
+			"key": "preview-job_id",
+			"value": ""
 		}
 	],
 	"protocolProfileBehavior": {}

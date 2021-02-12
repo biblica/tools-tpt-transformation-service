@@ -1,6 +1,4 @@
-﻿using TptMain.Models;
-
-namespace TptMain.Util
+﻿namespace TptMain.Util
 {
     /// <summary>
     /// Constants of Configuration parameter keys.

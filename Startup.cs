@@ -17,6 +17,7 @@ namespace TptMain
     /// <summary>
     /// Class used to configure the ASP.NET request services pipeline.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class Startup
     {
         private readonly IConfiguration _configuration;
@@ -33,17 +34,19 @@ namespace TptMain
         {
             // In-memory database for tracking typesetting preview jobs
             services.AddDbContext<PreviewContext>(
-                options => options.UseInMemoryDatabase("PreviewJobList"),
+                options => options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection")),
                ServiceLifetime.Singleton);
 
+            services.AddSingleton<IJobManager, JobManager>();
+            services.AddSingleton<IProjectManager, ProjectManager>();
+
             services.AddSingleton<ScriptRunner>();
-            services.AddSingleton<JobManager>();
             services.AddSingleton<ParatextApi>();
             services.AddSingleton<ParatextProjectService>();
             services.AddSingleton<JobScheduler>();
-            services.AddSingleton<ProjectManager>();
             services.AddSingleton<TemplateManager>();
             services.AddSingleton<WebRequestFactory>();
+
 
             services.AddControllers();
         }

@@ -1,8 +1,11 @@
+using InDesignServer;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Collections.Generic;
+using System.Threading;
 using TptMain.InDesign;
+using TptMain.Models;
 
 namespace TptTest
 {
@@ -59,6 +62,32 @@ namespace TptTest
                 _mockLogger.Object,
                 _testConfiguration);
             _testConfiguration.AssertIfNotAllKeysChecked();
+        }
+
+        [TestMethod]
+        public void TestRunScript()
+        {
+            // We're mocking the runner only for the InDesign client set up portion. Otherwise, call the base functionality.
+            var scriptRunner = new Mock<ScriptRunner>(_mockLogger.Object, _testConfiguration);
+            scriptRunner.CallBase = true;
+
+            // Mock up InDesign client
+            Mock<ServicePortTypeClient> indesignClient = new Mock<ServicePortTypeClient>();
+
+            // verify that the RunScript command is called as expected
+            indesignClient
+                .Setup(idClient => idClient.RunScript(It.IsNotNull<RunScriptRequest>()))
+                .Returns(new RunScriptResponse())
+                .Verifiable();
+
+            scriptRunner
+                .Setup(runner => runner.SetUpInDesignClient(_testConfiguration))
+                .Returns(indesignClient.Object);
+
+            scriptRunner.Object.RunScript(new PreviewJob() { ProjectName = "test" }, "abcdef".Split(), "A New Font", null);
+
+            // verify expected calls were made
+            indesignClient.Verify(idClient => idClient.RunScript(It.IsNotNull<RunScriptRequest>()), Times.Once);
         }
     }
 }
