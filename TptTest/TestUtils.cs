@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using Newtonsoft.Json;
 using TptMain.Models;
 
 namespace TptTest
@@ -28,7 +28,8 @@ namespace TptTest
                 FontLeadingInPts = 234.5f,
                 PageHeightInPts = 345.6f,
                 PageWidthInPts = 456.7f,
-                PageHeaderInPts = 567.8f
+                PageHeaderInPts = 567.8f,
+                UseProjectFont = false
             };
         }
 
