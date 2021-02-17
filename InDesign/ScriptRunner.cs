@@ -42,9 +42,14 @@ namespace TptMain.InDesign
         private readonly string _idsPreviewScriptNameFormat;
 
         /// <summary>
-        /// Default (Roman) script file.
+        /// Default (Document Creation) script file.
         /// </summary>
-        private readonly FileInfo _defaultScriptFile;
+        private readonly FileInfo _defaultDocScriptFile;
+
+        /// <summary>
+        /// Default (Book Creation) script file.
+        /// </summary>
+        private readonly FileInfo _defaultBookScriptFile;
 
         /// <summary>
         /// Basic ctor.
@@ -57,18 +62,24 @@ namespace TptMain.InDesign
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(configuration[ConfigConsts.IdsTimeoutInSecKey]
-                ?? throw new ArgumentNullException(ConfigConsts.IdsTimeoutInSecKey)))
+            _idsTimeoutInMSec = (int) TimeSpan.FromSeconds(int.Parse(configuration[ConfigConsts.IdsTimeoutInSecKey]
+                                                                     ?? throw new ArgumentNullException(ConfigConsts
+                                                                         .IdsTimeoutInSecKey)))
                 .TotalMilliseconds;
             _idsPreviewScriptDirectory = new DirectoryInfo((configuration[ConfigConsts.IdsPreviewScriptDirKey]
-                ?? throw new ArgumentNullException(ConfigConsts.IdsPreviewScriptDirKey)));
+                                                            ?? throw new ArgumentNullException(ConfigConsts
+                                                                .IdsPreviewScriptDirKey)));
             _idsPreviewScriptNameFormat = (configuration[ConfigConsts.IdsPreviewScriptNameFormatKey]
-                ?? throw new ArgumentNullException(ConfigConsts.IdsPreviewScriptNameFormatKey));
+                                           ?? throw new ArgumentNullException(
+                                               ConfigConsts.IdsPreviewScriptNameFormatKey));
 
             _serviceClient = SetUpInDesignClient(configuration);
 
-            _defaultScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
-                string.Format(_idsPreviewScriptNameFormat, MainConsts.DEFAULT_PROJECT_PREFIX)));
+            _defaultDocScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
+                "CreateDocument.jsx"));
+
+            _defaultBookScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
+                "CreateBook.jsx"));
 
             _logger.LogDebug("ScriptRunner()");
         }
@@ -83,7 +94,7 @@ namespace TptMain.InDesign
             var serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
                 configuration[ConfigConsts.IdsUriKey]
-                    ?? throw new ArgumentNullException(ConfigConsts.IdsUriKey));
+                ?? throw new ArgumentNullException(ConfigConsts.IdsUriKey));
 
             serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
             serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
@@ -98,77 +109,105 @@ namespace TptMain.InDesign
         /// <param name="footnoteMarkers">Custom footnote markers (optional).</param>
         /// <param name="overrideFont">A font name. If specified, overrides the IDML font settings (optional).</param>
         /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
-        public virtual void RunScript(PreviewJob inputJob, string[] footnoteMarkers, string overrideFont, CancellationToken? cancellationToken)
+        public virtual void RunScript(PreviewJob inputJob, string[] footnoteMarkers, string overrideFont,
+            CancellationToken? cancellationToken)
         {
             _logger.LogDebug($"RunScriptAsync() - inputJob.Id={inputJob.Id}.");
-            var scriptRequest = new RunScriptRequest();
+            var jobId = inputJob.Id;
+            var projectName = inputJob.ProjectName;
+            var bookFormat = inputJob.BookFormat.ToString();
 
-            var scriptParameters = new RunScriptParameters();
-            scriptRequest.runScriptParameters = scriptParameters;
+            // Initial variables
+            // Set top-level base and output dirs
+            var idttDir = @"C:\Work\IDTT\";
+            var idmlDir = @"C:\Work\IDML\";
+            var pdfDir = @"C:\Work\PDF\";
 
-            scriptParameters.scriptLanguage = "javascript";
-            scriptParameters.scriptFile = GetScriptFile(inputJob).FullName;
+            // Set project input dir and output file
+            var txtDir = $@"{idttDir}{bookFormat}\{projectName}\";
+            var bookPath = $"{idmlDir}preview-{jobId}.indb";
+            var pdfPath = $"{pdfDir}preview-{jobId}.pdf";
 
-            IList<IDSPScriptArg> scriptArgs = new List<IDSPScriptArg>();
+            // Build list of tagged text
+            // Find & sort tagged text documents to read
+            var txtFiles1 = Directory.GetFiles(txtDir, "books-*.txt").OrderBy(filename => filename);
+            var txtFiles2 = Directory.GetFiles(txtDir, "book-*.txt").OrderBy(filename => filename);
+            var txtFiles = txtFiles1.Concat(txtFiles2).ToArray();
 
-            AddNewArgToIdsArgs(ref scriptArgs, "jobId", inputJob.Id);
-            AddNewArgToIdsArgs(ref scriptArgs, "projectName", inputJob.ProjectName);
-            AddNewArgToIdsArgs(ref scriptArgs, "bookFormat", inputJob.BookFormat.ToString());
+            _logger.LogDebug("Building InDesign Documents");
+
+            // Create IDS document for each source, then add to book
+            IList<IDSPScriptArg> documentScriptArgs = new List<IDSPScriptArg>();
             if (!String.IsNullOrEmpty(overrideFont))
             {
-                AddNewArgToIdsArgs(ref scriptArgs, "overrideFont", overrideFont);
+                AddNewArgToIdsArgs(ref documentScriptArgs, "overrideFont", overrideFont);
             }
 
             // build the custom footnotes into a CSV string. EG: "a,d,e,ñ,h,Ä".
-            string customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;
-            AddNewArgToIdsArgs(ref scriptArgs, "customFootnoteList", customFootnotes);
+            String customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;
+            AddNewArgToIdsArgs(ref documentScriptArgs, "customFootnoteList", customFootnotes);
 
-            scriptParameters.scriptArgs = scriptArgs.ToArray();
-
-            RunScriptResponse scriptResponse;
-            if (cancellationToken == null)
+            for (int i = 0; i < txtFiles.Length; i++)
             {
-                scriptResponse = _serviceClient.RunScript(scriptRequest);
-            }
-            else
-            {
-                var scriptTask = _serviceClient.RunScriptAsync(scriptRequest);
-                scriptTask.Wait(_idsTimeoutInMSec, (CancellationToken)cancellationToken);
+                var txtFileName = new FileInfo(txtFiles[i]).Name;
+                _logger.LogDebug($"Building {txtFileName}");
 
-                scriptResponse = scriptTask.Result;
+                var txtFilePath = txtFiles[i];
+                var docPath = $"{idmlDir}preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
+                var idmlPath = $"{idmlDir}preview-{jobId}.idml";
+
+                var docScriptRequest = new RunScriptRequest();
+                var docScriptParameters = new RunScriptParameters();
+                docScriptRequest.runScriptParameters = docScriptParameters;
+
+                AddNewArgToIdsArgs(ref documentScriptArgs, "txtFilePath", txtFilePath);
+                AddNewArgToIdsArgs(ref documentScriptArgs, "docPath", docPath);
+                AddNewArgToIdsArgs(ref documentScriptArgs, "idmlPath", idmlPath);
+
+                docScriptParameters.scriptLanguage = "javascript";
+                docScriptParameters.scriptFile = _defaultDocScriptFile.FullName;
+                docScriptParameters.scriptArgs = documentScriptArgs.ToArray();
+
+                var docScriptResponse = _serviceClient.RunScript(docScriptRequest);
+
+                // check for result w/errors
+                if (docScriptResponse != null
+                    && docScriptResponse.errorNumber != 0)
+                {
+                    throw new ScriptException(
+                        $"Can't build {txtFileName} (error number: {docScriptResponse.errorNumber}, message: {docScriptResponse.errorString}).",
+                        null);
+                }
             }
+
+            _logger.LogDebug($"Building InDesign Book and PDF");
+            var docPattern = $"preview-{jobId}-*.indd";
+
+            IList<IDSPScriptArg> bookScriptArgs = new List<IDSPScriptArg>();
+            AddNewArgToIdsArgs(ref bookScriptArgs, "docPath", idmlDir);
+            AddNewArgToIdsArgs(ref bookScriptArgs, "docPattern", docPattern);
+            AddNewArgToIdsArgs(ref bookScriptArgs, "bookPath", bookPath);
+            AddNewArgToIdsArgs(ref bookScriptArgs, "pdfPath", pdfPath);
+
+            var bookScriptRequest = new RunScriptRequest();
+
+            var bookScriptParameters = new RunScriptParameters();
+            bookScriptRequest.runScriptParameters = bookScriptParameters;
+
+            bookScriptParameters.scriptLanguage = "javascript";
+            bookScriptParameters.scriptFile = _defaultBookScriptFile.FullName;
+            bookScriptParameters.scriptArgs = bookScriptArgs.ToArray();
+
+            RunScriptResponse bookScriptResponse = _serviceClient.RunScript(bookScriptRequest);
 
             // check for result w/errors
-            if (scriptResponse != null
-                && scriptResponse.errorNumber != 0)
+            if (bookScriptResponse != null
+                && bookScriptResponse.errorNumber != 0)
             {
                 throw new ScriptException(
-                    $"Can't execute script (error number: {scriptResponse.errorNumber}, message: {scriptResponse.errorString}).",
+                    $"Can't execute book script (error number: {bookScriptResponse.errorNumber}, message: {bookScriptResponse.errorString}).",
                     null);
             }
-        }
-
-        /// <summary>
-        /// Gets the script file for a given project language.
-        ///
-        /// Looks for a script file matching the initial, non-numeric characters of the project name,
-        /// then falls back to a default if a language-specific one isn't present.
-        /// </summary>
-        /// <param name="inputJob">Preview job (required).</param>
-        /// <returns>Found script file.</returns>
-        public FileInfo GetScriptFile(PreviewJob inputJob)
-        {
-            var projectPrefix = StringUtil.GetProjectPrefix(inputJob.ProjectName).ToUpper();
-            if (projectPrefix.Length < 1)
-            {
-                projectPrefix = MainConsts.DEFAULT_PROJECT_PREFIX;
-            }
-
-            var scriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
-                string.Format(_idsPreviewScriptNameFormat, projectPrefix)));
-            return scriptFile.Exists
-                ? scriptFile
-                : _defaultScriptFile;
         }
 
         /// <summary>
@@ -177,7 +216,8 @@ namespace TptMain.InDesign
         /// <param name="scriptArgs">The IDS arguments collection to add to. (required)</param>
         /// <param name="newArgName">The new argument key name. (required)</param>
         /// <param name="newArgValue">The new argument value. (optional)</param>
-        private void AddNewArgToIdsArgs(ref IList<IDSPScriptArg> scriptArgs, string newArgName, string newArgValue = null)
+        private void AddNewArgToIdsArgs(ref IList<IDSPScriptArg> scriptArgs, string newArgName,
+            string newArgValue = null)
         {
             var scriptArg = new IDSPScriptArg();
             scriptArgs.Add(scriptArg);
