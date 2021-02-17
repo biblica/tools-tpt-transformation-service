@@ -113,11 +113,15 @@ namespace TptMain.InDesign
             CancellationToken? cancellationToken)
         {
             _logger.LogDebug($"RunScriptAsync() - inputJob.Id={inputJob.Id}.");
+
+            // Simplify our logic later on by establishing a cancellation token if none was passed
+            var ct = cancellationToken ?? new CancellationToken();
+
+            // Establish base variables
             var jobId = inputJob.Id;
             var projectName = inputJob.ProjectName;
             var bookFormat = inputJob.BookFormat.ToString();
 
-            // Initial variables
             // Set top-level base and output dirs
             var idttDir = @"C:\Work\IDTT\";
             var idmlDir = @"C:\Work\IDML\";
@@ -127,67 +131,113 @@ namespace TptMain.InDesign
             var txtDir = $@"{idttDir}{bookFormat}\{projectName}\";
             var bookPath = $"{idmlDir}preview-{jobId}.indb";
             var pdfPath = $"{pdfDir}preview-{jobId}.pdf";
+            var idmlPath = $"{idmlDir}preview-{jobId}.idml";
 
-            // Build list of tagged text
-            // Find & sort tagged text documents to read
-            var txtFiles1 = Directory.GetFiles(txtDir, "books-*.txt").OrderBy(filename => filename);
-            var txtFiles2 = Directory.GetFiles(txtDir, "book-*.txt").OrderBy(filename => filename);
-            var txtFiles = txtFiles1.Concat(txtFiles2).ToArray();
+            // Create a list of all the tagged text files that will be turned into documents
+            var txtFiles = GetTaggedTextFiles(txtDir);
+            
+            // build the custom footnotes into a CSV string. EG: "a,d,e,ñ,h,Ä".
+            String customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;
 
-            _logger.LogDebug("Building InDesign Documents");
+            _logger.LogDebug("Creating InDesign Documents");
+            for (int i = 0; i < txtFiles.Length; i++)
+            {
+                ct.ThrowIfCancellationRequested();
+                
+                var txtFileName = new FileInfo(txtFiles[i]).Name;
+                var txtFilePath = txtFiles[i];
+                var docPath = $"{idmlDir}preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
+                
+                _logger.LogDebug($"Creating '{docPath}' from '{txtFileName}'");
+                CreateDocument(txtFileName, txtFilePath, docPath, idmlPath, overrideFont, customFootnotes);
+            }
+            _logger.LogDebug("Finished creating InDesign Documents");
 
-            // Create IDS document for each source, then add to book
+            ct.ThrowIfCancellationRequested();
+            _logger.LogDebug("Creating InDesign Book and PDF");
+            CreateBook(jobId, idmlDir, bookPath, pdfPath);
+            _logger.LogDebug("Finished creating InDesign Book and PDF");
+
+            _logger.LogDebug($"Finished RunScriptAsync() - inputJob.Id={inputJob.Id}.");
+        }
+
+        /// <summary>
+        /// This method creates an InDesign Document from a specified tagged text file.
+        /// </summary>
+        /// <param name="txtFileName">The name of the tagged text file</param>
+        /// <param name="txtFilePath">The file path of the tagged text to use for the document</param>
+        /// <param name="idmlPath">The file path of the IDML to use for the document</param>
+        /// <param name="docOutputPath">The file path where the document will be saved</param>
+        /// <param name="overrideFont">A font to use instead of the one specified in the IDML</param>
+        /// <param name="customFootnotes">Custom footnotes to use in the document</param>
+        /// <exception cref="ScriptException">An InDesign Server exception that resulted from executing the script</exception>
+        private void CreateDocument(string txtFileName, string txtFilePath, string idmlPath,
+            string docOutputPath,
+            string overrideFont, string customFootnotes)
+        {
+            var docScriptRequest = new RunScriptRequest();
+            var docScriptParameters = new RunScriptParameters();
+            docScriptRequest.runScriptParameters = docScriptParameters;
+
             IList<IDSPScriptArg> documentScriptArgs = new List<IDSPScriptArg>();
             if (!String.IsNullOrEmpty(overrideFont))
             {
                 AddNewArgToIdsArgs(ref documentScriptArgs, "overrideFont", overrideFont);
             }
 
-            // build the custom footnotes into a CSV string. EG: "a,d,e,ñ,h,Ä".
-            String customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;
             AddNewArgToIdsArgs(ref documentScriptArgs, "customFootnoteList", customFootnotes);
+            AddNewArgToIdsArgs(ref documentScriptArgs, "txtFilePath", txtFilePath);
+            AddNewArgToIdsArgs(ref documentScriptArgs, "docPath", idmlPath);
+            AddNewArgToIdsArgs(ref documentScriptArgs, "idmlPath", docOutputPath);
 
-            for (int i = 0; i < txtFiles.Length; i++)
+            docScriptParameters.scriptLanguage = "javascript";
+            docScriptParameters.scriptFile = _defaultDocScriptFile.FullName;
+            docScriptParameters.scriptArgs = documentScriptArgs.ToArray();
+
+            var docScriptResponse = _serviceClient.RunScript(docScriptRequest);
+
+            // check for result w/errors
+            if (docScriptResponse != null
+                && docScriptResponse.errorNumber != 0)
             {
-                var txtFileName = new FileInfo(txtFiles[i]).Name;
-                _logger.LogDebug($"Building {txtFileName}");
-
-                var txtFilePath = txtFiles[i];
-                var docPath = $"{idmlDir}preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
-                var idmlPath = $"{idmlDir}preview-{jobId}.idml";
-
-                var docScriptRequest = new RunScriptRequest();
-                var docScriptParameters = new RunScriptParameters();
-                docScriptRequest.runScriptParameters = docScriptParameters;
-
-                AddNewArgToIdsArgs(ref documentScriptArgs, "txtFilePath", txtFilePath);
-                AddNewArgToIdsArgs(ref documentScriptArgs, "docPath", docPath);
-                AddNewArgToIdsArgs(ref documentScriptArgs, "idmlPath", idmlPath);
-
-                docScriptParameters.scriptLanguage = "javascript";
-                docScriptParameters.scriptFile = _defaultDocScriptFile.FullName;
-                docScriptParameters.scriptArgs = documentScriptArgs.ToArray();
-
-                var docScriptResponse = _serviceClient.RunScript(docScriptRequest);
-
-                // check for result w/errors
-                if (docScriptResponse != null
-                    && docScriptResponse.errorNumber != 0)
-                {
-                    throw new ScriptException(
-                        $"Can't build {txtFileName} (error number: {docScriptResponse.errorNumber}, message: {docScriptResponse.errorString}).",
-                        null);
-                }
+                throw new ScriptException(
+                    $"Can't build {txtFileName} (error number: {docScriptResponse.errorNumber}, message: {docScriptResponse.errorString}).",
+                    null);
             }
+        }
 
-            _logger.LogDebug($"Building InDesign Book and PDF");
+        /// <summary>
+        /// This method collects a list of tagged text files that will be used to create new InDesign Documents.
+        /// </summary>
+        /// <param name="txtDir">The full path of the directory where the tagged text files are located</param>
+        /// <returns>A list of tagged text file paths</returns>
+        private static string[] GetTaggedTextFiles(string txtDir)
+        {
+            // Build list of tagged text
+            // Find & sort tagged text documents to read
+            var txtFiles1 = Directory.GetFiles(txtDir, "books-*.txt").OrderBy(filename => filename);
+            var txtFiles2 = Directory.GetFiles(txtDir, "book-*.txt").OrderBy(filename => filename);
+            var txtFiles = txtFiles1.Concat(txtFiles2).ToArray();
+            return txtFiles;
+        }
+
+        /// <summary>
+        /// This method creates a new InDesign Book (and PDF) from previously-generated InDesign Documents
+        /// </summary>
+        /// <param name="jobId">The job ID that generated the InDDesign Documents</param>
+        /// <param name="docPath">The full path to the directory where the generated documents can be found</param>
+        /// <param name="bookOutputPath">The file path where the book will be created</param>
+        /// <param name="pdfOutputPath">The file path where the PDF will be created</param>
+        /// <exception cref="ScriptException">An InDesign Server exception that resulted from executing the script</exception>
+        private void CreateBook(string jobId, string docPath, string bookOutputPath, string pdfOutputPath)
+        {
             var docPattern = $"preview-{jobId}-*.indd";
 
             IList<IDSPScriptArg> bookScriptArgs = new List<IDSPScriptArg>();
-            AddNewArgToIdsArgs(ref bookScriptArgs, "docPath", idmlDir);
+            AddNewArgToIdsArgs(ref bookScriptArgs, "docPath", docPath);
             AddNewArgToIdsArgs(ref bookScriptArgs, "docPattern", docPattern);
-            AddNewArgToIdsArgs(ref bookScriptArgs, "bookPath", bookPath);
-            AddNewArgToIdsArgs(ref bookScriptArgs, "pdfPath", pdfPath);
+            AddNewArgToIdsArgs(ref bookScriptArgs, "bookPath", bookOutputPath);
+            AddNewArgToIdsArgs(ref bookScriptArgs, "pdfPath", pdfOutputPath);
 
             var bookScriptRequest = new RunScriptRequest();
 
