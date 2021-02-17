@@ -149,7 +149,7 @@ namespace TptMain.InDesign
                 var docPath = $"{idmlDir}preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
                 
                 _logger.LogDebug($"Creating '{docPath}' from '{txtFileName}'");
-                CreateDocument(txtFileName, txtFilePath, docPath, idmlPath, overrideFont, customFootnotes);
+                CreateDocument(txtFileName, txtFilePath, idmlPath, docPath, overrideFont, customFootnotes);
             }
             _logger.LogDebug("Finished creating InDesign Documents");
 
