@@ -187,8 +187,8 @@ namespace TptMain.InDesign
 
             AddNewArgToIdsArgs(ref documentScriptArgs, "customFootnoteList", customFootnotes);
             AddNewArgToIdsArgs(ref documentScriptArgs, "txtFilePath", txtFilePath);
-            AddNewArgToIdsArgs(ref documentScriptArgs, "docPath", idmlPath);
-            AddNewArgToIdsArgs(ref documentScriptArgs, "idmlPath", docOutputPath);
+            AddNewArgToIdsArgs(ref documentScriptArgs, "idmlPath", idmlPath);
+            AddNewArgToIdsArgs(ref documentScriptArgs, "docOutputPath", docOutputPath);
 
             docScriptParameters.scriptLanguage = "javascript";
             docScriptParameters.scriptFile = _defaultDocScriptFile.FullName;

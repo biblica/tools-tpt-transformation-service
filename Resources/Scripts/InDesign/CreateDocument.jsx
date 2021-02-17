@@ -4,23 +4,23 @@
 
 // Retrieve parameters from the script arguments
 var txtFilePathIn = app.scriptArgs.getValue("txtFilePath");
-var docPathIn = app.scriptArgs.getValue("docPath");
 var idmlPathIn = app.scriptArgs.getValue("idmlPath");
+var docOutputPathIn = app.scriptArgs.getValue("docOutputPath");
 var customFootnotesIn = app.scriptArgs.getValue("customFootnoteList");
 var overrideFontIn = app.scriptArgs.getValue("overrideFont");
 
 // Create the INDD
-createDocument(txtFilePathIn, docPathIn, idmlPathIn, customFootnotesIn, overrideFontIn);
+createDocument(txtFilePathIn, idmlPathIn, docOutputPathIn, customFootnotesIn, overrideFontIn);
 
 /**
  * This function creates and InDesign Document (INDD) from a template (IDML) and tagged text (IDTT).
  * @param {string} txtFilePath The file path of the tagged text to place into the INDD
- * @param {string} docPath The file path where the IDML is located
- * @param {string} idmlPath The folder path where the INDD should be output
+ * @param {string} idmlPath The file path where the IDML is located
+ * @param {string} docOutputPath The file path where the INDD should be output
  * @param {string} customFootnotes Any custom footnotes as a list
  * @param {string} overrideFont A font to use rather than what is specified in the IDML
  */
-function createDocument(txtFilePath, docPath, idmlPath, customFootnotes, overrideFont) {
+function createDocument(txtFilePath, idmlPath, docOutputPath, customFootnotes, overrideFont) {
     // Load the IDML into the new INDD and turn off checking/auto-modifying capabilities to speed up performance
     var doc = app.open(idmlPath);
     doc.preflightOptions.preflightOff = true;
@@ -45,6 +45,6 @@ function createDocument(txtFilePath, docPath, idmlPath, customFootnotes, overrid
     doc.preflightOptions.preflightOff = false;
 
     // Save the INDD
-    doc.save(docPath);
+    doc.save(docOutputPath);
     doc.close(SaveOptions.YES);
 }
