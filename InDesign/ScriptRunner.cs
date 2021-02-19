@@ -42,6 +42,21 @@ namespace TptMain.InDesign
         private readonly string _idsPreviewScriptNameFormat;
 
         /// <summary>
+        /// Directory where IDTT files are located.
+        /// </summary>
+        private readonly string _idttDocDir;
+
+        /// <summary>
+        /// Directory where IDML files are located.
+        /// </summary>
+        private readonly string _idmlDocDir;
+
+        /// <summary>
+        /// Directory where PDF files are output.
+        /// </summary>
+        private readonly string _pdfDocDir;
+
+        /// <summary>
         /// Default (Document Creation) script file.
         /// </summary>
         private readonly FileInfo _defaultDocScriptFile;
@@ -72,6 +87,15 @@ namespace TptMain.InDesign
             _idsPreviewScriptNameFormat = (configuration[ConfigConsts.IdsPreviewScriptNameFormatKey]
                                            ?? throw new ArgumentNullException(
                                                ConfigConsts.IdsPreviewScriptNameFormatKey));
+            _idttDocDir = (configuration[ConfigConsts.IdttDocDirKey]
+                           ?? throw new ArgumentNullException(
+                               ConfigConsts.IdsPreviewScriptNameFormatKey));
+            _idmlDocDir = (configuration[ConfigConsts.IdmlDocDirKey]
+                           ?? throw new ArgumentNullException(
+                               ConfigConsts.IdmlDocDirKey));
+            _pdfDocDir = (configuration[ConfigConsts.PdfDocDirKey]
+                          ?? throw new ArgumentNullException(
+                              ConfigConsts.PdfDocDirKey));
 
             _serviceClient = SetUpInDesignClient(configuration);
 
@@ -119,46 +143,29 @@ namespace TptMain.InDesign
 
             // Establish base variables
             var jobId = inputJob.Id;
-            var projectName = inputJob.ProjectName;
-            var bookFormat = inputJob.BookFormat.ToString();
-
-            // Set top-level base and output dirs
-            var idttDir = @"C:\Work\IDTT\";
-            var idmlDir = @"C:\Work\IDML\";
-            var pdfDir = @"C:\Work\PDF\";
-
-            // Set project input dir and output file
-            var txtDir = $@"{idttDir}{bookFormat}\{projectName}\";
-            var bookPath = $"{idmlDir}preview-{jobId}.indb";
-            var pdfPath = $"{pdfDir}preview-{jobId}.pdf";
-            var idmlPath = $"{idmlDir}preview-{jobId}.idml";
 
             // Create a list of all the tagged text files that will be turned into documents
+            var projectName = inputJob.ProjectName;
+            var bookFormat = inputJob.BookFormat.ToString();
+            var txtDir = $@"{_idttDocDir}\{bookFormat}\{projectName}\";
             var txtFiles = GetTaggedTextFiles(txtDir);
-            
-            // build the custom footnotes into a CSV string. EG: "a,d,e,ñ,h,Ä".
-            String customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;
+
+            // Build custom footnotes into a CSV string, eg "a,d,e,ñ,h,Ä".
+            var customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;
 
             // Create the InDesign Documents (IDTT files)
             _logger.LogDebug("Creating InDesign Documents");
-            for (int i = 0; i < txtFiles.Length; i++)
+            foreach (var txtFile in txtFiles)
             {
                 ct.ThrowIfCancellationRequested();
-                
-                var txtFileName = new FileInfo(txtFiles[i]).Name;
-                var txtFilePath = txtFiles[i];
-                var docPath = $"{idmlDir}preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
-                
-                _logger.LogDebug($"Creating '{docPath}' from '{txtFileName}'");
-                CreateDocument(txtFileName, txtFilePath, idmlPath, docPath, overrideFont, customFootnotes);
+                CreateDocument(jobId, txtFile, overrideFont, customFootnotes);
             }
+
             _logger.LogDebug("Finished creating InDesign Documents");
 
             // Create a book (INDB) from the InDesign Documents and export it to PDF
             ct.ThrowIfCancellationRequested();
-            _logger.LogDebug("Creating InDesign Book and PDF");
-            CreateBook(jobId, idmlDir, bookPath, pdfPath);
-            _logger.LogDebug("Finished creating InDesign Book and PDF");
+            CreateBook(jobId);
 
             _logger.LogDebug($"Finished CreatePreview() - inputJob.Id={inputJob.Id}.");
         }
@@ -166,17 +173,19 @@ namespace TptMain.InDesign
         /// <summary>
         /// This method creates an InDesign Document from a specified tagged text file.
         /// </summary>
-        /// <param name="txtFileName">The name of the tagged text file</param>
+        /// <param name="jobId">The preview job ID</param>
         /// <param name="txtFilePath">The file path of the tagged text to use for the document</param>
-        /// <param name="idmlPath">The file path of the IDML to use for the document</param>
-        /// <param name="docOutputPath">The file path where the document will be saved</param>
         /// <param name="overrideFont">A font to use instead of the one specified in the IDML</param>
         /// <param name="customFootnotes">Custom footnotes to use in the document</param>
         /// <exception cref="ScriptException">An InDesign Server exception that resulted from executing the script</exception>
-        private void CreateDocument(string txtFileName, string txtFilePath, string idmlPath,
-            string docOutputPath,
+        private void CreateDocument(string jobId, string txtFilePath,
             string overrideFont, string customFootnotes)
         {
+            var txtFileName = new FileInfo(txtFilePath).Name;
+            var idmlPath = $@"{_idmlDocDir}\preview-{jobId}.idml";
+            var docOutputPath = $@"{_idmlDocDir}\preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
+
+            _logger.LogDebug($"Creating '{docOutputPath}' from '{txtFileName}'");
             var docScriptRequest = new RunScriptRequest();
             var docScriptParameters = new RunScriptParameters();
             docScriptRequest.runScriptParameters = docScriptParameters;
@@ -227,16 +236,16 @@ namespace TptMain.InDesign
         /// This method creates a new InDesign Book (and PDF) from previously-generated InDesign Documents
         /// </summary>
         /// <param name="jobId">The job ID that generated the InDDesign Documents</param>
-        /// <param name="docPath">The full path to the directory where the generated documents can be found</param>
-        /// <param name="bookOutputPath">The file path where the book will be created</param>
-        /// <param name="pdfOutputPath">The file path where the PDF will be created</param>
         /// <exception cref="ScriptException">An InDesign Server exception that resulted from executing the script</exception>
-        private void CreateBook(string jobId, string docPath, string bookOutputPath, string pdfOutputPath)
+        private void CreateBook(string jobId)
         {
             var docPattern = $"preview-{jobId}-*.indd";
+            var pdfOutputPath = $@"{_pdfDocDir}\preview-{jobId}.pdf";
+            var bookOutputPath = $@"{_idmlDocDir}\preview-{jobId}.indb";
 
+            _logger.LogDebug("Creating InDesign Book and PDF");
             IList<IDSPScriptArg> bookScriptArgs = new List<IDSPScriptArg>();
-            AddNewArgToIdsArgs(ref bookScriptArgs, "docPath", docPath);
+            AddNewArgToIdsArgs(ref bookScriptArgs, "docPath", _idmlDocDir);
             AddNewArgToIdsArgs(ref bookScriptArgs, "docPattern", docPattern);
             AddNewArgToIdsArgs(ref bookScriptArgs, "bookPath", bookOutputPath);
             AddNewArgToIdsArgs(ref bookScriptArgs, "pdfPath", pdfOutputPath);
@@ -260,6 +269,8 @@ namespace TptMain.InDesign
                     $"Can't execute book script (error number: {bookScriptResponse.errorNumber}, message: {bookScriptResponse.errorString}).",
                     null);
             }
+
+            _logger.LogDebug("Finished creating InDesign Book and PDF");
         }
 
         /// <summary>
