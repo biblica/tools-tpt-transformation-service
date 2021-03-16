@@ -114,35 +114,35 @@ namespace TptMain.Jobs
                     _paratextApi.IsUserAuthorizedOnProject(_previewJob);
                 }
 
+                // Track derived parameters that we'll pass on to InDesign
+                var additionalParams = new AdditionalPreviewParameters() {
+                    TextDirection = _paratextProjectService.GetTextDirection(_previewJob.ProjectName)
+                };
+
                 // Grab the project's footnote markers if configured to do so.
-                string[] customFootnoteMarkers = null;
                 if (!IsJobCanceled && _previewJob.UseCustomFootnotes)
                 {
-                    customFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.ProjectName);
+                    additionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.ProjectName);
                     // Throw an error, if custom footnotes are requested but are not available.
                     // This allows us to set the user's expectations early, rather than waiting
                     // for a preview.
-                    if (customFootnoteMarkers == null || customFootnoteMarkers.Length == 0)
+                    if (additionalParams.CustomFootnoteMarkers == null || additionalParams.CustomFootnoteMarkers.Length == 0)
                     {
                         throw new PreviewJobException(_previewJob, "Custom footnotes requested, but aren't specified in the project.");
                     }
 
-                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", customFootnoteMarkers));
+                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", additionalParams.CustomFootnoteMarkers));
                 }
 
                 // If we're using the project font (rather than what's in the IDML) pass it as an override.
-                string overrideFont = null;
                 if (!IsJobCanceled && _previewJob.UseProjectFont)
                 {
-                    string _projectFont = _paratextProjectService.GetProjectFont(_previewJob.ProjectName);
+                    additionalParams.OverrideFont = _paratextProjectService.GetProjectFont(_previewJob.ProjectName);
 
-                    if (String.IsNullOrEmpty(_projectFont))
+                    if (String.IsNullOrEmpty(additionalParams.OverrideFont))
                     {
                         _logger.LogInformation($"No font specified for project {_previewJob.ProjectName}. IDML font settings will not be modified.");
-                    }
-                    else
-                    {
-                        overrideFont = _projectFont;
+                        additionalParams.OverrideFont = null;
                     }
                 }
 
@@ -157,8 +157,7 @@ namespace TptMain.Jobs
                 if (!IsJobCanceled)
                 {
                     _scriptRunner.RunScript(_previewJob,
-                        customFootnoteMarkers,
-                        overrideFont,
+                        additionalParams,
                         _cancellationTokenSource.Token);
                 }
 

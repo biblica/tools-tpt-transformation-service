@@ -95,10 +95,12 @@ namespace TptMain.InDesign
         /// Execute typesetting preview generation synchronously, with optional cancellation.
         /// </summary>
         /// <param name="inputJob">Input preview job (required).</param>
-        /// <param name="footnoteMarkers">Custom footnote markers (optional).</param>
-        /// <param name="overrideFont">A font name. If specified, overrides the IDML font settings (optional).</param>
+        /// <param name="additionalParams">Additional params used by the preview job (required).</param>
         /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
-        public virtual void RunScript(PreviewJob inputJob, string[] footnoteMarkers, string overrideFont, CancellationToken? cancellationToken)
+        public virtual void RunScript(
+            PreviewJob inputJob,
+            AdditionalPreviewParameters additionalParams,
+            CancellationToken? cancellationToken)
         {
             _logger.LogDebug($"RunScriptAsync() - inputJob.Id={inputJob.Id}.");
             var scriptRequest = new RunScriptRequest();
@@ -114,13 +116,14 @@ namespace TptMain.InDesign
             AddNewArgToIdsArgs(ref scriptArgs, "jobId", inputJob.Id);
             AddNewArgToIdsArgs(ref scriptArgs, "projectName", inputJob.ProjectName);
             AddNewArgToIdsArgs(ref scriptArgs, "bookFormat", inputJob.BookFormat.ToString());
-            if (!String.IsNullOrEmpty(overrideFont))
+            AddNewArgToIdsArgs(ref scriptArgs, "textDirection", additionalParams.TextDirection.ToString());
+            if (!String.IsNullOrEmpty(additionalParams.OverrideFont))
             {
-                AddNewArgToIdsArgs(ref scriptArgs, "overrideFont", overrideFont);
+                AddNewArgToIdsArgs(ref scriptArgs, "overrideFont", additionalParams.OverrideFont);
             }
 
             // build the custom footnotes into a CSV string. EG: "a,d,e,ñ,h,Ä".
-            string customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;
+            string customFootnotes = additionalParams.CustomFootnoteMarkers != null ? String.Join(',', additionalParams.CustomFootnoteMarkers) : null;
             AddNewArgToIdsArgs(ref scriptArgs, "customFootnoteList", customFootnotes);
 
             scriptParameters.scriptArgs = scriptArgs.ToArray();

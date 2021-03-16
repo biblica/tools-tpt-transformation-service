@@ -33,6 +33,7 @@ var projectName = app.scriptArgs.getValue("projectName");
 var bookFormat = app.scriptArgs.getValue("bookFormat");
 var customFootnotes = app.scriptArgs.getValue("customFootnoteList");
 var overrideFont = app.scriptArgs.getValue("overrideFont");
+var textDirection = app.scriptArgs.getValue("textDirection");
 
 // Set top-level base and output dirs
 var idttDir = 'C:\\Work\\IDTT\\';
@@ -76,6 +77,21 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
         // Update the fonts in the IDML to match the Paratext project.
         if (typeof overrideFont === 'string' && overrideFont.length) {
             updateFont(doc, overrideFont);
+        }
+
+
+        for (var i = 1; i < doc.paragraphStyles.count(); i++) {
+            // Address when the text direction is RTL
+            if ("RTL" == textDirection) {
+                doc.paragraphStyles[i].paragraphDirection = ParagraphDirectionOptions.RIGHT_TO_LEFT_DIRECTION;
+                // set justification for non-titles.
+                if (!paragraphStyles[i].name.startsWith("mt")) {
+                    doc.paragraphStyles[i].justification = Justification.RIGHT_ALIGN;
+                }
+            }
+
+            // The composer should always be Adobe World-Ready.
+            doc.paragraphStyles[i].composer = "Adobe World-Ready Paragraph Composer";
         }
 
         // Place text

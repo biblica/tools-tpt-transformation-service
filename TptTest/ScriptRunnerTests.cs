@@ -84,7 +84,18 @@ namespace TptTest
                 .Setup(runner => runner.SetUpInDesignClient(_testConfiguration))
                 .Returns(indesignClient.Object);
 
-            scriptRunner.Object.RunScript(new PreviewJob() { ProjectName = "test" }, "abcdef".Split(), "A New Font", null);
+            scriptRunner.Object.RunScript(
+                new PreviewJob()
+                {
+                    ProjectName = "test"
+                },
+                new AdditionalPreviewParameters()
+                {
+                    CustomFootnoteMarkers = "abcdef".Split(),
+                    OverrideFont = "A New Font"
+                },
+                null
+            );
 
             // verify expected calls were made
             indesignClient.Verify(idClient => idClient.RunScript(It.IsNotNull<RunScriptRequest>()), Times.Once);
