@@ -85,8 +85,11 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
             if ("RTL" == textDirection) {
                 doc.paragraphStyles[i].paragraphDirection = ParagraphDirectionOptions.RIGHT_TO_LEFT_DIRECTION;
                 // set justification for non-titles.
-                if (!paragraphStyles[i].name.startsWith("mt")) {
+                if (doc.paragraphStyles[i].justification == Justification.LEFT_ALIGN) {
                     doc.paragraphStyles[i].justification = Justification.RIGHT_ALIGN;
+                }
+                if (doc.paragraphStyles[i].justification == Justification.LEFT_JUSTIFIED) {
+                    doc.paragraphStyles[i].justification = Justification.RIGHT_JUSTIFIED;
                 }
             }
 
