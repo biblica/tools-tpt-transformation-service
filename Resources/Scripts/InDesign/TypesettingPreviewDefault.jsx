@@ -61,6 +61,11 @@ var txtFiles2 = txtFolder.getFiles("book-*.txt");
 txtFiles2.sort(sortFunction);
 var txtFiles = txtFiles1.concat(txtFiles2);
 
+// Set the story direction to RTL when appropriate.
+if ("RTL" == textDirection) {
+    app.storyPreferences.storyDirection = StoryDirectionOptions.RIGHT_TO_LEFT_DIRECTION;
+}
+
 // Create IDS document for each source, then add to book
 for (var ctr = 0; ctr < txtFiles.length; ctr++) {
 
@@ -81,6 +86,9 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
 
 
         for (var i = 1; i < doc.paragraphStyles.count(); i++) {
+            // The composer should always be Adobe World-Ready.
+            doc.paragraphStyles[i].composer = "Adobe World-Ready Paragraph Composer";
+
             // Address when the text direction is RTL
             if ("RTL" == textDirection) {
                 doc.paragraphStyles[i].paragraphDirection = ParagraphDirectionOptions.RIGHT_TO_LEFT_DIRECTION;
@@ -92,9 +100,11 @@ for (var ctr = 0; ctr < txtFiles.length; ctr++) {
                     doc.paragraphStyles[i].justification = Justification.RIGHT_JUSTIFIED;
                 }
             }
+        }
 
-            // The composer should always be Adobe World-Ready.
-            doc.paragraphStyles[i].composer = "Adobe World-Ready Paragraph Composer";
+        // Set the story direction to RTL when appropriate.
+        if ("RTL" == textDirection) {
+            doc.storyPreferences.storyDirection = StoryDirectionOptions.RIGHT_TO_LEFT_DIRECTION;
         }
 
         // Place text

@@ -109,7 +109,7 @@ namespace TptMain.InDesign
             scriptRequest.runScriptParameters = scriptParameters;
 
             scriptParameters.scriptLanguage = "javascript";
-            scriptParameters.scriptFile = GetScriptFile(inputJob).FullName;
+            scriptParameters.scriptFile = GetScriptFile().FullName;
 
             IList<IDSPScriptArg> scriptArgs = new List<IDSPScriptArg>();
 
@@ -152,26 +152,13 @@ namespace TptMain.InDesign
         }
 
         /// <summary>
-        /// Gets the script file for a given project language.
+        /// Get the InDesign script to use file path.
         ///
-        /// Looks for a script file matching the initial, non-numeric characters of the project name,
-        /// then falls back to a default if a language-specific one isn't present.
         /// </summary>
-        /// <param name="inputJob">Preview job (required).</param>
-        /// <returns>Found script file.</returns>
-        public FileInfo GetScriptFile(PreviewJob inputJob)
+        /// <returns>InDesign script file info.</returns>
+        public FileInfo GetScriptFile()
         {
-            var projectPrefix = StringUtil.GetProjectPrefix(inputJob.ProjectName).ToUpper();
-            if (projectPrefix.Length < 1)
-            {
-                projectPrefix = MainConsts.DEFAULT_PROJECT_PREFIX;
-            }
-
-            var scriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
-                string.Format(_idsPreviewScriptNameFormat, projectPrefix)));
-            return scriptFile.Exists
-                ? scriptFile
-                : _defaultScriptFile;
+            return _defaultScriptFile;
         }
 
         /// <summary>
