@@ -156,7 +156,7 @@ namespace TptMain.Jobs
 
                 if (!IsJobCanceled)
                 {
-                    _scriptRunner.RunScript(_previewJob,
+                    _scriptRunner.CreatePreview(_previewJob,
                         additionalParams,
                         _cancellationTokenSource.Token);
                 }
