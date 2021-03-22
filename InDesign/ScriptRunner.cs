@@ -37,11 +37,6 @@ namespace TptMain.InDesign
         private readonly DirectoryInfo _idsPreviewScriptDirectory;
 
         /// <summary>
-        /// Preview script (JSX) name format (configured).
-        /// </summary>
-        private readonly string _idsPreviewScriptNameFormat;
-
-        /// <summary>
         /// Directory where IDTT files are located.
         /// </summary>
         private readonly string _idttDocDir;
@@ -84,9 +79,6 @@ namespace TptMain.InDesign
             _idsPreviewScriptDirectory = new DirectoryInfo((configuration[ConfigConsts.IdsPreviewScriptDirKey]
                                                             ?? throw new ArgumentNullException(ConfigConsts
                                                                 .IdsPreviewScriptDirKey)));
-            _idsPreviewScriptNameFormat = (configuration[ConfigConsts.IdsPreviewScriptNameFormatKey]
-                                           ?? throw new ArgumentNullException(
-                                               ConfigConsts.IdsPreviewScriptNameFormatKey));
             _idttDocDir = (configuration[ConfigConsts.IdttDocDirKey]
                            ?? throw new ArgumentNullException(
                                ConfigConsts.IdsPreviewScriptNameFormatKey));
@@ -151,17 +143,18 @@ namespace TptMain.InDesign
             var txtDir = $@"{_idttDocDir}\{bookFormat}\{projectName}\";
             var txtFiles = GetTaggedTextFiles(txtDir);
 
-            AddNewArgToIdsArgs(ref scriptArgs, "jobId", inputJob.Id);
-            AddNewArgToIdsArgs(ref scriptArgs, "projectName", inputJob.ProjectName);
-            AddNewArgToIdsArgs(ref scriptArgs, "bookFormat", inputJob.BookFormat.ToString());
-            if (!String.IsNullOrEmpty(overrideFont))
+            // Build custom footnotes into a CSV string, eg "a,d,e,ñ,h,Ä".
+            var customFootnotes = additionalParams.CustomFootnoteMarkers != null ? String.Join(',', additionalParams.CustomFootnoteMarkers) : null;
+
+            // Create the InDesign Documents (IDTT files)
+            _logger.LogDebug("Creating InDesign Documents");
+            foreach (var txtFile in txtFiles)
             {
-                AddNewArgToIdsArgs(ref scriptArgs, "overrideFont", overrideFont);
+                ct.ThrowIfCancellationRequested();
+                CreateDocument(jobId, txtFile, additionalParams.OverrideFont, customFootnotes, additionalParams.TextDirection);
             }
 
-            // build the custom footnotes into a CSV string. EG: "a,d,e,ñ,h,Ä".
-            string customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;
-            AddNewArgToIdsArgs(ref scriptArgs, "customFootnoteList", customFootnotes);
+            _logger.LogDebug("Finished creating InDesign Documents");
 
             // Create a book (INDB) from the InDesign Documents and export it to PDF
             ct.ThrowIfCancellationRequested();
@@ -177,9 +170,15 @@ namespace TptMain.InDesign
         /// <param name="txtFilePath">The file path of the tagged text to use for the document</param>
         /// <param name="overrideFont">A font to use instead of the one specified in the IDML</param>
         /// <param name="customFootnotes">Custom footnotes to use in the document</param>
+        /// <param name="textDirection">The text direction of the typesetting preview text.</param>
         /// <exception cref="ScriptException">An InDesign Server exception that resulted from executing the script</exception>
-        private void CreateDocument(string jobId, string txtFilePath,
-            string overrideFont, string customFootnotes)
+        private void CreateDocument(
+            string jobId, 
+            string txtFilePath,
+            string overrideFont, 
+            string customFootnotes,
+            TextDirection textDirection
+            )
         {
             var txtFileName = new FileInfo(txtFilePath).Name;
             var idmlPath = $@"{_idmlDocDir}\preview-{jobId}.idml";
@@ -200,6 +199,7 @@ namespace TptMain.InDesign
             AddNewArgToIdsArgs(ref documentScriptArgs, "txtFilePath", txtFilePath);
             AddNewArgToIdsArgs(ref documentScriptArgs, "idmlPath", idmlPath);
             AddNewArgToIdsArgs(ref documentScriptArgs, "docOutputPath", docOutputPath);
+            AddNewArgToIdsArgs(ref documentScriptArgs, "textDirection", textDirection.ToString());
 
             docScriptParameters.scriptLanguage = "javascript";
             docScriptParameters.scriptFile = _defaultDocScriptFile.FullName;

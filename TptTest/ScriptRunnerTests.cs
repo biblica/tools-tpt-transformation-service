@@ -26,7 +26,6 @@ namespace TptTest
         public const string TEST_IDS_URI = "http://172.31.10.90:9876/service";
         public const string TEST_IDS_TIMEOUT = "600";
         public const string TEST_IDS_PREVIEW_SCRIPT_DIR = "C:\\Work\\JSX";
-        public const string TEST_IDS_PREVIEW_SCRIPT_NAME_FORMAT = "TypesettingPreview{0}.jsx";
         public const string TEST_IDTT_DOC_DIR = "C:\\Work\\IDTT";
         public const string TEST_IDML_DOC_DIR = "C:\\Work\\IDML";
         public const string TEST_PDF_DOC_DIR = "C:\\Work\\PDF";
@@ -56,7 +55,6 @@ namespace TptTest
             configKeys[TEST_IDS_URI_KEY] = TEST_IDS_URI;
             configKeys[TEST_IDS_TIMEOUT_KEY] = TEST_IDS_TIMEOUT;
             configKeys[TEST_IDS_PREVIEW_SCRIPT_DIR_KEY] = TEST_IDS_PREVIEW_SCRIPT_DIR;
-            configKeys[TEST_IDS_PREVIEW_SCRIPT_NAME_FORMAT_KEY] = TEST_IDS_PREVIEW_SCRIPT_NAME_FORMAT;
             configKeys[TEST_IDTT_DOC_DIR_KEY] = TEST_IDTT_DOC_DIR;
             configKeys[TEST_IDML_DOC_DIR_KEY] = TEST_IDML_DOC_DIR;
             configKeys[TEST_PDF_DOC_DIR_KEY] = TEST_PDF_DOC_DIR;
@@ -98,7 +96,7 @@ namespace TptTest
             scriptRunner.Object.CreatePreview(
                 new PreviewJob()
                 {
-                    ProjectName = "test"
+                    ProjectName = ""
                 },
                 new AdditionalPreviewParameters()
                 {
