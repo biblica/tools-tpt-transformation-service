@@ -5,7 +5,6 @@ namespace TptMain.Models
     /// <summary>
     /// Book format.
     /// </summary>
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public enum TextDirection
     {
         /// <summary>
