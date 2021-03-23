@@ -94,15 +94,11 @@ namespace TptMain.ParatextProjects
             var ldml = LoadLdmlFromXmlFile(ldmlFilePath);
 
             var textDirection = ldml?.layout?.orientation?.characterOrder;
-            if (textDirection == null)
-            {
-                return TextDirection.UNSPECIFIED;
-            }
-            if (textDirection.Equals("right-to-left",StringComparison.InvariantCultureIgnoreCase))
+            if ("right-to-left".Equals(textDirection, StringComparison.InvariantCultureIgnoreCase))
             {
                 return TextDirection.RTL;
             }
-            if (textDirection.Equals("left-to-right", StringComparison.InvariantCultureIgnoreCase))
+            if ("left-to-right".Equals(textDirection, StringComparison.InvariantCultureIgnoreCase))
             {
                 return TextDirection.LTR;
             }
