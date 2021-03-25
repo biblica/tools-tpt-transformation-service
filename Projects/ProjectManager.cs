@@ -111,7 +111,7 @@ namespace TptMain.Projects
                                     // Find the modified date of the latest IDTT file for the project
                                     ProjectUpdated =
                                         formatDirs
-                                            .SelectMany(dirItem => dirItem.GetFiles("book-*.txt")
+                                            .SelectMany(dirItem => dirItem.GetFiles("book*.txt")
                                                 .Select(fileItem => fileItem.LastWriteTimeUtc))
                                             .Aggregate(DateTime.MinValue,
                                                 (lastTimeUtc, writeTimeUtc) =>
