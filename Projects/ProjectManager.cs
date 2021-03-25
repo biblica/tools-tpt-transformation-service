@@ -108,9 +108,11 @@ namespace TptMain.Projects
                                 newProjectDetails[projectName] = new ProjectDetails
                                 {
                                     ProjectName = projectName,
+                                    // Find the modified date of the latest IDTT file for the project
                                     ProjectUpdated =
                                         formatDirs
-                                            .Select(dirItem => dirItem.LastWriteTimeUtc)
+                                            .SelectMany(dirItem => dirItem.GetFiles("book-*.txt")
+                                                .Select(fileItem => fileItem.LastWriteTimeUtc))
                                             .Aggregate(DateTime.MinValue,
                                                 (lastTimeUtc, writeTimeUtc) =>
                                                     writeTimeUtc > lastTimeUtc ? writeTimeUtc : lastTimeUtc)
