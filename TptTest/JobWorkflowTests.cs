@@ -69,7 +69,6 @@ namespace TptTest
             configKeys[ScriptRunnerTests.TEST_IDS_URI_KEY] = ScriptRunnerTests.TEST_IDS_URI;
             configKeys[ScriptRunnerTests.TEST_IDS_TIMEOUT_KEY] = ScriptRunnerTests.TEST_IDS_TIMEOUT;
             configKeys[ScriptRunnerTests.TEST_IDS_PREVIEW_SCRIPT_DIR_KEY] = ScriptRunnerTests.TEST_IDS_TIMEOUT;
-            configKeys[ScriptRunnerTests.TEST_IDS_PREVIEW_SCRIPT_NAME_FORMAT_KEY] = ScriptRunnerTests.TEST_IDS_PREVIEW_SCRIPT_NAME_FORMAT;
 
             // - TemplateManager
             configKeys[TemplateManagerTests.TEST_TEMPLATE_SERVER_URI_KEY] = TemplateManagerTests.TEST_TEMPLATE_SERVER_URI;
@@ -196,7 +195,10 @@ namespace TptTest
             _mockParatextApi.Setup(paratextApi =>
                 paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
                 .Verifiable();
-
+            _mockParatextProjectService.Setup(ptProjService =>
+                ptProjService.GetTextDirection(It.IsAny<string>()))
+                .Returns(TextDirection.LTR)
+                .Verifiable();
             IList<PreviewJob> jobUpdates = new List<PreviewJob>();
             var isTaskRun = false;
             _mockTemplateManager.Setup(managerItem =>
@@ -205,8 +207,8 @@ namespace TptTest
                     It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                runnerItem.CreatePreview(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()))
-                .Callback<PreviewJob, string[], string, CancellationToken?>((jobItem, _, __, tokenItem) =>
+                runnerItem.CreatePreview(testPreviewJob, It.IsAny<AdditionalPreviewParameters>(), It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, AdditionalPreviewParameters, CancellationToken?>((jobItem, _, tokenItem) =>
                 {
                     isTaskRun = true;
                 })
@@ -226,7 +228,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.CreatePreview(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()), Times.Once);
+                runnerItem.CreatePreview(testPreviewJob, It.IsAny<AdditionalPreviewParameters>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(isTaskRun); // task was run
@@ -273,6 +275,9 @@ namespace TptTest
             _mockParatextApi.Setup(paratextApi =>
                 paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
                 .Verifiable();
+            _mockParatextProjectService.Setup(ptProjService =>
+                ptProjService.GetTextDirection(It.IsAny<string>()))
+                .Returns(TextDirection.LTR);
 
             IList<PreviewJob> jobUpdates = new List<PreviewJob>();
             var isTaskRun = false;
@@ -281,8 +286,8 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                runnerItem.CreatePreview(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()))
-                .Callback<PreviewJob, string[], string, CancellationToken?>((jobItem, _, __, tokenItem) =>
+                runnerItem.CreatePreview(testPreviewJob, It.IsAny<AdditionalPreviewParameters>(), It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, AdditionalPreviewParameters, CancellationToken?>((jobItem, _, tokenItem) =>
                 {
                     isTaskRun = true;
                     if (tokenItem != null)
@@ -322,7 +327,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.CreatePreview(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()), Times.Once);
+                runnerItem.CreatePreview(testPreviewJob, It.IsAny<AdditionalPreviewParameters>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(mockWorkflow.Object.IsJobCanceled); // job wasn't cancelled
@@ -365,6 +370,10 @@ namespace TptTest
             // setup mocks
             _mockParatextApi.Setup(paratextApi =>
                 paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
+                .Verifiable();
+            _mockParatextProjectService.Setup(ptProjService =>
+                ptProjService.GetTextDirection(It.IsAny<string>()))
+                .Returns(TextDirection.LTR)
                 .Verifiable();
 
             IList<PreviewJob> jobUpdates = new List<PreviewJob>();
@@ -428,6 +437,10 @@ namespace TptTest
             _mockParatextApi.Setup(paratextApi =>
                 paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
                 .Verifiable();
+            _mockParatextProjectService.Setup(ptProjService =>
+                ptProjService.GetTextDirection(It.IsAny<string>()))
+                .Returns(TextDirection.LTR)
+                .Verifiable();
             _mockParatextProjectService.Setup(ptProjectService =>
                 ptProjectService.GetFootnoteCallerSequence(testPreviewJob.ProjectName))
                 .Returns(new string[] { "a", "b"})
@@ -440,7 +453,7 @@ namespace TptTest
                     managerItem.DownloadTemplateFile(testPreviewJob, It.IsAny<FileInfo>(), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                    runnerItem.CreatePreview(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()))
+                    runnerItem.CreatePreview(testPreviewJob, It.IsAny<AdditionalPreviewParameters>(), It.IsAny<CancellationToken?>()))
                 .Verifiable();
 
             // execute
@@ -456,7 +469,7 @@ namespace TptTest
             _mockTemplateManager.Verify(managerItem =>
                     managerItem.DownloadTemplateFile(testPreviewJob, It.IsAny<FileInfo>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                    runnerItem.CreatePreview(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()), Times.Once);
+                    runnerItem.CreatePreview(testPreviewJob, It.IsAny<AdditionalPreviewParameters>(), It.IsAny<CancellationToken?>()), Times.Once);
 
         }
 
@@ -485,6 +498,10 @@ namespace TptTest
             _mockParatextApi.Setup(paratextApi =>
                 paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
                 .Verifiable();
+            _mockParatextProjectService.Setup(ptProjService =>
+                ptProjService.GetTextDirection(It.IsAny<string>()))
+                .Returns(TextDirection.LTR)
+                .Verifiable();
 
             IList<PreviewJob> jobUpdates = new List<PreviewJob>();
             var isTaskRun = false;
@@ -493,8 +510,8 @@ namespace TptTest
                         It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockScriptRunner.Setup(runnerItem =>
-                    runnerItem.CreatePreview(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()))
-                .Callback<PreviewJob, string[], string, CancellationToken?>((jobItem, _, __, tokenItem) =>
+                    runnerItem.CreatePreview(testPreviewJob, It.IsAny<AdditionalPreviewParameters>(), It.IsAny<CancellationToken?>()))
+                .Callback<PreviewJob, AdditionalPreviewParameters, CancellationToken?>((jobItem, _, tokenItem) =>
                 {
                     isTaskRun = true;
                     throw new IOException();
@@ -514,7 +531,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()),
                 Times.Once);
             _mockScriptRunner.Verify(runnerItem =>
-                runnerItem.CreatePreview(testPreviewJob, It.IsAny<string[]>(), It.IsAny<string>(), It.IsAny<CancellationToken?>()), Times.Once);
+                runnerItem.CreatePreview(testPreviewJob, It.IsAny<AdditionalPreviewParameters>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockJobManager.Verify(managerItem =>
                 managerItem.TryUpdateJob(testPreviewJob), Times.AtLeastOnce);
             Assert.IsTrue(isTaskRun); // task was run

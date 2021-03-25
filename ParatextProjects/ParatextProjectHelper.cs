@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using TptMain.Models;
 using TptMain.ParatextProjects.Models;
 using TptMain.Util;
 
@@ -77,6 +78,31 @@ namespace TptMain.ParatextProjects
             var ldml = LoadLdmlFromXmlFile(ldmlFilePath);
 
             return ExtractFootnoteMarkers(ldml);
+        }
+
+        /// <summary>
+        /// Extracts the text direction from a Paratext project's LDML file.
+        /// </summary>
+        /// <param name="ldmlFilePath">The absolute path of the <c>.ldml</c> file. (required)</param>
+        /// <returns>The project's text direction.</returns>
+        public static TextDirection ExtractTextDirection(string ldmlFilePath)
+        {
+            // validate input
+            _ = ldmlFilePath ?? throw new ArgumentNullException(nameof(ldmlFilePath));
+
+            // Deserialize LDML from file
+            var ldml = LoadLdmlFromXmlFile(ldmlFilePath);
+
+            var textDirection = ldml?.layout?.orientation?.characterOrder;
+            if ("right-to-left".Equals(textDirection, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return TextDirection.RTL;
+            }
+            if ("left-to-right".Equals(textDirection, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return TextDirection.LTR;
+            }
+            return TextDirection.UNSPECIFIED;
         }
 
         /// <summary>

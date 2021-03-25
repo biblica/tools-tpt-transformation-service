@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using TptMain.Models;
 using TptMain.Util;
 
 namespace TptMain.ParatextProjects
@@ -59,6 +60,27 @@ namespace TptMain.ParatextProjects
             var footnoteMarkers = ParatextProjectHelper.ExtractFootnoteMarkers(ldmlPath);
 
             return footnoteMarkers;
+        }
+
+        /// <summary>
+        /// Return a Paratext project's text direction.
+        /// </summary>
+        /// <param name="projectShortName">The Paratext project's shortname.</param>
+        /// <returns>The paratext project's text direction.</returns>
+        public virtual TextDirection GetTextDirection(string projectShortName)
+        {
+            // validate input
+            _ = projectShortName ?? throw new ArgumentNullException(nameof(projectShortName));
+
+            // Grab the Paratext project settings (for the LDML path).
+            var projectPath = Path.Combine(_paratextDirectory.FullName, projectShortName);
+            var projectSettings = ParatextProjectHelper.GetProjectSettings(projectPath);
+
+            // Get the project's text direction from the LDML file
+            var ldmlPath = Path.Combine(projectPath, projectSettings.LdmlFileName);
+            var textDirection = ParatextProjectHelper.ExtractTextDirection(ldmlPath);
+
+            return textDirection;
         }
 
         /// <summary>

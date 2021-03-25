@@ -37,11 +37,6 @@ namespace TptMain.InDesign
         private readonly DirectoryInfo _idsPreviewScriptDirectory;
 
         /// <summary>
-        /// Preview script (JSX) name format (configured).
-        /// </summary>
-        private readonly string _idsPreviewScriptNameFormat;
-
-        /// <summary>
         /// Directory where IDTT files are located.
         /// </summary>
         private readonly string _idttDocDir;
@@ -84,9 +79,6 @@ namespace TptMain.InDesign
             _idsPreviewScriptDirectory = new DirectoryInfo((configuration[ConfigConsts.IdsPreviewScriptDirKey]
                                                             ?? throw new ArgumentNullException(ConfigConsts
                                                                 .IdsPreviewScriptDirKey)));
-            _idsPreviewScriptNameFormat = (configuration[ConfigConsts.IdsPreviewScriptNameFormatKey]
-                                           ?? throw new ArgumentNullException(
-                                               ConfigConsts.IdsPreviewScriptNameFormatKey));
             _idttDocDir = (configuration[ConfigConsts.IdttDocDirKey]
                            ?? throw new ArgumentNullException(
                                ConfigConsts.IdsPreviewScriptNameFormatKey));
@@ -130,10 +122,11 @@ namespace TptMain.InDesign
         /// Execute typesetting preview generation synchronously, with optional cancellation.
         /// </summary>
         /// <param name="inputJob">Input preview job (required).</param>
-        /// <param name="footnoteMarkers">Custom footnote markers (optional).</param>
-        /// <param name="overrideFont">A font name. If specified, overrides the IDML font settings (optional).</param>
+        /// <param name="additionalParams">Additional params used by the preview job (required).</param>
         /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
-        public virtual void CreatePreview(PreviewJob inputJob, string[] footnoteMarkers, string overrideFont,
+        public virtual void CreatePreview(
+            PreviewJob inputJob,
+            AdditionalPreviewParameters additionalParams,
             CancellationToken? cancellationToken)
         {
             _logger.LogDebug($"CreatePreview() - inputJob.Id={inputJob.Id}.");
@@ -151,14 +144,14 @@ namespace TptMain.InDesign
             var txtFiles = GetTaggedTextFiles(txtDir);
 
             // Build custom footnotes into a CSV string, eg "a,d,e,ñ,h,Ä".
-            var customFootnotes = footnoteMarkers != null ? String.Join(',', footnoteMarkers) : null;
+            var customFootnotes = additionalParams.CustomFootnoteMarkers != null ? String.Join(',', additionalParams.CustomFootnoteMarkers) : null;
 
             // Create the InDesign Documents (IDTT files)
             _logger.LogDebug("Creating InDesign Documents");
             foreach (var txtFile in txtFiles)
             {
                 ct.ThrowIfCancellationRequested();
-                CreateDocument(jobId, txtFile, overrideFont, customFootnotes);
+                CreateDocument(jobId, txtFile, additionalParams.OverrideFont, customFootnotes, additionalParams.TextDirection);
             }
 
             _logger.LogDebug("Finished creating InDesign Documents");
@@ -177,9 +170,15 @@ namespace TptMain.InDesign
         /// <param name="txtFilePath">The file path of the tagged text to use for the document</param>
         /// <param name="overrideFont">A font to use instead of the one specified in the IDML</param>
         /// <param name="customFootnotes">Custom footnotes to use in the document</param>
+        /// <param name="textDirection">The text direction of the typesetting preview text.</param>
         /// <exception cref="ScriptException">An InDesign Server exception that resulted from executing the script</exception>
-        private void CreateDocument(string jobId, string txtFilePath,
-            string overrideFont, string customFootnotes)
+        private void CreateDocument(
+            string jobId, 
+            string txtFilePath,
+            string overrideFont, 
+            string customFootnotes,
+            TextDirection textDirection
+            )
         {
             var txtFileName = new FileInfo(txtFilePath).Name;
             var idmlPath = $@"{_idmlDocDir}\preview-{jobId}.idml";
@@ -200,6 +199,7 @@ namespace TptMain.InDesign
             AddNewArgToIdsArgs(ref documentScriptArgs, "txtFilePath", txtFilePath);
             AddNewArgToIdsArgs(ref documentScriptArgs, "idmlPath", idmlPath);
             AddNewArgToIdsArgs(ref documentScriptArgs, "docOutputPath", docOutputPath);
+            AddNewArgToIdsArgs(ref documentScriptArgs, "textDirection", textDirection.ToString());
 
             docScriptParameters.scriptLanguage = "javascript";
             docScriptParameters.scriptFile = _defaultDocScriptFile.FullName;
@@ -279,7 +279,9 @@ namespace TptMain.InDesign
         /// <param name="scriptArgs">The IDS arguments collection to add to. (required)</param>
         /// <param name="newArgName">The new argument key name. (required)</param>
         /// <param name="newArgValue">The new argument value. (optional)</param>
-        private void AddNewArgToIdsArgs(ref IList<IDSPScriptArg> scriptArgs, string newArgName,
+        private void AddNewArgToIdsArgs(
+            ref IList<IDSPScriptArg> scriptArgs, 
+            string newArgName,
             string newArgValue = null)
         {
             var scriptArg = new IDSPScriptArg();
