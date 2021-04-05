@@ -19,22 +19,22 @@ namespace TptMain.Projects
         /// <summary>
         /// IDTT directory config key.
         /// </summary>
-        private const string IdttDirKey = "Docs:IDTT:Directory";
+        public const string IdttDirKey = "Docs:IDTT:Directory";
 
         /// <summary>
         /// Paratext directory config key.
         /// </summary>
-        private const string ParatextDirKey = "Docs:Paratext:Directory";
+        public const string ParatextDirKey = "Docs:Paratext:Directory";
 
         /// <summary>
         /// IDTT update interval config key.
         /// </summary>
-        private const string ProjectUpdateIntervalKey = "Docs:IDTT:CheckIntervalInSec";
+        public const string ProjectUpdateIntervalKey = "Docs:IDTT:CheckIntervalInSec";
 
         /// <summary>
         /// The number of seconds before updating the project details since the previous the update.
         /// </summary>
-        private readonly int CheckIntervalInSec;
+        private readonly int _checkIntervalInSec;
 
         /// <summary>
         /// Type-specific logger (injected).
@@ -80,7 +80,7 @@ namespace TptMain.Projects
 
             // extract the project details cache time to live 
             _ = configuration[ProjectUpdateIntervalKey] ?? throw new ArgumentNullException(ProjectUpdateIntervalKey);
-            CheckIntervalInSec = Int32.Parse(configuration[ProjectUpdateIntervalKey]);
+            _checkIntervalInSec = Int32.Parse(configuration[ProjectUpdateIntervalKey]);
 
             if (!Directory.Exists(_idttDirectory.FullName))
             {
@@ -102,7 +102,7 @@ namespace TptMain.Projects
             lock (this)
             {
                 // update project details if never done or we've past the configured cache time-to-live.
-                if (_projectDetails == null || DateTime.UtcNow > LastProjectUpdatedFileTime.AddSeconds(CheckIntervalInSec))
+                if (_projectDetails == null || DateTime.UtcNow > LastProjectUpdatedFileTime.AddSeconds(_checkIntervalInSec))
                 {
                     try
                     {
