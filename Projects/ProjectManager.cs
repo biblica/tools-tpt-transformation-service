@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using SIL.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -27,6 +28,16 @@ namespace TptMain.Projects
         private const string ParatextDirKey = "Docs:Paratext:Directory";
 
         /// <summary>
+        /// IDTT update interval config key.
+        /// </summary>
+        private const string ProjectUpdateIntervalKey = "Docs:IDTT:CheckIntervalInSec";
+
+        /// <summary>
+        /// The number of seconds before updating the project details since the previous the update.
+        /// </summary>
+        private readonly int CheckIntervalInSec;
+
+        /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
         private readonly ILogger<ProjectManager> _logger;
@@ -47,6 +58,11 @@ namespace TptMain.Projects
         private IDictionary<string, ProjectDetails> _projectDetails;
 
         /// <summary>
+        /// The project details last updated timestamp. This allows us to determine if it's to update again or not.
+        /// </summary>
+        private DateTime LastProjectUpdatedFileTime { get; set; }
+
+        /// <summary>
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
@@ -62,6 +78,10 @@ namespace TptMain.Projects
                                                ?? throw new ArgumentNullException(IdttDirKey));
             _paratextDirectory = new DirectoryInfo(configuration[ParatextDirKey]
                                                    ?? throw new ArgumentNullException(ParatextDirKey));
+
+            // extract the project details cache time to live 
+            _ = configuration[ProjectUpdateIntervalKey] ?? throw new ArgumentNullException(ProjectUpdateIntervalKey);
+            CheckIntervalInSec = Int32.Parse(configuration[ProjectUpdateIntervalKey]);
 
             if (!Directory.Exists(_idttDirectory.FullName))
             {
@@ -79,52 +99,59 @@ namespace TptMain.Projects
         /// </summary>
         public virtual void CheckProjectFiles()
         {
+            
             lock (this)
             {
-                try
+                // update project details if never done or we've past the configured cache time-to-live.
+                if (_projectDetails == null || DateTime.UtcNow > LastProjectUpdatedFileTime.AddSeconds(CheckIntervalInSec))
                 {
-                    _logger.LogDebug("Checking IDTT files...");
-
-                    IDictionary<string, ProjectDetails> newProjectDetails = new SortedDictionary<string, ProjectDetails>();
-                    foreach (var projectDir in _paratextDirectory.GetDirectories())
+                    try
                     {
-                        var sfmFiles = projectDir.GetFiles("*.SFM");
-                        if (sfmFiles.Length > 0)
-                        {
-                            var projectName = projectDir.Name;
-                            var formatDirs = new[] {
-                                new DirectoryInfo(
-                                    Path.Join(_idttDirectory.FullName,
-                                        BookFormat.cav.ToString(),
-                                        projectName)),
-                                new DirectoryInfo(
-                                    Path.Join(_idttDirectory.FullName,
-                                        BookFormat.tbotb.ToString(),
-                                        projectName))
-                            };
+                        _logger.LogDebug("Checking IDTT files...");
 
-                            if (formatDirs.All(dirItem => dirItem.Exists))
+                        IDictionary<string, ProjectDetails> newProjectDetails = new SortedDictionary<string, ProjectDetails>();
+                        foreach (var projectDir in _paratextDirectory.GetDirectories())
+                        {
+                            var sfmFiles = projectDir.GetFiles("*.SFM");
+                            if (sfmFiles.Length > 0)
                             {
-                                newProjectDetails[projectName] = new ProjectDetails
-                                {
-                                    ProjectName = projectName,
-                                    ProjectUpdated =
-                                        formatDirs
-                                            .Select(dirItem => dirItem.LastWriteTimeUtc)
-                                            .Aggregate(DateTime.MinValue,
-                                                (lastTimeUtc, writeTimeUtc) =>
-                                                    writeTimeUtc > lastTimeUtc ? writeTimeUtc : lastTimeUtc)
+                                var projectName = projectDir.Name;
+                                var formatDirs = new[] {
+                                    new DirectoryInfo(
+                                        Path.Join(_idttDirectory.FullName,
+                                            BookFormat.cav.ToString(),
+                                            projectName)),
+                                    new DirectoryInfo(
+                                        Path.Join(_idttDirectory.FullName,
+                                            BookFormat.tbotb.ToString(),
+                                            projectName))
                                 };
+
+                                if (formatDirs.All(dirItem => dirItem.Exists))
+                                {
+                                    newProjectDetails[projectName] = new ProjectDetails
+                                    {
+                                        ProjectName = projectName,
+                                        ProjectUpdated =
+                                            formatDirs
+                                                .Select(dirItem => dirItem.LastWriteTimeUtc)
+                                                .Aggregate(DateTime.MinValue,
+                                                    (lastTimeUtc, writeTimeUtc) =>
+                                                        writeTimeUtc > lastTimeUtc ? writeTimeUtc : lastTimeUtc)
+                                    };
+                                }
                             }
                         }
-                    }
 
-                    _projectDetails = newProjectDetails.ToImmutableDictionary();
-                    _logger.LogDebug("...IDTT files checked.");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Can't check IDTT files.");
+                        // Update the project details and the time in which we did so
+                        LastProjectUpdatedFileTime = DateTime.UtcNow;
+                        _projectDetails = newProjectDetails.ToImmutableDictionary();
+                        _logger.LogDebug("...IDTT files checked.");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Can't check IDTT files.");
+                    }
                 }
             }
         }
@@ -139,10 +166,7 @@ namespace TptMain.Projects
             _logger.LogDebug("TryGetProjectDetails().");
             lock (this)
             {
-                if (_projectDetails == null)
-                {
-                    CheckProjectFiles();
-                }
+                CheckProjectFiles();
 
                 projectDetails = _projectDetails;
                 return (projectDetails.Count > 0);
