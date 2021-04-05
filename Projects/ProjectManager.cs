@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SIL.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -127,21 +126,23 @@ namespace TptMain.Projects
                                             projectName))
                                 };
 
-                                if (formatDirs.All(dirItem => dirItem.Exists))
+                            if (formatDirs.All(dirItem => dirItem.Exists))
+                            {
+                                newProjectDetails[projectName] = new ProjectDetails
                                 {
-                                    newProjectDetails[projectName] = new ProjectDetails
-                                    {
-                                        ProjectName = projectName,
-                                        ProjectUpdated =
-                                            formatDirs
-                                                .Select(dirItem => dirItem.LastWriteTimeUtc)
-                                                .Aggregate(DateTime.MinValue,
-                                                    (lastTimeUtc, writeTimeUtc) =>
-                                                        writeTimeUtc > lastTimeUtc ? writeTimeUtc : lastTimeUtc)
-                                    };
-                                }
+                                    ProjectName = projectName,
+                                    // Find the modified date of the latest IDTT file for the project
+                                    ProjectUpdated =
+                                        formatDirs
+                                            .SelectMany(dirItem => dirItem.GetFiles("book*.txt")
+                                                .Select(fileItem => fileItem.LastWriteTimeUtc))
+                                            .Aggregate(DateTime.MinValue,
+                                                (lastTimeUtc, writeTimeUtc) =>
+                                                    writeTimeUtc > lastTimeUtc ? writeTimeUtc : lastTimeUtc)
+                                };
                             }
                         }
+                    }
 
                         // Update the project details and the time in which we did so
                         LastProjectUpdatedFileTime = DateTime.UtcNow;
