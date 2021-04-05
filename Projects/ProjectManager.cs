@@ -98,7 +98,7 @@ namespace TptMain.Projects
         /// </summary>
         public virtual void CheckProjectFiles()
         {
-            
+
             lock (this)
             {
                 // update project details if never done or we've past the configured cache time-to-live.
@@ -126,23 +126,23 @@ namespace TptMain.Projects
                                             projectName))
                                 };
 
-                            if (formatDirs.All(dirItem => dirItem.Exists))
-                            {
-                                newProjectDetails[projectName] = new ProjectDetails
+                                if (formatDirs.All(dirItem => dirItem.Exists))
                                 {
-                                    ProjectName = projectName,
-                                    // Find the modified date of the latest IDTT file for the project
-                                    ProjectUpdated =
-                                        formatDirs
-                                            .SelectMany(dirItem => dirItem.GetFiles("book*.txt")
-                                                .Select(fileItem => fileItem.LastWriteTimeUtc))
-                                            .Aggregate(DateTime.MinValue,
-                                                (lastTimeUtc, writeTimeUtc) =>
-                                                    writeTimeUtc > lastTimeUtc ? writeTimeUtc : lastTimeUtc)
-                                };
+                                    newProjectDetails[projectName] = new ProjectDetails
+                                    {
+                                        ProjectName = projectName,
+                                        // Find the modified date of the latest IDTT file for the project
+                                        ProjectUpdated =
+                                            formatDirs
+                                                .SelectMany(dirItem => dirItem.GetFiles("book*.txt")
+                                                    .Select(fileItem => fileItem.LastWriteTimeUtc))
+                                                .Aggregate(DateTime.MinValue,
+                                                    (lastTimeUtc, writeTimeUtc) =>
+                                                        writeTimeUtc > lastTimeUtc ? writeTimeUtc : lastTimeUtc)
+                                    };
+                                }
                             }
                         }
-                    }
 
                         // Update the project details and the time in which we did so
                         LastProjectUpdatedFileTime = DateTime.UtcNow;
