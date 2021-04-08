@@ -1,7 +1,25 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace TptMain.Models
 {
+    /// <summary>
+    /// Represents the possible states of a Preview Job
+    /// </summary>
+    public enum PreviewJobState
+    {
+        Created,
+        Submitted,
+        Started,
+        GeneratingTemplate,
+        TemplateGenerated,
+        GeneratingTaggedText,
+        TaggedTextGenerated,
+        GeneratingPreview,
+        PreviewGenerated,
+        Error
+    }
+    
     /// <summary>
     /// Model for tracking Typesetting Preview jobs.
     /// </summary>
@@ -66,6 +84,12 @@ namespace TptMain.Models
         /// Whether or not there was an error during job execution.
         /// </summary>
         public bool IsError { get; set; } = false;
+
+        /// <summary>
+        /// The current state of the Preview Job
+        /// </summary>
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public PreviewJobState State { get; set; } = PreviewJobState.Created;
 
         /// <summary>
         /// User-friendly message regarding the error; <c>null</c> otherwise.
