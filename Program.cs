@@ -28,7 +28,7 @@ namespace TptMain
                 IServiceProvider services = scope.ServiceProvider;
                 try
                 {
-                    PreviewContext context = services.GetRequiredService<PreviewContext>();
+                    var context = services.GetRequiredService<TptServiceContext>();
                     context.Database.EnsureCreated();
 
                     // Find any dangling jobs.

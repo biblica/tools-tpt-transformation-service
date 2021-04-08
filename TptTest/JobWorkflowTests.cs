@@ -104,8 +104,8 @@ namespace TptTest
             _mockJobManagerLogger = new Mock<ILogger<JobManager>>();
 
             // preview context
-            var _context = new PreviewContext(
-                new DbContextOptionsBuilder<PreviewContext>()
+            var _context = new TptServiceContext(
+                new DbContextOptionsBuilder<TptServiceContext>()
                     .UseInMemoryDatabase(Guid.NewGuid().ToString())
                     .Options);
 

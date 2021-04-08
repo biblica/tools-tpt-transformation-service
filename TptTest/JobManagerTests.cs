@@ -33,7 +33,7 @@ namespace TptTest
         /// <summary>
         /// DB context.
         /// </summary>
-        private PreviewContext _context;
+        private TptServiceContext _context;
 
         /// <summary>
         /// Mock script runner.
@@ -112,8 +112,8 @@ namespace TptTest
                .Build();
 
             // preview context
-            _context = new PreviewContext(
-                new DbContextOptionsBuilder<PreviewContext>()
+            _context = new TptServiceContext(
+                new DbContextOptionsBuilder<TptServiceContext>()
                     .UseInMemoryDatabase(Guid.NewGuid().ToString())
                     .Options);
 
