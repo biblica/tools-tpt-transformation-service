@@ -102,6 +102,11 @@ namespace TptMain.Models
         public string ErrorDetail { get; private set; }
 
         /// <summary>
+        /// Which Bible books to include
+        /// </summary>
+        public BibleSelectionParams BibleSelectionParams { get; set; }
+        
+        /// <summary>
         /// Font size in points.
         /// </summary>
         public float? FontSizeInPts { get; set; }
