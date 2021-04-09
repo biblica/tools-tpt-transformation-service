@@ -296,6 +296,8 @@ namespace TptMain.Jobs
         {
             // identifying information
             previewJob.Id = Guid.NewGuid().ToString();
+            previewJob.BibleSelectionParams.Id = Guid.NewGuid().ToString();
+            previewJob.TypesettingParams.Id = Guid.NewGuid().ToString();
             previewJob.DateSubmitted = DateTime.UtcNow;
             previewJob.DateStarted = null;
             previewJob.DateCompleted = null;

@@ -99,12 +99,12 @@ namespace TptMain.Models
         /// <summary>
         /// Which Bible books to include
         /// </summary>
-        public BibleSelectionParams BibleSelectionParams { get; set; }
-        
+        public BibleSelectionParams BibleSelectionParams { get; set; } = new BibleSelectionParams();
+
         /// <summary>
         /// Parameters to use for the typesetting preview
         /// </summary>
-        public TypesettingParams TypesettingParams { get; set; }
+        public TypesettingParams TypesettingParams { get; set; } = new TypesettingParams();
 
         /// <summary>
         /// Function used for indicating an error occurred and provide a message for the reason.
