@@ -302,12 +302,12 @@ namespace TptMain.Jobs
             previewJob.DateCancelled = null;
 
             // project defaults
-            previewJob.FontSizeInPts ??= MainConsts.DEFAULT_FONT_SIZE_IN_PTS;
-            previewJob.FontLeadingInPts ??= MainConsts.DEFAULT_FONT_LEADING_IN_PTS;
-            previewJob.PageWidthInPts ??= MainConsts.DEFAULT_PAGE_WIDTH_IN_PTS;
-            previewJob.PageHeightInPts ??= MainConsts.DEFAULT_PAGE_HEIGHT_IN_PTS;
-            previewJob.PageHeaderInPts ??= MainConsts.DEFAULT_PAGE_HEADER_IN_PTS;
-            previewJob.BookFormat ??= MainConsts.DEFAULT_BOOK_FORMAT;
+            previewJob.TypesettingParams.FontSizeInPts ??= MainConsts.DEFAULT_FONT_SIZE_IN_PTS;
+            previewJob.TypesettingParams.FontLeadingInPts ??= MainConsts.DEFAULT_FONT_LEADING_IN_PTS;
+            previewJob.TypesettingParams.PageWidthInPts ??= MainConsts.DEFAULT_PAGE_WIDTH_IN_PTS;
+            previewJob.TypesettingParams.PageHeightInPts ??= MainConsts.DEFAULT_PAGE_HEIGHT_IN_PTS;
+            previewJob.TypesettingParams.PageHeaderInPts ??= MainConsts.DEFAULT_PAGE_HEADER_IN_PTS;
+            previewJob.TypesettingParams.BookFormat ??= MainConsts.DEFAULT_BOOK_FORMAT;
         }
 
         /// <summary>

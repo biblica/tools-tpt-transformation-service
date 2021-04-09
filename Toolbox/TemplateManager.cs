@@ -132,12 +132,12 @@ namespace TptMain.Toolbox
         {
             IDictionary<string, string> queryMap = new SortedDictionary<string, string>
             {
-                ["font_size"] = inputJob.FontSizeInPts.ToString(),
-                ["leading"] = inputJob.FontLeadingInPts.ToString(),
-                ["page_width"] = inputJob.PageWidthInPts.ToString(),
-                ["page_height"] = inputJob.PageHeightInPts.ToString(),
-                ["header_size"] = inputJob.PageHeaderInPts.ToString(),
-                ["book_type"] = inputJob.BookFormat.ToString()
+                ["font_size"] = inputJob.TypesettingParams.FontSizeInPts.ToString(),
+                ["leading"] = inputJob.TypesettingParams.FontLeadingInPts.ToString(),
+                ["page_width"] = inputJob.TypesettingParams.PageWidthInPts.ToString(),
+                ["page_height"] = inputJob.TypesettingParams.PageHeightInPts.ToString(),
+                ["header_size"] = inputJob.TypesettingParams.PageHeaderInPts.ToString(),
+                ["book_type"] = inputJob.TypesettingParams.BookFormat.ToString()
             };
 
             return StringUtil.ToQueryString(queryMap);

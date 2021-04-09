@@ -374,12 +374,12 @@ namespace TptTest
             // this function expects a null Id.
             testPreviewJob.Id = null;
             // reset some of the values so that defaults are set.
-            testPreviewJob.FontSizeInPts = null;
-            testPreviewJob.FontLeadingInPts = null;
-            testPreviewJob.PageWidthInPts = null;
-            testPreviewJob.PageHeightInPts = null;
-            testPreviewJob.PageHeaderInPts = null;
-            testPreviewJob.BookFormat = null;
+            testPreviewJob.TypesettingParams.FontSizeInPts = null;
+            testPreviewJob.TypesettingParams.FontLeadingInPts = null;
+            testPreviewJob.TypesettingParams.PageWidthInPts = null;
+            testPreviewJob.TypesettingParams.PageHeightInPts = null;
+            testPreviewJob.TypesettingParams.PageHeaderInPts = null;
+            testPreviewJob.TypesettingParams.BookFormat = null;
 
             // This will fail due to an Id being set on the input job.
             Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob, out var createdJob));

@@ -418,8 +418,8 @@ namespace TptTest
         {
             // set up job with additional options
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
-            testPreviewJob.UseCustomFootnotes = true;
-            testPreviewJob.UseProjectFont = true;
+            testPreviewJob.TypesettingParams.UseCustomFootnotes = true;
+            testPreviewJob.TypesettingParams.UseProjectFont = true;
 
             // setup service under test
             var mockWorkflow =

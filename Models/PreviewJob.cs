@@ -107,46 +107,9 @@ namespace TptMain.Models
         public BibleSelectionParams BibleSelectionParams { get; set; }
         
         /// <summary>
-        /// Font size in points.
+        /// Parameters to use for the typesetting preview
         /// </summary>
-        public float? FontSizeInPts { get; set; }
-
-        /// <summary>
-        /// Font leading in points.
-        /// </summary>
-        public float? FontLeadingInPts { get; set; }
-
-        /// <summary>
-        /// Page width in points.
-        /// </summary>
-        public float? PageWidthInPts { get; set; }
-
-        /// <summary>
-        /// Page height in points.
-        /// </summary>
-        public float? PageHeightInPts { get; set; }
-
-        /// <summary>
-        /// Page header in points.
-        /// </summary>
-        public float? PageHeaderInPts { get; set; }
-
-        /// <summary>
-        /// Book format, either TBOTB or CAV.
-        /// </summary>
-        public BookFormat? BookFormat { get; set; }
-
-        /// <summary>
-        /// (Optional) Whether or not to use custom footnotes. Defaults to false.
-        /// 
-        /// Note: The footnotes would be pulled from the project's respective Paratext footnote caller sequence.
-        /// </summary>
-        public bool UseCustomFootnotes { get; set; } = false;
-
-        /// <summary>
-        /// (Optional) Whether or not to use the project's defined font. Defaults to true.
-        /// </summary>
-        public bool UseProjectFont { get; set; } = true;
+        public TypesettingParams TypesettingParams { get; set; }
 
         /// <summary>
         /// Function used for indicating an error occurred and provide a message for the reason.

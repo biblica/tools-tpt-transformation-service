@@ -120,7 +120,7 @@ namespace TptMain.Jobs
                 };
 
                 // Grab the project's footnote markers if configured to do so.
-                if (!IsJobCanceled && _previewJob.UseCustomFootnotes)
+                if (!IsJobCanceled && _previewJob.TypesettingParams.UseCustomFootnotes)
                 {
                     additionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.ProjectName);
                     // Throw an error, if custom footnotes are requested but are not available.
@@ -135,7 +135,7 @@ namespace TptMain.Jobs
                 }
 
                 // If we're using the project font (rather than what's in the IDML) pass it as an override.
-                if (!IsJobCanceled && _previewJob.UseProjectFont)
+                if (!IsJobCanceled && _previewJob.TypesettingParams.UseProjectFont)
                 {
                     additionalParams.OverrideFont = _paratextProjectService.GetProjectFont(_previewJob.ProjectName);
 
