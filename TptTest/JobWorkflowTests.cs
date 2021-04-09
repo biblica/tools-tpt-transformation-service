@@ -442,11 +442,11 @@ namespace TptTest
                 .Returns(TextDirection.LTR)
                 .Verifiable();
             _mockParatextProjectService.Setup(ptProjectService =>
-                ptProjectService.GetFootnoteCallerSequence(testPreviewJob.ProjectName))
+                ptProjectService.GetFootnoteCallerSequence(testPreviewJob.BibleSelectionParams.ProjectName))
                 .Returns(new string[] { "a", "b"})
                 .Verifiable();
             _mockParatextProjectService.Setup(ptProjectService =>
-                ptProjectService.GetProjectFont(testPreviewJob.ProjectName))
+                ptProjectService.GetProjectFont(testPreviewJob.BibleSelectionParams.ProjectName))
                 .Returns("Arial")
                 .Verifiable();
             _mockTemplateManager.Setup(managerItem =>
@@ -463,9 +463,9 @@ namespace TptTest
             _mockParatextApi.Verify(paratextApi =>
                 paratextApi.IsUserAuthorizedOnProject(testPreviewJob), Times.Once);
             _mockParatextProjectService.Verify(ptProjectService =>
-                ptProjectService.GetFootnoteCallerSequence(testPreviewJob.ProjectName), Times.Once);
+                ptProjectService.GetFootnoteCallerSequence(testPreviewJob.BibleSelectionParams.ProjectName), Times.Once);
             _mockParatextProjectService.Verify(ptProjectService =>
-                ptProjectService.GetProjectFont(testPreviewJob.ProjectName), Times.Once);
+                ptProjectService.GetProjectFont(testPreviewJob.BibleSelectionParams.ProjectName), Times.Once);
             _mockTemplateManager.Verify(managerItem =>
                     managerItem.DownloadTemplateFile(testPreviewJob, It.IsAny<FileInfo>(), It.IsAny<CancellationToken?>()), Times.Once);
             _mockScriptRunner.Verify(runnerItem =>

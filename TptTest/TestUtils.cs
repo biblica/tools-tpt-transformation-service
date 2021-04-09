@@ -21,7 +21,10 @@ namespace TptTest
             return new PreviewJob
             {
                 Id = Guid.Empty.ToString(),
-                ProjectName = TestConsts.TEST_PROJECT_NAME,
+                BibleSelectionParams = new BibleSelectionParams
+                {
+                    ProjectName = TestConsts.TEST_PROJECT_NAME
+                },
                 User = TestConsts.TEST_USER,
                 TypesettingParams = new TypesettingParams
                 {

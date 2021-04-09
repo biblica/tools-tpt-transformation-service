@@ -258,8 +258,8 @@ namespace TptMain.Jobs
         {
             _logger.LogDebug($"TryAddJob() - inputJob.Id={inputJob.Id}.");
             if (inputJob.Id != null
-                || inputJob.ProjectName == null
-                || inputJob.ProjectName.Any(charItem => !char.IsLetterOrDigit(charItem)))
+                || inputJob.BibleSelectionParams.ProjectName == null
+                || inputJob.BibleSelectionParams.ProjectName.Any(charItem => !char.IsLetterOrDigit(charItem)))
             {
                 outputJob = null;
                 return false;
@@ -448,7 +448,7 @@ namespace TptMain.Jobs
 
                             //IDTT / TXT
                             //"{{Properties::Docs::IDTT::Directory}}\{{PreviewJob::bookFormat}}\{{PreviewJob::projectName}}\book*.txt"
-                            var idttDirectory = Path.Combine(_idttDirectory.FullName, bookFormatStr, previewJob.ProjectName);
+                            var idttDirectory = Path.Combine(_idttDirectory.FullName, bookFormatStr, previewJob.BibleSelectionParams.ProjectName);
                             var idttFilePattern = "book*.txt";
                             AddFilesToZip(zip, idttDirectory, idttFilePattern, "IDTT");
 

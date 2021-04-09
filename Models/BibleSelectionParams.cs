@@ -11,6 +11,11 @@
         public string Id { get; set; }
 
         /// <summary>
+        /// The Paratext short project name
+        /// </summary>
+        public string ProjectName { get; set; }
+
+        /// <summary>
         /// A comma-separated list of Bible books to include
         /// </summary>
         public string SelectedBooks { get; set; }

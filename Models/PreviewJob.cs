@@ -51,11 +51,6 @@ namespace TptMain.Models
         public DateTime? DateCancelled { get; set; }
 
         /// <summary>
-        /// The PT short project name to generate a typesetting preview of.
-        /// </summary>
-        public string ProjectName { get; set; }
-
-        /// <summary>
         /// The user requesting the job.
         /// </summary>
         public string User { get; set; }

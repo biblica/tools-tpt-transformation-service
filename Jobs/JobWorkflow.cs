@@ -116,13 +116,13 @@ namespace TptMain.Jobs
 
                 // Track derived parameters that we'll pass on to InDesign
                 var additionalParams = new AdditionalPreviewParameters() {
-                    TextDirection = _paratextProjectService.GetTextDirection(_previewJob.ProjectName)
+                    TextDirection = _paratextProjectService.GetTextDirection(_previewJob.BibleSelectionParams.ProjectName)
                 };
 
                 // Grab the project's footnote markers if configured to do so.
                 if (!IsJobCanceled && _previewJob.TypesettingParams.UseCustomFootnotes)
                 {
-                    additionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.ProjectName);
+                    additionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.BibleSelectionParams.ProjectName);
                     // Throw an error, if custom footnotes are requested but are not available.
                     // This allows us to set the user's expectations early, rather than waiting
                     // for a preview.
@@ -137,11 +137,11 @@ namespace TptMain.Jobs
                 // If we're using the project font (rather than what's in the IDML) pass it as an override.
                 if (!IsJobCanceled && _previewJob.TypesettingParams.UseProjectFont)
                 {
-                    additionalParams.OverrideFont = _paratextProjectService.GetProjectFont(_previewJob.ProjectName);
+                    additionalParams.OverrideFont = _paratextProjectService.GetProjectFont(_previewJob.BibleSelectionParams.ProjectName);
 
                     if (String.IsNullOrEmpty(additionalParams.OverrideFont))
                     {
-                        _logger.LogInformation($"No font specified for project {_previewJob.ProjectName}. IDML font settings will not be modified.");
+                        _logger.LogInformation($"No font specified for project {_previewJob.BibleSelectionParams.ProjectName}. IDML font settings will not be modified.");
                         additionalParams.OverrideFont = null;
                     }
                 }
