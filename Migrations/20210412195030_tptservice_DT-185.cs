@@ -86,6 +86,7 @@ namespace TptMain.Migrations
                     PageHeightInPts = table.Column<float>(type: "real", nullable: true),
                     PageHeaderInPts = table.Column<float>(type: "real", nullable: true),
                     BookFormat = table.Column<int>(type: "int", nullable: true),
+                    UseHyphenation = table.Column<bool>(type: "bit", nullable: false),
                     UseCustomFootnotes = table.Column<bool>(type: "bit", nullable: false),
                     UseProjectFont = table.Column<bool>(type: "bit", nullable: false),
                     IncludeIntros = table.Column<bool>(type: "bit", nullable: false),

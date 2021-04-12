@@ -10,7 +10,7 @@ using TptMain.Models;
 namespace TptMain.Migrations
 {
     [DbContext(typeof(TptServiceContext))]
-    [Migration("20210409172433_tptservice_DT-185")]
+    [Migration("20210412195030_tptservice_DT-185")]
     partial class tptservice_DT185
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -129,6 +129,9 @@ namespace TptMain.Migrations
                         .HasColumnType("real");
 
                     b.Property<bool>("UseCustomFootnotes")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("UseHyphenation")
                         .HasColumnType("bit");
 
                     b.Property<bool>("UseProjectFont")

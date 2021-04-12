@@ -129,6 +129,9 @@ namespace TptMain.Migrations
                     b.Property<bool>("UseCustomFootnotes")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("UseHyphenation")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("UseProjectFont")
                         .HasColumnType("bit");
 
