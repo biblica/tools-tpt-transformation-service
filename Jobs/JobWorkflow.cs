@@ -107,6 +107,7 @@ namespace TptMain.Jobs
             {
                 _logger.LogInformation($"Job started: {_previewJob.Id}");
                 _previewJob.DateStarted = DateTime.UtcNow;
+                _previewJob.State = PreviewJobState.Started;
                 _jobManager.TryUpdateJob(_previewJob);
 
                 if (!IsJobCanceled)
@@ -180,6 +181,7 @@ namespace TptMain.Jobs
             finally
             {
                 _previewJob.DateCompleted = DateTime.UtcNow;
+                _previewJob.State = PreviewJobState.PreviewGenerated;
                 _jobManager.TryUpdateJob(_previewJob);
             }
         }
@@ -206,6 +208,7 @@ namespace TptMain.Jobs
             finally
             {
                 _previewJob.DateCancelled = DateTime.UtcNow;
+                _previewJob.State = PreviewJobState.Cancelled;
                 _jobManager.TryUpdateJob(_previewJob);
             }
         }
