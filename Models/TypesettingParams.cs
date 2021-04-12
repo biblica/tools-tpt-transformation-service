@@ -41,6 +41,11 @@
         public BookFormat? BookFormat { get; set; }
 
         /// <summary>
+        /// (Optional) Whether or not to use hyphenation. Defaults to false.
+        /// </summary>
+        public bool UseHyphenation { get; set; } = false;
+        
+        /// <summary>
         /// (Optional) Whether or not to use custom footnotes. Defaults to false.
         /// 
         /// Note: The footnotes would be pulled from the project's respective Paratext footnote caller sequence.
