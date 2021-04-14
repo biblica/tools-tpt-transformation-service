@@ -96,7 +96,10 @@ namespace TptTest
             scriptRunner.Object.CreatePreview(
                 new PreviewJob()
                 {
-                    ProjectName = ""
+                    BibleSelectionParams = new BibleSelectionParams
+                    {
+                        ProjectName = ""
+                    }
                 },
                 new AdditionalPreviewParameters()
                 {

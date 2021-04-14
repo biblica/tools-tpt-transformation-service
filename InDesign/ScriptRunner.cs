@@ -138,8 +138,8 @@ namespace TptMain.InDesign
             var jobId = inputJob.Id;
 
             // Create a list of all the tagged text files that will be turned into documents
-            var projectName = inputJob.ProjectName;
-            var bookFormat = inputJob.BookFormat.ToString();
+            var projectName = inputJob.BibleSelectionParams.ProjectName;
+            var bookFormat = inputJob.TypesettingParams.BookFormat.ToString();
             var txtDir = $@"{_idttDocDir}\{bookFormat}\{projectName}\";
             var txtFiles = GetTaggedTextFiles(txtDir);
 

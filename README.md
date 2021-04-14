@@ -97,3 +97,8 @@ On the build machine:
 Logs for the Typesetting Preview Tool and InDesign are located in the Windows Event Viewer.
 
 Navigate to "Event View" > "Windows Logs" > "Application.
+
+## Migrations
+When a persisted model changes, use the [Entity Framework Core Tools](https://docs.microsoft.com/en-us/ef/core/cli/dotnet) to create migrations and upate the database snapshot.
+
+E.g. `dotnet ef migrations add <migration name>` to create a migration, or `dotnet ef database drop && dotnet ef database update` to use a fresh local database.
