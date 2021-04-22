@@ -1,6 +1,6 @@
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=TPTService;Trusted_Connection=True;MultipleActiveResultSets=true"
+    "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=TPTService;Trusted_Connection=True;User Instance=True"
   },
   "Logging": {
     "LogLevel": {
@@ -13,10 +13,9 @@
     "MaxConcurrent": "1"
   },
   "InDesign": {
-    "ServerUri": "http://172.31.10.90:9876/service",
+    "ServerUri": "http://localhost:9876/service",
     "TimeoutInSec": "3600",
-    "PreviewScriptDirectory": "C:\\Work\\JSX",
-    "PreviewScriptNameFormat": "TypesettingPreview{0}.jsx"
+    "PreviewScriptDirectory": "C:\\Work\\JSX"
   },
   "Paratext": {
     "API": {
@@ -52,7 +51,7 @@
   },
   "Toolbox": {
     "Template": {
-      "ServerUri": "http://172.31.10.175:3000/idtt/template/create",
+      "ServerUri": "http://localhost:3000/idtt/template/create",
       "TimeoutInSec": "600"
     }
   }

@@ -110,11 +110,11 @@ namespace TptMain.ParatextProjects
             // Validate input
             _ = previewJob ?? throw new ArgumentException(nameof(previewJob));
 
-            var isAuthorized = IsUserAuthorizedOnProject(previewJob.User, previewJob.ProjectName).Result;
+            var isAuthorized = IsUserAuthorizedOnProject(previewJob.User, previewJob.BibleSelectionParams.ProjectName).Result;
 
             if (!isAuthorized)
             {
-                throw new PreviewJobException(previewJob, $"User '{previewJob.User}' is unauthorized to generate a typesetting preview for project '{previewJob.ProjectName}'. Authorized Paratext roles: '{String.Join(", ", _allowedMemberRoles)}'");
+                throw new PreviewJobException(previewJob, $"User '{previewJob.User}' is unauthorized to generate a typesetting preview for project '{previewJob.BibleSelectionParams.ProjectName}'. Authorized Paratext roles: '{String.Join(", ", _allowedMemberRoles)}'");
             }
         }
 

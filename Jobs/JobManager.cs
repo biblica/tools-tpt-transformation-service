@@ -28,7 +28,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Job preview context (persistence; injected).
         /// </summary>
-        private readonly PreviewContext _previewContext;
+        private readonly TptServiceContext _tptServiceContext;
 
         /// <summary>
         /// IDS server script runner (injected).
@@ -100,7 +100,7 @@ namespace TptMain.Jobs
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
         /// <param name="configuration">System configuration (required).</param>
-        /// <param name="previewContext">Job preview context (persistence; required).</param>
+        /// <param name="tptServiceContext">Database context (persistence; required).</param>
         /// <param name="scriptRunner">Script runner (required).</param>
         /// <param name="templateManager">Template manager (required).</param>
         /// <param name="paratextApi">Paratext API for verifying user authorization on projects (required).</param>
@@ -109,7 +109,7 @@ namespace TptMain.Jobs
         public JobManager(
             ILogger<JobManager> logger,
             IConfiguration configuration,
-            PreviewContext previewContext,
+            TptServiceContext tptServiceContext,
             ScriptRunner scriptRunner,
             TemplateManager templateManager,
             ParatextApi paratextApi,
@@ -118,7 +118,7 @@ namespace TptMain.Jobs
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _previewContext = previewContext ?? throw new ArgumentNullException(nameof(previewContext));
+            _tptServiceContext = tptServiceContext ?? throw new ArgumentNullException(nameof(tptServiceContext));
             _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _paratextApi = paratextApi ?? throw new ArgumentNullException(nameof(paratextApi));
@@ -162,14 +162,14 @@ namespace TptMain.Jobs
         {
             try
             {
-                lock (_previewContext)
+                lock (_tptServiceContext)
                 {
                     _logger.LogDebug("Checking preview jobs...");
 
                     var checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
                     IList<PreviewJob> toRemove = new List<PreviewJob>();
 
-                    foreach (var jobItem in _previewContext.PreviewJobs)
+                    foreach (var jobItem in _tptServiceContext.PreviewJobs)
                     {
                         var refTime = jobItem.DateCompleted
                             ?? jobItem.DateCancelled
@@ -184,8 +184,8 @@ namespace TptMain.Jobs
                     }
                     if (toRemove.Count > 0)
                     {
-                        _previewContext.PreviewJobs.RemoveRange(toRemove);
-                        _previewContext.SaveChanges();
+                        _tptServiceContext.PreviewJobs.RemoveRange(toRemove);
+                        _tptServiceContext.SaveChanges();
                     }
 
                     _logger.LogDebug("...Preview jobs checked.");
@@ -258,18 +258,18 @@ namespace TptMain.Jobs
         {
             _logger.LogDebug($"TryAddJob() - inputJob.Id={inputJob.Id}.");
             if (inputJob.Id != null
-                || inputJob.ProjectName == null
-                || inputJob.ProjectName.Any(charItem => !char.IsLetterOrDigit(charItem)))
+                || inputJob.BibleSelectionParams.ProjectName == null
+                || inputJob.BibleSelectionParams.ProjectName.Any(charItem => !char.IsLetterOrDigit(charItem)))
             {
                 outputJob = null;
                 return false;
             }
             this.InitPreviewJob(inputJob);
 
-            lock (_previewContext)
+            lock (_tptServiceContext)
             {
-                _previewContext.PreviewJobs.Add(inputJob);
-                _previewContext.SaveChanges();
+                _tptServiceContext.PreviewJobs.Add(inputJob);
+                _tptServiceContext.SaveChanges();
 
                 _jobScheduler.AddEntry(
                     new JobWorkflow(
@@ -296,18 +296,20 @@ namespace TptMain.Jobs
         {
             // identifying information
             previewJob.Id = Guid.NewGuid().ToString();
+            previewJob.BibleSelectionParams.Id = Guid.NewGuid().ToString();
+            previewJob.TypesettingParams.Id = Guid.NewGuid().ToString();
             previewJob.DateSubmitted = DateTime.UtcNow;
             previewJob.DateStarted = null;
             previewJob.DateCompleted = null;
             previewJob.DateCancelled = null;
 
             // project defaults
-            previewJob.FontSizeInPts ??= MainConsts.DEFAULT_FONT_SIZE_IN_PTS;
-            previewJob.FontLeadingInPts ??= MainConsts.DEFAULT_FONT_LEADING_IN_PTS;
-            previewJob.PageWidthInPts ??= MainConsts.DEFAULT_PAGE_WIDTH_IN_PTS;
-            previewJob.PageHeightInPts ??= MainConsts.DEFAULT_PAGE_HEIGHT_IN_PTS;
-            previewJob.PageHeaderInPts ??= MainConsts.DEFAULT_PAGE_HEADER_IN_PTS;
-            previewJob.BookFormat ??= MainConsts.DEFAULT_BOOK_FORMAT;
+            previewJob.TypesettingParams.FontSizeInPts ??= MainConsts.DEFAULT_FONT_SIZE_IN_PTS;
+            previewJob.TypesettingParams.FontLeadingInPts ??= MainConsts.DEFAULT_FONT_LEADING_IN_PTS;
+            previewJob.TypesettingParams.PageWidthInPts ??= MainConsts.DEFAULT_PAGE_WIDTH_IN_PTS;
+            previewJob.TypesettingParams.PageHeightInPts ??= MainConsts.DEFAULT_PAGE_HEIGHT_IN_PTS;
+            previewJob.TypesettingParams.PageHeaderInPts ??= MainConsts.DEFAULT_PAGE_HEADER_IN_PTS;
+            previewJob.TypesettingParams.BookFormat ??= MainConsts.DEFAULT_BOOK_FORMAT;
         }
 
         /// <summary>
@@ -319,14 +321,14 @@ namespace TptMain.Jobs
         public virtual bool TryDeleteJob(string jobId, out PreviewJob outputJob)
         {
             _logger.LogDebug($"TryDeleteJob() - jobId={jobId}.");
-            lock (_previewContext)
+            lock (_tptServiceContext)
             {
                 if (TryGetJob(jobId, out var foundJob))
                 {
                     _jobScheduler.RemoveEntry(foundJob.Id);
 
-                    _previewContext.PreviewJobs.Remove(foundJob);
-                    _previewContext.SaveChanges();
+                    _tptServiceContext.PreviewJobs.Remove(foundJob);
+                    _tptServiceContext.SaveChanges();
 
                     outputJob = foundJob;
                     return true;
@@ -347,12 +349,12 @@ namespace TptMain.Jobs
         public virtual bool TryUpdateJob(PreviewJob nextJob)
         {
             _logger.LogDebug($"TryUpdateJob() - nextJob={nextJob.Id}.");
-            lock (_previewContext)
+            lock (_tptServiceContext)
             {
                 if (IsJobId(nextJob.Id))
                 {
-                    _previewContext.Entry(nextJob).State = EntityState.Modified;
-                    _previewContext.SaveChanges();
+                    _tptServiceContext.Entry(nextJob).State = EntityState.Modified;
+                    _tptServiceContext.SaveChanges();
 
                     return true;
                 }
@@ -372,9 +374,9 @@ namespace TptMain.Jobs
         public virtual bool TryGetJob(string jobId, out PreviewJob previewJob)
         {
             _logger.LogDebug($"TryGetJob() - jobId={jobId}.");
-            lock (_previewContext)
+            lock (_tptServiceContext)
             {
-                previewJob = _previewContext.PreviewJobs.Find(jobId);
+                previewJob = _tptServiceContext.PreviewJobs.Find(jobId);
                 return (previewJob != null);
             }
         }
@@ -387,9 +389,9 @@ namespace TptMain.Jobs
         public virtual bool IsJobId(string jobId)
         {
             _logger.LogDebug($"IsJobId() - jobId={jobId}.");
-            lock (_previewContext)
+            lock (_tptServiceContext)
             {
-                return _previewContext.PreviewJobs.Find(jobId) != null;
+                return _tptServiceContext.PreviewJobs.Find(jobId) != null;
             }
         }
 
@@ -404,7 +406,7 @@ namespace TptMain.Jobs
         public virtual bool TryGetPreviewStream(string jobId, out FileStream fileStream, bool archive)
         {
             _logger.LogDebug($"TryGetPreviewStream() - jobId={jobId}.");
-            lock (_previewContext)
+            lock (_tptServiceContext)
             {
                 if (!TryGetJob(jobId, out var previewJob))
                 {
@@ -448,7 +450,7 @@ namespace TptMain.Jobs
 
                             //IDTT / TXT
                             //"{{Properties::Docs::IDTT::Directory}}\{{PreviewJob::bookFormat}}\{{PreviewJob::projectName}}\book*.txt"
-                            var idttDirectory = Path.Combine(_idttDirectory.FullName, bookFormatStr, previewJob.ProjectName);
+                            var idttDirectory = Path.Combine(_idttDirectory.FullName, bookFormatStr, previewJob.BibleSelectionParams.ProjectName);
                             var idttFilePattern = "book*.txt";
                             AddFilesToZip(zip, idttDirectory, idttFilePattern, "IDTT");
 

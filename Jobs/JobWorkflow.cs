@@ -107,6 +107,7 @@ namespace TptMain.Jobs
             {
                 _logger.LogInformation($"Job started: {_previewJob.Id}");
                 _previewJob.DateStarted = DateTime.UtcNow;
+                _previewJob.State = PreviewJobState.Started;
                 _jobManager.TryUpdateJob(_previewJob);
 
                 if (!IsJobCanceled)
@@ -114,35 +115,35 @@ namespace TptMain.Jobs
                     _paratextApi.IsUserAuthorizedOnProject(_previewJob);
                 }
 
+                // Track derived parameters that we'll pass on to InDesign
+                var additionalParams = new AdditionalPreviewParameters() {
+                    TextDirection = _paratextProjectService.GetTextDirection(_previewJob.BibleSelectionParams.ProjectName)
+                };
+
                 // Grab the project's footnote markers if configured to do so.
-                string[] customFootnoteMarkers = null;
-                if (!IsJobCanceled && _previewJob.UseCustomFootnotes)
+                if (!IsJobCanceled && _previewJob.TypesettingParams.UseCustomFootnotes)
                 {
-                    customFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.ProjectName);
+                    additionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.BibleSelectionParams.ProjectName);
                     // Throw an error, if custom footnotes are requested but are not available.
                     // This allows us to set the user's expectations early, rather than waiting
                     // for a preview.
-                    if (customFootnoteMarkers == null || customFootnoteMarkers.Length == 0)
+                    if (additionalParams.CustomFootnoteMarkers == null || additionalParams.CustomFootnoteMarkers.Length == 0)
                     {
                         throw new PreviewJobException(_previewJob, "Custom footnotes requested, but aren't specified in the project.");
                     }
 
-                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", customFootnoteMarkers));
+                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", additionalParams.CustomFootnoteMarkers));
                 }
 
                 // If we're using the project font (rather than what's in the IDML) pass it as an override.
-                string overrideFont = null;
-                if (!IsJobCanceled && _previewJob.UseProjectFont)
+                if (!IsJobCanceled && _previewJob.TypesettingParams.UseProjectFont)
                 {
-                    string _projectFont = _paratextProjectService.GetProjectFont(_previewJob.ProjectName);
+                    additionalParams.OverrideFont = _paratextProjectService.GetProjectFont(_previewJob.BibleSelectionParams.ProjectName);
 
-                    if (String.IsNullOrEmpty(_projectFont))
+                    if (String.IsNullOrEmpty(additionalParams.OverrideFont))
                     {
-                        _logger.LogInformation($"No font specified for project {_previewJob.ProjectName}. IDML font settings will not be modified.");
-                    }
-                    else
-                    {
-                        overrideFont = _projectFont;
+                        _logger.LogInformation($"No font specified for project {_previewJob.BibleSelectionParams.ProjectName}. IDML font settings will not be modified.");
+                        additionalParams.OverrideFont = null;
                     }
                 }
 
@@ -156,17 +157,18 @@ namespace TptMain.Jobs
 
                 if (!IsJobCanceled)
                 {
-                    _scriptRunner.RunScript(_previewJob,
-                        customFootnoteMarkers,
-                        overrideFont,
+                    _scriptRunner.CreatePreview(_previewJob,
+                        additionalParams,
                         _cancellationTokenSource.Token);
                 }
 
                 _logger.LogInformation($"Job finished: {_previewJob.Id}.");
+                _previewJob.State = PreviewJobState.PreviewGenerated;
             }
             catch (OperationCanceledException ex)
             {
                 _logger.LogDebug(ex, $"Can't run job: {_previewJob.Id} (cancelled, ignoring).");
+                _previewJob.State = PreviewJobState.Cancelled;
             }
             catch (PreviewJobException ex)
             {
@@ -175,8 +177,8 @@ namespace TptMain.Jobs
             }
             catch (Exception ex)
             {
-                _previewJob.SetError("An internal server error occurred.", ex.Message);
                 _logger.LogWarning(ex, $"Can't run job: {_previewJob.Id}");
+                _previewJob.SetError("An internal server error occurred.", ex.Message);
             }
             finally
             {
@@ -207,6 +209,7 @@ namespace TptMain.Jobs
             finally
             {
                 _previewJob.DateCancelled = DateTime.UtcNow;
+                _previewJob.State = PreviewJobState.Cancelled;
                 _jobManager.TryUpdateJob(_previewJob);
             }
         }
