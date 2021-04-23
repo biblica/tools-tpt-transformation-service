@@ -1,7 +1,25 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace TptMain.Models
 {
+    /// <summary>
+    /// Represents the possible states of a Preview Job
+    /// </summary>
+    public enum PreviewJobState
+    {
+        Submitted,
+        Started,
+        GeneratingTemplate,
+        TemplateGenerated,
+        GeneratingTaggedText,
+        TaggedTextGenerated,
+        GeneratingPreview,
+        PreviewGenerated,
+        Cancelled,
+        Error
+    }
+    
     /// <summary>
     /// Model for tracking Typesetting Preview jobs.
     /// </summary>
@@ -33,11 +51,6 @@ namespace TptMain.Models
         public DateTime? DateCancelled { get; set; }
 
         /// <summary>
-        /// The PT short project name to generate a typesetting preview of.
-        /// </summary>
-        public string ProjectName { get; set; }
-
-        /// <summary>
         /// The user requesting the job.
         /// </summary>
         public string User { get; set; }
@@ -65,7 +78,13 @@ namespace TptMain.Models
         /// <summary>
         /// Whether or not there was an error during job execution.
         /// </summary>
-        public bool IsError { get; set; } = false;
+        public bool IsError => this.State.Equals(PreviewJobState.Error);
+
+        /// <summary>
+        /// The current state of the Preview Job
+        /// </summary>
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public PreviewJobState State { get; set; } = PreviewJobState.Submitted;
 
         /// <summary>
         /// User-friendly message regarding the error; <c>null</c> otherwise.
@@ -78,46 +97,14 @@ namespace TptMain.Models
         public string ErrorDetail { get; private set; }
 
         /// <summary>
-        /// Font size in points.
+        /// Which Bible books to include
         /// </summary>
-        public float? FontSizeInPts { get; set; }
+        public BibleSelectionParams BibleSelectionParams { get; set; } = new BibleSelectionParams();
 
         /// <summary>
-        /// Font leading in points.
+        /// Parameters to use for the typesetting preview
         /// </summary>
-        public float? FontLeadingInPts { get; set; }
-
-        /// <summary>
-        /// Page width in points.
-        /// </summary>
-        public float? PageWidthInPts { get; set; }
-
-        /// <summary>
-        /// Page height in points.
-        /// </summary>
-        public float? PageHeightInPts { get; set; }
-
-        /// <summary>
-        /// Page header in points.
-        /// </summary>
-        public float? PageHeaderInPts { get; set; }
-
-        /// <summary>
-        /// Book format, either TBOTB or CAV.
-        /// </summary>
-        public BookFormat? BookFormat { get; set; }
-
-        /// <summary>
-        /// (Optional) Whether or not to use custom footnotes. Defaults to false.
-        /// 
-        /// Note: The footnotes would be pulled from the project's respective Paratext footnote caller sequence.
-        /// </summary>
-        public bool UseCustomFootnotes { get; set; } = false;
-
-        /// <summary>
-        /// (Optional) Whether or not to use the project's defined font. Defaults to true.
-        /// </summary>
-        public bool UseProjectFont { get; set; } = true;
+        public TypesettingParams TypesettingParams { get; set; } = new TypesettingParams();
 
         /// <summary>
         /// Function used for indicating an error occurred and provide a message for the reason.
@@ -130,7 +117,7 @@ namespace TptMain.Models
             this.ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
             this.ErrorDetail = errorDetail ?? throw new ArgumentNullException(nameof(errorDetail));
 
-            this.IsError = true;
+            this.State = PreviewJobState.Error;
         }
     }
 }

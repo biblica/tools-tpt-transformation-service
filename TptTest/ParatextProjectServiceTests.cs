@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Collections.Generic;
 using System.Linq;
+using TptMain.Models;
 using TptMain.ParatextProjects;
 using TptMain.Util;
 
@@ -36,6 +37,11 @@ namespace TptTest
         /// Faux Paratext Project without footnotes.
         /// </summary>
         private const string TEST_PROJECT_WITHOUT_FOOTNOTES = "projectWithoutFootnotes";
+
+        /// <summary>
+        /// Faux Paratext Project that's right-to-left text direction AKA character orientation.
+        /// </summary>
+        private const string TEST_PROJECT_RTL_TEXT_DIRECTION = "projectRtlTextDirection";
 
         /// <summary>
         /// Test setup.
@@ -95,7 +101,35 @@ namespace TptTest
         }
 
         /// <summary>
-        /// Test the ability to download an archive of the typesetting files.
+        /// Test the ability to determine RTL projects.
+        /// </summary>
+        [TestMethod]
+        public void TestProjectRtlTextDirection()
+        {
+            // setup service under test
+            _mockParatextProjectService.Setup(service => service.GetTextDirection(TEST_PROJECT_RTL_TEXT_DIRECTION)).CallBase();
+
+            var textDirection = _mockParatextProjectService.Object.GetTextDirection(TEST_PROJECT_RTL_TEXT_DIRECTION);
+
+            Assert.AreEqual(TextDirection.RTL, textDirection);
+        }
+
+        /// <summary>
+        /// Test the ability to determine LTR projects.
+        /// </summary>
+        [TestMethod]
+        public void TestProjectLtrTextDirection()
+        {
+            // setup service under test
+            _mockParatextProjectService.Setup(service => service.GetTextDirection(TEST_PROJECT_WITHOUT_FOOTNOTES)).CallBase();
+
+            var textDirection = _mockParatextProjectService.Object.GetTextDirection(TEST_PROJECT_WITHOUT_FOOTNOTES);
+
+            Assert.AreEqual(TextDirection.LTR, textDirection);
+        }
+
+        /// <summary>
+        /// Test that we correctly determine when there's no project specific footnotes.
         /// </summary>
         [TestMethod]
         public void TestCustomFootnotesFailPath()
