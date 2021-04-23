@@ -32,8 +32,8 @@ namespace TptMain
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // In-memory database for tracking typesetting preview jobs
-            services.AddDbContext<PreviewContext>(
+            // Add database service for tracking Preview Jobs
+            services.AddDbContext<TptServiceContext>(
                 options => options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection")),
                ServiceLifetime.Singleton);
 

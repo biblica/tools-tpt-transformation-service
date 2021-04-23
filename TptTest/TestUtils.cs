@@ -21,15 +21,21 @@ namespace TptTest
             return new PreviewJob
             {
                 Id = Guid.Empty.ToString(),
-                ProjectName = TestConsts.TEST_PROJECT_NAME,
+                BibleSelectionParams = new BibleSelectionParams
+                {
+                    ProjectName = TestConsts.TEST_PROJECT_NAME
+                },
                 User = TestConsts.TEST_USER,
-                BookFormat = BookFormat.cav,
-                FontSizeInPts = 123.4f,
-                FontLeadingInPts = 234.5f,
-                PageHeightInPts = 345.6f,
-                PageWidthInPts = 456.7f,
-                PageHeaderInPts = 567.8f,
-                UseProjectFont = false
+                TypesettingParams = new TypesettingParams
+                {
+                    BookFormat = BookFormat.cav,
+                    FontSizeInPts = 123.4f,
+                    FontLeadingInPts = 234.5f,
+                    PageHeightInPts = 345.6f,
+                    PageWidthInPts = 456.7f,
+                    PageHeaderInPts = 567.8f,
+                    UseProjectFont = false
+                }
             };
         }
 
