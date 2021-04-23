@@ -163,10 +163,12 @@ namespace TptMain.Jobs
                 }
 
                 _logger.LogInformation($"Job finished: {_previewJob.Id}.");
+                _previewJob.State = PreviewJobState.PreviewGenerated;
             }
             catch (OperationCanceledException ex)
             {
                 _logger.LogDebug(ex, $"Can't run job: {_previewJob.Id} (cancelled, ignoring).");
+                _previewJob.State = PreviewJobState.Cancelled;
             }
             catch (PreviewJobException ex)
             {
@@ -175,13 +177,12 @@ namespace TptMain.Jobs
             }
             catch (Exception ex)
             {
-                _previewJob.SetError("An internal server error occurred.", ex.Message);
                 _logger.LogWarning(ex, $"Can't run job: {_previewJob.Id}");
+                _previewJob.SetError("An internal server error occurred.", ex.Message);
             }
             finally
             {
                 _previewJob.DateCompleted = DateTime.UtcNow;
-                _previewJob.State = PreviewJobState.PreviewGenerated;
                 _jobManager.TryUpdateJob(_previewJob);
             }
         }
