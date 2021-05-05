@@ -7,35 +7,38 @@ namespace TptMain.Util
     /// </summary>
     public static class MainConsts
     {
+        #region Typesetting Selection Constants
         /// <summary>
-        /// Default font size for previews, in points.
+        /// Allowed font sizes for previews, in points.
         /// </summary>
-        public const float DEFAULT_FONT_SIZE_IN_PTS = 8f;
+        public static readonly FloatMinMaxDefault ALLOWED_FONT_SIZE_IN_PTS = new FloatMinMaxDefault(8f, 6f, 24f);
 
         /// <summary>
-        /// Default font leading for previews, in points.
+        /// Allowed font leading sizes for previews, in points.
         /// </summary>
-        public const float DEFAULT_FONT_LEADING_IN_PTS = 9f;
+        public static readonly FloatMinMaxDefault ALLOWED_FONT_LEADING_IN_PTS = new FloatMinMaxDefault(9f, 6f, 28f);
 
         /// <summary>
-        /// Default page width for previews, in points.
+        /// Allowed page widths for previews, in points.
         /// </summary>
-        public const float DEFAULT_PAGE_WIDTH_IN_PTS = 396f;
+        public static readonly FloatMinMaxDefault ALLOWED_PAGE_WIDTH_IN_PTS = new FloatMinMaxDefault(396f, 180f, 612f);
 
         /// <summary>
-        /// Default page height for previews, in points.
+        /// Allowed page heights for previews, in points.
         /// </summary>
-        public const float DEFAULT_PAGE_HEIGHT_IN_PTS = 612f;
+        public static readonly FloatMinMaxDefault ALLOWED_PAGE_HEIGHT_IN_PTS = new FloatMinMaxDefault(612f, 216f, 1008f);
 
         /// <summary>
-        /// Default page header for previews, in points.
+        /// Allowed page header sizes for previews, in points.
         /// </summary>
-        public const float DEFAULT_PAGE_HEADER_IN_PTS = 18f;
+        public static readonly FloatMinMaxDefault ALLOWED_PAGE_HEADER_IN_PTS = new FloatMinMaxDefault(18f, 0f, 50f);
 
         /// <summary>
         /// Default book format.
         /// </summary>
         public const BookFormat DEFAULT_BOOK_FORMAT = BookFormat.cav;
+        #endregion
+
 
         /// <summary>
         /// Timer startup delay, in seconds.

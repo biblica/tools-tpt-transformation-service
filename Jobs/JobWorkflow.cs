@@ -37,9 +37,9 @@ namespace TptMain.Jobs
         private readonly TemplateManager _templateManager;
 
         /// <summary>
-        /// Paratext API service used to authorize user access.
+        /// Preview Job Validator service.
         /// </summary>
-        private readonly ParatextApi _paratextApi;
+        private readonly IPreviewJobValidator _jobValidator;
 
         /// <summary>
         /// Paratext Project service used to get information related to local Paratext projects.
@@ -81,7 +81,7 @@ namespace TptMain.Jobs
             JobManager jobManager,
             ScriptRunner scriptRunner,
             TemplateManager templateManager,
-            ParatextApi paratextApi,
+            IPreviewJobValidator jobValidator,
             ParatextProjectService paratextProjectService,
             PreviewJob previewJob
             )
@@ -91,7 +91,7 @@ namespace TptMain.Jobs
             _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _previewJob = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
-            _paratextApi = paratextApi ?? throw new ArgumentNullException(nameof(paratextApi));
+            _jobValidator = jobValidator ?? throw new ArgumentNullException(nameof(jobValidator));
             _paratextProjectService = paratextProjectService ?? throw new ArgumentNullException(nameof(paratextProjectService));
 
             _cancellationTokenSource = new CancellationTokenSource();
@@ -112,7 +112,7 @@ namespace TptMain.Jobs
 
                 if (!IsJobCanceled)
                 {
-                    _paratextApi.IsUserAuthorizedOnProject(_previewJob);
+                    _jobValidator.ValidatePreviewJob(_previewJob);
                 }
 
                 // Track derived parameters that we'll pass on to InDesign
