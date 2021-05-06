@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -42,9 +43,9 @@ namespace TptTest
         private Mock<TemplateManager> _mockTemplateManager;
 
         /// <summary>
-        /// Mock Paratext API.
+        /// Mock Preview Job Validator.
         /// </summary>
-        private Mock<ParatextApi> _mockParatextApi;
+        private Mock<IPreviewJobValidator> _mockJobValidator;
 
         /// <summary>
         /// Mock Paratext Project Service API.
@@ -124,10 +125,11 @@ namespace TptTest
             _mockTemplateManager = new Mock<TemplateManager>(MockBehavior.Strict,
                 mockTemplateManagerLogger.Object, _testConfiguration, mockRequestFactory.Object);
 
-            // mock: paratext API
-            var mockParatextApiLogger = new Mock<ILogger<ParatextApi>>();
-            _mockParatextApi = new Mock<ParatextApi>(MockBehavior.Strict,
-                mockParatextApiLogger.Object, _testConfiguration);
+            // mock: preview job validator
+            _mockJobValidator = new Mock<IPreviewJobValidator>();
+            _mockJobValidator.Setup(validator =>
+                validator.ValidatePreviewJob(It.IsAny<PreviewJob>()))
+                .Verifiable();
 
             // mock: paratext project service
             var _mockParatextProjectServiceLogger = new Mock<ILogger<ParatextProjectService>>();
@@ -146,7 +148,7 @@ namespace TptTest
                 _context,
                 _mockScriptRunner.Object,
                 _mockTemplateManager.Object,
-                _mockParatextApi.Object,
+                _mockJobValidator.Object,
                 _mockParatextProjectService.Object,
                 mockJobScheduler.Object);
         }
@@ -162,7 +164,7 @@ namespace TptTest
                 _mockJobManager.Object,
                 _mockScriptRunner.Object,
                 _mockTemplateManager.Object,
-                _mockParatextApi.Object,
+                _mockJobValidator.Object,
                 _mockParatextProjectService.Object,
                 TestUtils.CreateTestPreviewJob());
         }
@@ -183,7 +185,7 @@ namespace TptTest
                     _mockJobManager.Object,
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
+                    _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
                    testPreviewJob);
             mockWorkflow.Setup(workflowItem =>
@@ -192,9 +194,6 @@ namespace TptTest
                 workflowItem.IsJobCanceled).CallBase();
 
             // setup mocks
-            _mockParatextApi.Setup(paratextApi =>
-                paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
-                .Verifiable();
             _mockParatextProjectService.Setup(ptProjService =>
                 ptProjService.GetTextDirection(It.IsAny<string>()))
                 .Returns(TextDirection.LTR)
@@ -261,7 +260,7 @@ namespace TptTest
                     _mockJobManager.Object,
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
+                    _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
                     testPreviewJob);
             mockWorkflow.Setup(workflowItem =>
@@ -272,9 +271,6 @@ namespace TptTest
                 workflowItem.IsJobCanceled).CallBase();
 
             // setup mocks
-            _mockParatextApi.Setup(paratextApi =>
-                paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
-                .Verifiable();
             _mockParatextProjectService.Setup(ptProjService =>
                 ptProjService.GetTextDirection(It.IsAny<string>()))
                 .Returns(TextDirection.LTR);
@@ -359,7 +355,7 @@ namespace TptTest
                     _mockJobManager.Object,
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
+                    _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
                     testPreviewJob);
             mockWorkflow.Setup(workflowItem =>
@@ -368,9 +364,6 @@ namespace TptTest
                 workflowItem.IsJobCanceled).CallBase();
 
             // setup mocks
-            _mockParatextApi.Setup(paratextApi =>
-                paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
-                .Verifiable();
             _mockParatextProjectService.Setup(ptProjService =>
                 ptProjService.GetTextDirection(It.IsAny<string>()))
                 .Returns(TextDirection.LTR)
@@ -428,15 +421,12 @@ namespace TptTest
                     _mockJobManager.Object,
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
+                    _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
                     testPreviewJob);
             mockWorkflow.CallBase = true;
 
             // setup mocks of the expected custom handling
-            _mockParatextApi.Setup(paratextApi =>
-                paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
-                .Verifiable();
             _mockParatextProjectService.Setup(ptProjService =>
                 ptProjService.GetTextDirection(It.IsAny<string>()))
                 .Returns(TextDirection.LTR)
@@ -460,8 +450,6 @@ namespace TptTest
             mockWorkflow.Object.RunJob();
 
             // verify the expected customizations occurred
-            _mockParatextApi.Verify(paratextApi =>
-                paratextApi.IsUserAuthorizedOnProject(testPreviewJob), Times.Once);
             _mockParatextProjectService.Verify(ptProjectService =>
                 ptProjectService.GetFootnoteCallerSequence(testPreviewJob.BibleSelectionParams.ProjectName), Times.Once);
             _mockParatextProjectService.Verify(ptProjectService =>
@@ -489,15 +477,12 @@ namespace TptTest
                     _mockJobManager.Object,
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
+                    _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
                     testPreviewJob);
             mockWorkflow.CallBase = true;
 
             // setup mocks
-            _mockParatextApi.Setup(paratextApi =>
-                paratextApi.IsUserAuthorizedOnProject(testPreviewJob))
-                .Verifiable();
             _mockParatextProjectService.Setup(ptProjService =>
                 ptProjService.GetTextDirection(It.IsAny<string>()))
                 .Returns(TextDirection.LTR)

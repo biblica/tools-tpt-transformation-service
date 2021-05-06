@@ -41,9 +41,9 @@ namespace TptMain.Jobs
         private readonly TemplateManager _templateManager;
 
         /// <summary>
-        /// Paratext API service used to authorize user access.
+        /// Job Validation service for ensuring feasible and authorized jobs.
         /// </summary>
-        private readonly ParatextApi _paratextApi;
+        private readonly IPreviewJobValidator _jobValidator;
 
         /// <summary>
         /// Paratext Project service used to get information related to local Paratext projects.
@@ -103,7 +103,7 @@ namespace TptMain.Jobs
         /// <param name="tptServiceContext">Database context (persistence; required).</param>
         /// <param name="scriptRunner">Script runner (required).</param>
         /// <param name="templateManager">Template manager (required).</param>
-        /// <param name="paratextApi">Paratext API for verifying user authorization on projects (required).</param>
+        /// <param name="jobValidator">Preview Job Validator used for ensuring job feasibility and authorization on projects (required).</param>
         /// <param name="paratextProjectService">Paratext Project service for getting information related to local Paratext projects. (required).</param>
         /// <param name="jobScheduler">Job scheduler (required).</param>
         public JobManager(
@@ -112,7 +112,7 @@ namespace TptMain.Jobs
             TptServiceContext tptServiceContext,
             ScriptRunner scriptRunner,
             TemplateManager templateManager,
-            ParatextApi paratextApi,
+            IPreviewJobValidator jobValidator,
             ParatextProjectService paratextProjectService,
             JobScheduler jobScheduler)
         {
@@ -121,7 +121,7 @@ namespace TptMain.Jobs
             _tptServiceContext = tptServiceContext ?? throw new ArgumentNullException(nameof(tptServiceContext));
             _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
-            _paratextApi = paratextApi ?? throw new ArgumentNullException(nameof(paratextApi));
+            _jobValidator = jobValidator ?? throw new ArgumentNullException(nameof(jobValidator));
             _paratextProjectService = paratextProjectService ?? throw new ArgumentNullException(nameof(paratextProjectService));
             _jobScheduler = jobScheduler ?? throw new ArgumentNullException(nameof(jobScheduler));
 
@@ -277,7 +277,7 @@ namespace TptMain.Jobs
                         this,
                         _scriptRunner,
                         _templateManager,
-                        _paratextApi,
+                        _jobValidator,
                         _paratextProjectService,
                         inputJob
                         )
@@ -304,11 +304,11 @@ namespace TptMain.Jobs
             previewJob.DateCancelled = null;
 
             // project defaults
-            previewJob.TypesettingParams.FontSizeInPts ??= MainConsts.DEFAULT_FONT_SIZE_IN_PTS;
-            previewJob.TypesettingParams.FontLeadingInPts ??= MainConsts.DEFAULT_FONT_LEADING_IN_PTS;
-            previewJob.TypesettingParams.PageWidthInPts ??= MainConsts.DEFAULT_PAGE_WIDTH_IN_PTS;
-            previewJob.TypesettingParams.PageHeightInPts ??= MainConsts.DEFAULT_PAGE_HEIGHT_IN_PTS;
-            previewJob.TypesettingParams.PageHeaderInPts ??= MainConsts.DEFAULT_PAGE_HEADER_IN_PTS;
+            previewJob.TypesettingParams.FontSizeInPts ??= MainConsts.ALLOWED_FONT_SIZE_IN_PTS.Default;
+            previewJob.TypesettingParams.FontLeadingInPts ??= MainConsts.ALLOWED_FONT_LEADING_IN_PTS.Default;
+            previewJob.TypesettingParams.PageWidthInPts ??= MainConsts.ALLOWED_PAGE_WIDTH_IN_PTS.Default;
+            previewJob.TypesettingParams.PageHeightInPts ??= MainConsts.ALLOWED_PAGE_HEIGHT_IN_PTS.Default;
+            previewJob.TypesettingParams.PageHeaderInPts ??= MainConsts.ALLOWED_PAGE_HEADER_IN_PTS.Default;
             previewJob.TypesettingParams.BookFormat ??= MainConsts.DEFAULT_BOOK_FORMAT;
         }
 

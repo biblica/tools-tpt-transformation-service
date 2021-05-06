@@ -51,9 +51,9 @@ namespace TptTest
         private Mock<TemplateManager> _mockTemplateManager;
 
         /// <summary>
-        /// Mock Paratext API.
+        /// Mock Preview Job Validator.
         /// </summary>
-        private Mock<ParatextApi> _mockParatextApi;
+        private Mock<IPreviewJobValidator> _mockJobValidator;
 
         /// <summary>
         /// Mock Paratext Project Service API.
@@ -84,16 +84,6 @@ namespace TptTest
             // - TemplateManager
             configKeys[TemplateManagerTests.TEST_TEMPLATE_SERVER_URI_KEY] = TemplateManagerTests.TEST_TEMPLATE_SERVER_URI;
             configKeys[TemplateManagerTests.TEST_TEMPLATE_TIMEOUT_IN_SEC_KEY] = TemplateManagerTests.TEST_TEMPLATE_TIMEOUT_IN_SEC;
-
-            // - ParatextApi
-            configKeys[ConfigConsts.ParatextApiServerUriKey] = ParatextApiTests.TEST_PT_API_SERVER_URI;
-            configKeys[ConfigConsts.ParatextApiUsernameKey] = ParatextApiTests.TEST_PT_API_USERNAME;
-            configKeys[ConfigConsts.ParatextApiPasswordKey] = ParatextApiTests.TEST_PT_API_PASSWORD;
-            configKeys[ConfigConsts.ParatextApiProjectCacheAgeInSecKey] = ParatextApiTests.TEST_PT_API_PROJECT_CACHE_AGE_IN_SEC.ToString();
-            for (var i = 0; i < ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES.Count; i++)
-            {
-                configKeys[ConfigConsts.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
-            }
 
             // - JobManager
             configKeys[ConfigConsts.IdmlDocDirKey] = TestConsts.TEST_IDML_DOC_DIR;
@@ -132,10 +122,11 @@ namespace TptTest
             _mockTemplateManager = new Mock<TemplateManager>(MockBehavior.Strict,
                 mockTemplateManagerLogger.Object, _testConfiguration, _mockRequestFactory.Object);
 
-            // mock: paratext API
-            var mockParatextApiLogger = new Mock<ILogger<ParatextApi>>();
-            _mockParatextApi = new Mock<ParatextApi>(MockBehavior.Strict,
-                mockParatextApiLogger.Object, _testConfiguration);
+            // mock: preview job validator
+            _mockJobValidator = new Mock<IPreviewJobValidator>();
+            _mockJobValidator.Setup(validator =>
+                validator.ValidatePreviewJob(It.IsAny<PreviewJob>()))
+                .Verifiable();
 
             // mock: paratext project service
             var _mockParatextProjectServiceLogger = new Mock<ILogger<ParatextProjectService>>();
@@ -161,7 +152,7 @@ namespace TptTest
                 _context,
                 _mockScriptRunner.Object,
                 _mockTemplateManager.Object,
-                _mockParatextApi.Object,
+                _mockJobValidator.Object,
                 _mockParatextProjectService.Object,
                 _mockJobScheduler.Object);
 
@@ -185,7 +176,7 @@ namespace TptTest
                 _context,
                 _mockScriptRunner.Object,
                 _mockTemplateManager.Object,
-                _mockParatextApi.Object,
+                _mockJobValidator.Object,
                 _mockParatextProjectService.Object,
                 _mockJobScheduler.Object);
 
@@ -237,7 +228,7 @@ namespace TptTest
                     _context,
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
+                    _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
                     _mockJobScheduler.Object);
             // call base functions unless overriden
@@ -289,7 +280,7 @@ namespace TptTest
                     _context,
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
+                    _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
                     _mockJobScheduler.Object);
             // call base functions unless overriden
@@ -338,7 +329,7 @@ namespace TptTest
                     _context,
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
+                    _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
                     _mockJobScheduler.Object);
             // call base functions unless overriden
@@ -364,7 +355,7 @@ namespace TptTest
                     _context,
                     _mockScriptRunner.Object,
                     _mockTemplateManager.Object,
-                    _mockParatextApi.Object,
+                    _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
                     _mockJobScheduler.Object);
             // call base functions unless overriden
