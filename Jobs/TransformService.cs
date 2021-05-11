@@ -46,7 +46,7 @@ namespace TptMain.Jobs
             PROCESSING,
             CANCELED,
             TAGGED_TEXT_COMPLETE,
-            TRANFORM_COMPLETE,
+            TEMPLATE_COMPLETE,
             ALL_COMPLETE,
             ERROR
         }
@@ -65,14 +65,14 @@ namespace TptMain.Jobs
 
         /// <summary>
         /// A flag that some part of the processing is complete. This is
-        /// the prefix to a full file name like '.complete-transform'
+        /// the prefix to a full file name like '.complete-template'
         /// </summary>
         private static string COMPLETE_MARKER = ".complete";
 
         /// <summary>
         /// A flag for the tranform processing is complete
         /// </summary>
-        private static string COMPLETE_TRANSFORM_MARKER = "-transform";
+        private static string COMPLETE_TEMPLATE_MARKER = "-template";
 
         /// <summary>
         /// A flag that the tagged text is complete
@@ -211,7 +211,7 @@ namespace TptMain.Jobs
             // if the complete marker is there, then respond thus
             if (!string.IsNullOrEmpty(completeFile))
             {
-                bool transformComplete = completeFile.Contains(COMPLETE_TRANSFORM_MARKER);
+                bool transformComplete = completeFile.Contains(COMPLETE_TEMPLATE_MARKER);
                 bool taggedTextComplete = completeFile.Contains(COMPLETE_TAGGED_TEXT_MARKER);
 
                 if(transformComplete && taggedTextComplete)
@@ -221,7 +221,7 @@ namespace TptMain.Jobs
 
                 if(transformComplete)
                 {
-                    return TransformJobStatus.TRANFORM_COMPLETE;
+                    return TransformJobStatus.TEMPLATE_COMPLETE;
                 }
 
                 if(taggedTextComplete)

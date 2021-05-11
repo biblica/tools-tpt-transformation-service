@@ -103,7 +103,7 @@ namespace TptTest.Jobs
 
             TransformJobStatus jobStatus = transformService.GetTransformJobStatus("test-job");
 
-            Assert.AreEqual(TransformJobStatus.TRANFORM_COMPLETE, jobStatus);
+            Assert.AreEqual(TransformJobStatus.TEMPLATE_COMPLETE, jobStatus);
         }
 
 
