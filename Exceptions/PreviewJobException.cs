@@ -14,6 +14,15 @@ namespace TptMain.Exceptions
         public PreviewJob PreviewJob { get; private set; }
 
         /// <summary>
+        /// Default basic constructor that allows for a message only exception
+        /// </summary>
+        /// <param name="message"></param>
+        public PreviewJobException(string message)
+            : base(message)
+        {
+        }
+
+        /// <summary>
         /// Simple <c>PreviewJobException</c> constructor tracking the <c>PreviewJob</c>.
         /// </summary>
         /// <param name="previewJob">Running <c>PreviewJob</c> when the exception occurred.</param>
@@ -54,7 +63,10 @@ namespace TptMain.Exceptions
         /// <returns>A string representation of the current exception.</returns>
         public override string ToString()
         {
-            //return base.ToString();
+            if(this.PreviewJob is null)
+            {
+                return string.Format("Error: {0}", this.Message);
+            }
             return string.Format("Error: {0}\r\n\tJob ID: '{1}'", this.Message, this.PreviewJob.Id);
         }
     }

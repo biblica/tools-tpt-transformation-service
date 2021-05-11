@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.ECS" Version="3.7.1.2" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.0.21" />
     <PackageReference Include="AWSSDK.SQS" Version="3.7.0.18" />
     <PackageReference Include="DotNetZip" Version="1.15.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.5" />
@@ -69,5 +70,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="echo /// This is an auto-generated file, created by a Pre-Build event. &gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo /// After changing environment variables, restart Visual Studio. &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo namespace TptMain.Util &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo { &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     ///^&lt;summary^&gt;Configuration information for AWS services.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     public static class AWSCredentials &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     { &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The AWS Access Key ID. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_ACCESS_KEY_ID = &quot;$(AWS_ACCESS_KEY_ID)&quot;; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The AWS Access Key Secret. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_ACCESS_KEY_SECRET = &quot;$(AWS_ACCESS_KEY_SECRET)&quot;; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The TPT AWS Bucket Name. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_BUCKET_NAME = &quot;$(AWS_TPT_BUCKET_NAME)&quot;; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The AWS Region. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_REGION = &quot;$(AWS_TPT_REGION)&quot;; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The TPT AWS SQS Queue URL. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_SQS_QUEUE_URL = &quot;$(AWS_TPT_SQS_QUEUE_URL)&quot;; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     } &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo } &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;" />
+  </Target>
 
 </Project>

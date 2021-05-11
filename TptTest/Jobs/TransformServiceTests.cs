@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using TptMain.Jobs;
 using TptMain.Models;
+using TptMain.Util;
+using static TptMain.Jobs.TransformService;
 
 namespace TptTest.Jobs
 {
@@ -45,9 +47,8 @@ namespace TptTest.Jobs
 
             TransformService transformService = new TransformService(_logger);
 
-            string uniqueMessageId = transformService.GenerateTaggedText(previewJob);
+            transformService.GenerateTaggedText(previewJob);
 
-            Assert.IsNotNull(uniqueMessageId);
         }
 
         /// <summary>
@@ -64,12 +65,69 @@ namespace TptTest.Jobs
 
             TransformService transformService = new TransformService(_logger);
 
-            string uniqueMessageId = transformService.GenerateTemplate(previewJob);
-
-            Assert.IsNotNull(uniqueMessageId);
+            transformService.GenerateTemplate(previewJob);
         }
 
+        /// <summary>
+        /// Test the ability to list files in S3
+        /// </summary>
         [TestMethod]
+        public void S3ListFilesTest()
+        {
+            S3Service s3Service = new S3Service();
+            List<string> filenames = s3Service.ListAllFiles("jobs/");
+
+            Assert.IsNotNull(filenames);
+        }
+
+        /// <summary>
+        /// Test the ability to check for an unknown job
+        /// </summary>
+        [TestMethod]
+        public void GetStatusWaitingTest()
+        {
+            TransformService transformService = new TransformService(_logger);
+
+            TransformJobStatus jobStatus = transformService.GetTransformJobStatus("unknown");
+
+            Assert.AreEqual(TransformJobStatus.WAITING, jobStatus);
+        }
+
+        /// <summary>
+        /// Test the ability to list files in S3
+        /// </summary>
+        [TestMethod]
+        public void GetStatusCompleteTest()
+        {
+            TransformService transformService = new TransformService(_logger);
+
+            TransformJobStatus jobStatus = transformService.GetTransformJobStatus("test-job");
+
+            Assert.AreEqual(TransformJobStatus.TRANFORM_COMPLETE, jobStatus);
+        }
+
+
+        /// <summary>
+        /// Test the ability to list files in S3
+        /// </summary>
+        [TestMethod]
+        public void CancelTest()
+        {
+            TransformService transformService = new TransformService(_logger);
+
+            string transformJobId = Guid.NewGuid().ToString();
+
+            transformService.CancelTransformJobs(transformJobId);
+
+            TransformJobStatus jobStatus = transformService.GetTransformJobStatus(transformJobId);
+
+            Assert.AreEqual(TransformJobStatus.CANCELED, jobStatus);
+        }
+
+        /// <summary>
+        ///  Simple test harness for creating a bunch of messages for external testing
+        /// </summary>
+        /*[TestMethod]
         public void GenerateMessages()
         {
             for(int i = 0; i < 100; i++)
@@ -77,7 +135,7 @@ namespace TptTest.Jobs
                 GenerateTaggedTextTest();
                 GenerateTemplateTest();
             }
-        }
+        }*/
 
     }
 }
