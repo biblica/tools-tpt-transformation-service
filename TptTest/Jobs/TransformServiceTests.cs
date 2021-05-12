@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿#define TEST
+#undef TEST
+
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -32,6 +35,8 @@ namespace TptTest.Jobs
 
             _logger = factory.CreateLogger<TransformServiceTests>();
         }
+
+#if TEST
 
         /// <summary>
         /// Test submitting jobs for tagged text generation to the queue
@@ -136,6 +141,7 @@ namespace TptTest.Jobs
                 GenerateTemplateTest();
             }
         }*/
+#endif
 
     }
 }
