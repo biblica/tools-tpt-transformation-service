@@ -75,6 +75,9 @@ namespace TptTest.Jobs
 
         /// <summary>
         /// Test the ability to list files in S3
+        /// 
+        /// Note: Ensure 'jobs' directory exists in S3 before running this test.
+        /// 
         /// </summary>
         [TestMethod]
         public void S3ListFilesTest()
@@ -99,7 +102,11 @@ namespace TptTest.Jobs
         }
 
         /// <summary>
-        /// Test the ability to list files in S3
+        /// Test the ability to get a complete status
+        /// 
+        /// Note: Ensure there is a directory called jobs/test-job/ with a .complete-template 
+        /// file existing in that directory before running this test.
+        /// 
         /// </summary>
         [TestMethod]
         public void GetStatusCompleteTest()
@@ -111,9 +118,8 @@ namespace TptTest.Jobs
             Assert.AreEqual(TransformJobStatus.TEMPLATE_COMPLETE, jobStatus);
         }
 
-
         /// <summary>
-        /// Test the ability to list files in S3
+        /// Test the ability to create a .cancel file in S3
         /// </summary>
         [TestMethod]
         public void CancelTest()
