@@ -18,7 +18,6 @@ namespace TptMain.Jobs
     /// <summary>
     /// This class is for submitting jobs, either TEMPLATE GENERATION, or TAGGED TEXT, to the SQS queue in AWS.
     /// These jobs will then be picked up by the template generation ability and processed.
-    /// The job status and 
     /// </summary>
     public class TransformService
     {
@@ -90,9 +89,14 @@ namespace TptMain.Jobs
         private string _secretKey = AWSCredentials.AWS_ACCESS_KEY_SECRET;
 
         /// <summary>
-        /// The URL to the queue based on an environment variable (AWS_SQS_QUEUE_URL), or the default.
+        /// The URL to the queue based on an environment variable (AWS_TPT_SQS_QUEUE_URL_TAGGED_TEXT), or the default.
         /// </summary>
-        private string _awsSqsQueueURL = AWSCredentials.AWS_TPT_SQS_QUEUE_URL;
+        private string _awsSqsQueueURLTaggedText = AWSCredentials.AWS_TPT_SQS_QUEUE_URL_TAGGED_TEXT;
+
+        /// <summary>
+        /// The URL to the queue based on an environment variable (AWS_TPT_SQS_QUEUE_URL_TEMPLATE), or the default.
+        /// </summary>
+        private string _awsSqsQueueURLTemplate = AWSCredentials.AWS_TPT_SQS_QUEUE_URL_TEMPLATE;
 
         /// <summary>
         /// Unless otherwise specified, as baked into the application from development envrionment variables, use us-east-2 for testing
@@ -147,7 +151,7 @@ namespace TptMain.Jobs
         }
 
         /// <summary>
-        /// Places a job on the SQS queue for createing the Tagged Text from the USX
+        /// Places a job on the SQS queue for creating the Tagged Text from the USX
         /// </summary>
         /// <param name="previewJob">The job to submit for Tagged Text generation</param>
         public void GenerateTaggedText(PreviewJob previewJob)
@@ -271,7 +275,7 @@ namespace TptMain.Jobs
             // Put the message onto the queue
             SendMessageRequest sendMessageRequest = new SendMessageRequest
             {
-                QueueUrl = _awsSqsQueueURL,
+                QueueUrl = transformType.Equals(TransformTypeEnum.TAGGED_TEXT) ? _awsSqsQueueURLTaggedText : _awsSqsQueueURLTemplate,
                 MessageBody = message,
                 MessageGroupId = transformType.ToString(),
                 MessageDeduplicationId = uniqueId

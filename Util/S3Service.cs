@@ -20,7 +20,7 @@ namespace TptMain.Util
         // AWS configuration parameters.
         string accessKey = AWSCredentials.AWS_ACCESS_KEY_ID;
         string secretKey = AWSCredentials.AWS_ACCESS_KEY_SECRET;
-        RegionEndpoint region = RegionEndpoint.GetBySystemName(AWSCredentials.AWS_TPT_REGION) ?? RegionEndpoint.USEast1;
+        RegionEndpoint region = RegionEndpoint.GetBySystemName(AWSCredentials.AWS_TPT_REGION) ?? RegionEndpoint.USEast2;
         public virtual string BucketName { get; set; } = AWSCredentials.AWS_TPT_BUCKET_NAME;
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace TptMain.Util
 
         public List<string> ListAllFiles(string prefix)
         {
-            List<string> checkFileNames = new List<string>();
+            List<string> fileNames = new List<string>();
             ListObjectsV2Request request = new ListObjectsV2Request
             {
                 BucketName = BucketName,
@@ -53,12 +53,12 @@ namespace TptMain.Util
                 // Process the response.
                 foreach (S3Object entry in response.S3Objects)
                 {
-                    checkFileNames.Add(entry.Key);
+                    fileNames.Add(entry.Key);
                 }
                 request.ContinuationToken = response.NextContinuationToken;
             } while (response.IsTruncated);
 
-            return checkFileNames;
+            return fileNames;
         }
 
         public Stream GetFileStream(string file)

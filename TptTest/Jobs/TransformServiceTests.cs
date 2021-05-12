@@ -132,7 +132,8 @@ namespace TptTest.Jobs
         /// <summary>
         ///  Simple test harness for creating a bunch of messages for external testing
         /// </summary>
-        /*[TestMethod]
+        [TestMethod]
+        [Ignore]
         public void GenerateMessages()
         {
             for(int i = 0; i < 100; i++)
@@ -140,7 +141,7 @@ namespace TptTest.Jobs
                 GenerateTaggedTextTest();
                 GenerateTemplateTest();
             }
-        }*/
+        }
 #endif
 
     }
