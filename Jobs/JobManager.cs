@@ -33,7 +33,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// IDS server script runner (injected).
         /// </summary>
-        private readonly ScriptRunner _scriptRunner;
+        private readonly InDesignScriptRunner _scriptRunner;
 
         /// <summary>
         /// Template manager.
@@ -110,7 +110,7 @@ namespace TptMain.Jobs
             ILogger<JobManager> logger,
             IConfiguration configuration,
             TptServiceContext tptServiceContext,
-            ScriptRunner scriptRunner,
+            InDesignScriptRunner scriptRunner,
             TemplateManager templateManager,
             IPreviewJobValidator jobValidator,
             ParatextProjectService paratextProjectService,

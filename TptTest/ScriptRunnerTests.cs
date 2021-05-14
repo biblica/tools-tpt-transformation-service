@@ -34,7 +34,7 @@ namespace TptTest
         /// <summary>
         /// Mock script runner logger.
         /// </summary>
-        private Mock<ILogger<ScriptRunner>> _mockLogger;
+        private Mock<ILogger<InDesignScriptRunner>> _mockLogger;
 
         /// <summary>
         /// Test configuration.
@@ -48,7 +48,7 @@ namespace TptTest
         public void TestSetup()
         {
             // create mocks
-            _mockLogger = new Mock<ILogger<ScriptRunner>>();
+            _mockLogger = new Mock<ILogger<InDesignScriptRunner>>();
 
             // setup for ctor
             IDictionary<string, string> configKeys = new Dictionary<string, string>();
@@ -67,7 +67,7 @@ namespace TptTest
         [TestMethod]
         public void InstantiateTest()
         {
-            new ScriptRunner(
+            new InDesignScriptRunner(
                 _mockLogger.Object,
                 _testConfiguration);
             _testConfiguration.AssertIfNotAllKeysChecked();
@@ -77,7 +77,7 @@ namespace TptTest
         public void TestRunScript()
         {
             // We're mocking the runner only for the InDesign client set up portion. Otherwise, call the base functionality.
-            var scriptRunner = new Mock<ScriptRunner>(_mockLogger.Object, _testConfiguration);
+            var scriptRunner = new Mock<InDesignScriptRunner>(_mockLogger.Object, _testConfiguration);
             scriptRunner.CallBase = true;
 
             // Mock up InDesign client

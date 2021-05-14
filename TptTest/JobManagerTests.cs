@@ -38,7 +38,7 @@ namespace TptTest
         /// <summary>
         /// Mock script runner.
         /// </summary>
-        private Mock<ScriptRunner> _mockScriptRunner;
+        private Mock<InDesignScriptRunner> _mockScriptRunner;
 
         /// <summary>
         /// Mock request factory.
@@ -108,8 +108,8 @@ namespace TptTest
                     .Options);
 
             // mock: script runner
-            var mockScriptRunnerLogger = new Mock<ILogger<ScriptRunner>>();
-            _mockScriptRunner = new Mock<ScriptRunner>(
+            var mockScriptRunnerLogger = new Mock<ILogger<InDesignScriptRunner>>();
+            _mockScriptRunner = new Mock<InDesignScriptRunner>(
                 mockScriptRunnerLogger.Object, _testConfiguration);
 
             // mock: web request factory

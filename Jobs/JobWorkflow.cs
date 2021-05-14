@@ -29,7 +29,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Script runner.
         /// </summary>
-        private readonly ScriptRunner _scriptRunner;
+        private readonly InDesignScriptRunner _scriptRunner;
 
         /// <summary>
         /// Template manager.
@@ -79,7 +79,7 @@ namespace TptMain.Jobs
         public JobWorkflow(
             ILogger<JobManager> logger,
             JobManager jobManager,
-            ScriptRunner scriptRunner,
+            InDesignScriptRunner scriptRunner,
             TemplateManager templateManager,
             IPreviewJobValidator jobValidator,
             ParatextProjectService paratextProjectService,
