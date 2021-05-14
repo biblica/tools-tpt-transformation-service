@@ -41,9 +41,9 @@
         public const string MaxConcurrentJobsKey = "Jobs:MaxConcurrent";
 
         /// <summary>
-        /// InDesign server uri config key.
+        /// InDesign servers section config key.
         /// </summary>
-        public const string IdsUriKey = "InDesign:ServerUri";
+        public const string IdsServersSectionKey = "InDesign:Servers";
 
         /// <summary>
         /// InDesign server request timeout config key.

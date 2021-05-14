@@ -17,14 +17,19 @@ namespace TptMain.InDesign
     public class InDesignScriptRunner
     {
         /// <summary>
-        /// Type-specific logger (injected).
+        /// Logger (injected).
         /// </summary>
-        private readonly ILogger<InDesignScriptRunner> _logger;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// IDS server client (injected).
         /// </summary>
         private readonly ServicePortTypeClient _serviceClient;
+
+        /// <summary>
+        /// IDS configuration.
+        /// </summary>
+        private readonly InDesignServerConfig _serverConfig;
 
         /// <summary>
         /// IDS request timeout in seconds (configured).
@@ -37,19 +42,19 @@ namespace TptMain.InDesign
         private readonly DirectoryInfo _idsPreviewScriptDirectory;
 
         /// <summary>
-        /// Directory where IDTT files are located.
-        /// </summary>
-        private readonly string _idttDocDir;
-
-        /// <summary>
         /// Directory where IDML files are located.
         /// </summary>
-        private readonly string _idmlDocDir;
+        private readonly DirectoryInfo _idmlDocDir;
+
+        /// <summary>
+        /// Directory where IDTT files are located.
+        /// </summary>
+        private readonly DirectoryInfo _idttDocDir;
 
         /// <summary>
         /// Directory where PDF files are output.
         /// </summary>
-        private readonly string _pdfDocDir;
+        private readonly DirectoryInfo _pdfDocDir;
 
         /// <summary>
         /// Default (Document Creation) script file.
@@ -64,32 +69,33 @@ namespace TptMain.InDesign
         /// <summary>
         /// Basic ctor.
         /// </summary>
-        /// <param name="logger">Type-specific logger (required).</param>
-        /// <param name="configuration">System configuration (required).</param>
-        public InDesignScriptRunner(ILogger<InDesignScriptRunner> logger,
-            IConfiguration configuration)
+        /// <param name="logger">Logger (required).</param>
+        /// <param name="serverConfig">InDesign server configuration (required).</param>
+        /// <param name="idsTimeoutInMSec">IDS request timeout in seconds (required).</param>
+        /// <param name="scriptDir">Preview script (JSX) path (required).</param>
+        /// <param name="idmlDocDir">Directory where IDML files are located. (required).</param>
+        /// <param name="idttDocDir">Directory where IDTT files are located. (required).</param>
+        /// <param name="pdfDocDir">Directory where PDF files are output (required).</param>
+        public InDesignScriptRunner(
+            ILogger logger,
+            InDesignServerConfig serverConfig,
+            int idsTimeoutInMSec,
+            DirectoryInfo scriptDir,
+            DirectoryInfo idmlDocDir,
+            DirectoryInfo idttDocDir,
+            DirectoryInfo pdfDocDir
+            )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _serverConfig = serverConfig ?? throw new ArgumentNullException(nameof(serverConfig));
 
-            _idsTimeoutInMSec = (int) TimeSpan.FromSeconds(int.Parse(configuration[ConfigConsts.IdsTimeoutInSecKey]
-                                                                     ?? throw new ArgumentNullException(ConfigConsts
-                                                                         .IdsTimeoutInSecKey)))
-                .TotalMilliseconds;
-            _idsPreviewScriptDirectory = new DirectoryInfo((configuration[ConfigConsts.IdsPreviewScriptDirKey]
-                                                            ?? throw new ArgumentNullException(ConfigConsts
-                                                                .IdsPreviewScriptDirKey)));
-            _idttDocDir = (configuration[ConfigConsts.IdttDocDirKey]
-                           ?? throw new ArgumentNullException(
-                               ConfigConsts.IdsPreviewScriptNameFormatKey));
-            _idmlDocDir = (configuration[ConfigConsts.IdmlDocDirKey]
-                           ?? throw new ArgumentNullException(
-                               ConfigConsts.IdmlDocDirKey));
-            _pdfDocDir = (configuration[ConfigConsts.PdfDocDirKey]
-                          ?? throw new ArgumentNullException(
-                              ConfigConsts.PdfDocDirKey));
+            _idsTimeoutInMSec = idsTimeoutInMSec;
+            _idsPreviewScriptDirectory = scriptDir ?? throw new ArgumentNullException(nameof(scriptDir));
+            _idmlDocDir = idmlDocDir ?? throw new ArgumentNullException(nameof(idmlDocDir));
+            _idttDocDir = idttDocDir ?? throw new ArgumentNullException(nameof(idttDocDir));
+            _pdfDocDir = pdfDocDir ?? throw new ArgumentNullException(nameof(pdfDocDir));
 
-            _serviceClient = SetUpInDesignClient(configuration);
+            _serviceClient = SetUpInDesignClient(serverConfig);
 
             _defaultDocScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
                 "CreateDocument.jsx"));
@@ -97,7 +103,7 @@ namespace TptMain.InDesign
             _defaultBookScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
                 "CreateBook.jsx"));
 
-            _logger.LogDebug("ScriptRunner()");
+            _logger.LogDebug("InDesignScriptRunner()");
         }
 
         /// <summary>
@@ -105,15 +111,15 @@ namespace TptMain.InDesign
         /// </summary>
         /// <param name="configuration">The configuration to aid setting up the Client.</param>
         /// <returns>The instanstiated InDesign server client.</returns>
-        public virtual ServicePortTypeClient SetUpInDesignClient(IConfiguration configuration)
+        public virtual ServicePortTypeClient SetUpInDesignClient(InDesignServerConfig configuration)
         {
             var serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
-                configuration[ConfigConsts.IdsUriKey]
-                ?? throw new ArgumentNullException(ConfigConsts.IdsUriKey));
+                _serverConfig.ServerUri
+                ) ?? throw new ArgumentNullException(nameof(_serverConfig.ServerUri));
 
             serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
-            serviceClient.Endpoint.Binding.ReceiveTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
+            serviceClient.Endpoint.Binding.ReceiveTimeout = serviceClient.Endpoint.Binding.SendTimeout;
 
             return serviceClient;
         }
@@ -245,7 +251,7 @@ namespace TptMain.InDesign
 
             _logger.LogDebug("Creating InDesign Book and PDF");
             IList<IDSPScriptArg> bookScriptArgs = new List<IDSPScriptArg>();
-            AddNewArgToIdsArgs(ref bookScriptArgs, "docPath", _idmlDocDir);
+            AddNewArgToIdsArgs(ref bookScriptArgs, "docPath", _idmlDocDir.FullName);
             AddNewArgToIdsArgs(ref bookScriptArgs, "docPattern", docPattern);
             AddNewArgToIdsArgs(ref bookScriptArgs, "bookPath", bookOutputPath);
             AddNewArgToIdsArgs(ref bookScriptArgs, "pdfPath", pdfOutputPath);

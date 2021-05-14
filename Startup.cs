@@ -39,6 +39,7 @@ namespace TptMain
 
             services.AddSingleton<IPreviewJobValidator, PreviewJobValidator>();
             services.AddSingleton<IJobManager, JobManager>();
+            services.AddSingleton<IPreviewManager, PreviewManager>();
             services.AddSingleton<IProjectManager, ProjectManager>();
 
             services.AddSingleton<InDesignScriptRunner>();

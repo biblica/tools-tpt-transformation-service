@@ -27,9 +27,9 @@ namespace TptMain.Jobs
         private readonly JobManager _jobManager;
 
         /// <summary>
-        /// Script runner.
+        /// Preview Manager.
         /// </summary>
-        private readonly InDesignScriptRunner _scriptRunner;
+        private readonly IPreviewManager _previewManager;
 
         /// <summary>
         /// Template manager.
@@ -71,7 +71,7 @@ namespace TptMain.Jobs
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
         /// <param name="jobManager">Job manager constructing this entry (required).</param>
-        /// <param name="scriptRunner">Script runner for IDS calls (required).</param>
+        /// <param name="previewManager">Preview Manager used to generate PDF/ID previews (required).</param>
         /// <param name="templateManager">Template manager for IDML retrieval (required).</param>
         /// <param name="paratextApi">Paratext API for verifiying user authorization on projects (required).</param>
         /// <param name="paratextProjectService">Paratext Project service for getting information related to local Paratext projects. (required).</param>
@@ -79,7 +79,7 @@ namespace TptMain.Jobs
         public JobWorkflow(
             ILogger<JobManager> logger,
             JobManager jobManager,
-            InDesignScriptRunner scriptRunner,
+            IPreviewManager previewManager,
             TemplateManager templateManager,
             IPreviewJobValidator jobValidator,
             ParatextProjectService paratextProjectService,
@@ -88,7 +88,7 @@ namespace TptMain.Jobs
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
-            _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
+            _previewManager = previewManager ?? throw new ArgumentNullException(nameof(previewManager));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _previewJob = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
             _jobValidator = jobValidator ?? throw new ArgumentNullException(nameof(jobValidator));

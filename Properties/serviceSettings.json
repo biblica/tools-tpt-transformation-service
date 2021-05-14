@@ -13,7 +13,12 @@
     "MaxConcurrent": "1"
   },
   "InDesign": {
-    "ServerUri": "http://localhost:9876/service",
+    "Servers": [
+      {
+        "Name": "IDS Server #1",
+        "ServerUri": "http://localhost:9876/service"
+      }
+    ],
     "TimeoutInSec": "3600",
     "PreviewScriptDirectory": "C:\\Work\\JSX"
   },
