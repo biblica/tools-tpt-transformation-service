@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using TptMain.InDesign;
 using TptMain.Models;
@@ -12,24 +13,15 @@ namespace TptTest
     [TestClass]
     public class ScriptRunnerTests
     {
-        // config keys
-        public const string TEST_IDS_URI_KEY = "InDesign:ServerUri";
-        public const string TEST_IDS_TIMEOUT_KEY = "InDesign:TimeoutInSec";
-        public const string TEST_IDS_PREVIEW_SCRIPT_DIR_KEY = "InDesign:PreviewScriptDirectory";
-        public const string TEST_IDS_PREVIEW_SCRIPT_NAME_FORMAT_KEY = "InDesign:PreviewScriptNameFormat";
-        public const string TEST_IDTT_DOC_DIR_KEY = "Docs:IDTT:Directory";
-        public const string TEST_IDML_DOC_DIR_KEY = "Docs:IDML:Directory";
-        public const string TEST_PDF_DOC_DIR_KEY = "Docs:PDF:Directory";
-        
-
         // config values
         public const string TEST_IDS_URI = "http://172.31.10.90:9876/service";
-        public const string TEST_IDS_TIMEOUT = "600";
+        public const int TEST_IDS_TIMEOUT = 600;
         public const string TEST_IDS_PREVIEW_SCRIPT_DIR = "C:\\Work\\JSX";
         public const string TEST_IDTT_DOC_DIR = "C:\\Work\\IDTT";
         public const string TEST_IDML_DOC_DIR = "C:\\Work\\IDML";
         public const string TEST_PDF_DOC_DIR = "C:\\Work\\PDF";
         
+
 
         /// <summary>
         /// Mock script runner logger.
@@ -37,9 +29,9 @@ namespace TptTest
         private Mock<ILogger<InDesignScriptRunner>> _mockLogger;
 
         /// <summary>
-        /// Test configuration.
+        /// Test IDS configuration.
         /// </summary>
-        private TestConfiguration _testConfiguration;
+        private InDesignServerConfig _testIdsConfig;
 
         /// <summary>
         /// Test setup.
@@ -50,15 +42,11 @@ namespace TptTest
             // create mocks
             _mockLogger = new Mock<ILogger<InDesignScriptRunner>>();
 
-            // setup for ctor
-            IDictionary<string, string> configKeys = new Dictionary<string, string>();
-            configKeys[TEST_IDS_URI_KEY] = TEST_IDS_URI;
-            configKeys[TEST_IDS_TIMEOUT_KEY] = TEST_IDS_TIMEOUT;
-            configKeys[TEST_IDS_PREVIEW_SCRIPT_DIR_KEY] = TEST_IDS_PREVIEW_SCRIPT_DIR;
-            configKeys[TEST_IDTT_DOC_DIR_KEY] = TEST_IDTT_DOC_DIR;
-            configKeys[TEST_IDML_DOC_DIR_KEY] = TEST_IDML_DOC_DIR;
-            configKeys[TEST_PDF_DOC_DIR_KEY] = TEST_PDF_DOC_DIR;
-            _testConfiguration = new TestConfiguration(configKeys);
+            _testIdsConfig = new InDesignServerConfig()
+            {
+                Name = "Chaddington",
+                ServerUri = TEST_IDS_URI
+            };
         }
 
         /// <summary>
@@ -69,15 +57,28 @@ namespace TptTest
         {
             new InDesignScriptRunner(
                 _mockLogger.Object,
-                _testConfiguration);
-            _testConfiguration.AssertIfNotAllKeysChecked();
+                _testIdsConfig,
+                TEST_IDS_TIMEOUT,
+                new DirectoryInfo(TEST_IDS_PREVIEW_SCRIPT_DIR),
+                new DirectoryInfo(TEST_IDML_DOC_DIR),
+                new DirectoryInfo(TEST_IDTT_DOC_DIR),
+                new DirectoryInfo(TEST_PDF_DOC_DIR)
+                );
         }
 
         [TestMethod]
         public void TestRunScript()
         {
             // We're mocking the runner only for the InDesign client set up portion. Otherwise, call the base functionality.
-            var scriptRunner = new Mock<InDesignScriptRunner>(_mockLogger.Object, _testConfiguration);
+            var scriptRunner = new Mock<InDesignScriptRunner>(
+                _mockLogger.Object,
+                _testIdsConfig,
+                TEST_IDS_TIMEOUT,
+                new DirectoryInfo(TEST_IDS_PREVIEW_SCRIPT_DIR),
+                new DirectoryInfo(TEST_IDML_DOC_DIR),
+                new DirectoryInfo(TEST_IDTT_DOC_DIR),
+                new DirectoryInfo(TEST_PDF_DOC_DIR)
+                );
             scriptRunner.CallBase = true;
 
             // Mock up InDesign client
@@ -90,7 +91,7 @@ namespace TptTest
                 .Verifiable();
 
             scriptRunner
-                .Setup(runner => runner.SetUpInDesignClient(_testConfiguration))
+                .Setup(runner => runner.SetUpInDesignClient(_testIdsConfig))
                 .Returns(indesignClient.Object);
 
             scriptRunner.Object.CreatePreview(

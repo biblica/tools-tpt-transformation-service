@@ -61,6 +61,11 @@ namespace TptTest
         private Mock<ParatextProjectService> _mockParatextProjectService;
 
         /// <summary>
+        /// Mock Preview Manager.
+        /// </summary>
+        private Mock<IPreviewManager> _mockPreviewManager;
+
+        /// <summary>
         /// Mock job scheduler.
         /// </summary>
         private Mock<JobScheduler> _mockJobScheduler;
@@ -76,10 +81,6 @@ namespace TptTest
             IDictionary<string, string> configKeys = new Dictionary<string, string>();
 
             // Configuration Parameters
-            // - ScriptRunner
-            configKeys[ScriptRunnerTests.TEST_IDS_URI_KEY] = ScriptRunnerTests.TEST_IDS_URI;
-            configKeys[ScriptRunnerTests.TEST_IDS_TIMEOUT_KEY] = ScriptRunnerTests.TEST_IDS_TIMEOUT;
-            configKeys[ScriptRunnerTests.TEST_IDS_PREVIEW_SCRIPT_DIR_KEY] = ScriptRunnerTests.TEST_IDS_TIMEOUT;
 
             // - TemplateManager
             configKeys[TemplateManagerTests.TEST_TEMPLATE_SERVER_URI_KEY] = TemplateManagerTests.TEST_TEMPLATE_SERVER_URI;
@@ -133,6 +134,9 @@ namespace TptTest
             _mockParatextProjectService = new Mock<ParatextProjectService>(MockBehavior.Strict,
                 _mockParatextProjectServiceLogger.Object, _testConfiguration);
 
+            // mock: preview manager
+            _mockPreviewManager = new Mock<IPreviewManager>();
+
             // mock: job scheduler
             var mockJobSchedulerLogger = new Mock<ILogger<JobScheduler>>();
             _mockJobScheduler = new Mock<JobScheduler>(
@@ -150,7 +154,7 @@ namespace TptTest
                 _mockLogger.Object,
                 _testConfiguration,
                 _context,
-                _mockScriptRunner.Object,
+                _mockPreviewManager.Object,
                 _mockTemplateManager.Object,
                 _mockJobValidator.Object,
                 _mockParatextProjectService.Object,
@@ -174,7 +178,7 @@ namespace TptTest
                     _mockLogger.Object,
                 _testConfiguration,
                 _context,
-                _mockScriptRunner.Object,
+                _mockPreviewManager.Object,
                 _mockTemplateManager.Object,
                 _mockJobValidator.Object,
                 _mockParatextProjectService.Object,
@@ -226,7 +230,7 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockScriptRunner.Object,
+                    _mockPreviewManager.Object,
                     _mockTemplateManager.Object,
                     _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
@@ -278,7 +282,7 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockScriptRunner.Object,
+                    _mockPreviewManager.Object,
                     _mockTemplateManager.Object,
                     _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
@@ -327,7 +331,7 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockScriptRunner.Object,
+                    _mockPreviewManager.Object,
                     _mockTemplateManager.Object,
                     _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
@@ -353,7 +357,7 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockScriptRunner.Object,
+                    _mockPreviewManager.Object,
                     _mockTemplateManager.Object,
                     _mockJobValidator.Object,
                     _mockParatextProjectService.Object,

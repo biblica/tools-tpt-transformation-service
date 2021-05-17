@@ -94,11 +94,45 @@ namespace TptMain.Jobs
         }
 
         /// <summary>
-        /// TODO: delete
+        /// Process a preview job.
         /// </summary>
-        public void Test()
+        /// <param name="previewJob">Preview job to process (required).</param>
+        public void ProcessJob(ref PreviewJob previewJob)
         {
+            // pass along to the functional overloaded function.
+            ProcessJob(ref previewJob, null);
+        }
 
+        /// <summary>
+        /// Process a preview job.
+        /// </summary>
+        /// <param name="previewJob">Preview job to process (required).</param>
+        /// <param name="additionalPreviewParams">Additional preview job params (optional).</param>
+        public void ProcessJob(ref PreviewJob previewJob, AdditionalPreviewParameters additionalPreviewParams)
+        {
+            // validate inputs
+            _ = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
+
+            previewJob.State = PreviewJobState.GeneratingPreview;
+        }
+
+        /// <summary>
+        /// Query the status of the PreviewJob and update the job itself appropriately.
+        /// </summary>
+        /// <param name="previewJob">The PreviewJob to query the status of.</param>
+        public void GetStatus(ref PreviewJob previewJob)
+        {
+            throw new NotSupportedException();
+        }
+
+        /// <summary>
+        /// Initiate the cancellation of a PreviewJob.
+        /// </summary>
+        /// <param name="previewJob">The PreviewJob to cancel.</param>
+        public void CancelJob(ref PreviewJob previewJob)
+        {
+            _logger.LogInformation($"Preview job '{previewJob.Id}' has been cancelled.");
+            previewJob.State = PreviewJobState.Cancelled;
         }
 
         /// <summary>

@@ -110,7 +110,7 @@ namespace TptMain.Jobs
             ILogger<JobManager> logger,
             IConfiguration configuration,
             TptServiceContext tptServiceContext,
-            PreviewManager previewManager,
+            IPreviewManager previewManager,
             TemplateManager templateManager,
             IPreviewJobValidator jobValidator,
             ParatextProjectService paratextProjectService,

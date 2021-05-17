@@ -49,7 +49,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Preview job.
         /// </summary>
-        private readonly PreviewJob _previewJob;
+        private PreviewJob _previewJob;
 
         /// <summary>
         /// Cancellation token, for aborting jobs in progress.
@@ -157,9 +157,8 @@ namespace TptMain.Jobs
 
                 if (!IsJobCanceled)
                 {
-                    _scriptRunner.CreatePreview(_previewJob,
-                        additionalParams,
-                        _cancellationTokenSource.Token);
+                    _previewManager.ProcessJob(ref _previewJob,
+                        additionalParams);
                 }
 
                 _logger.LogInformation($"Job finished: {_previewJob.Id}.");
@@ -196,6 +195,7 @@ namespace TptMain.Jobs
             {
                 _logger.LogInformation($"Canceling job: {_previewJob.Id}");
                 _cancellationTokenSource.Cancel();
+                _previewManager.CancelJob(ref _previewJob);
                 _logger.LogInformation($"Job canceled: {_previewJob.Id}");
             }
             catch (OperationCanceledException ex)

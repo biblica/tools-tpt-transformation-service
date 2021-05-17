@@ -24,23 +24,16 @@ namespace TptMain.Controllers
         private readonly IJobManager _jobManager;
 
         /// <summary>
-        /// TODO remove
-        /// </summary>
-        private readonly IPreviewManager _previewManager;
-
-        /// <summary>
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Logger (required).</param>
         /// <param name="jobManager">Job manager (required).</param>
         public PreviewJobsController(
             ILogger<PreviewJobsController> logger,
-            IJobManager jobManager,
-            IPreviewManager previewManager)
+            IJobManager jobManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
-            _previewManager = previewManager ?? throw new ArgumentNullException(nameof(previewManager));
 
             _logger.LogDebug("PreviewJobsController()");
         }
@@ -75,19 +68,6 @@ namespace TptMain.Controllers
                 return BadRequest();
             }
             return CreatedAtAction("GetPreviewJob", new { jobId = outputJob.Id }, outputJob);
-        }
-
-        /// <summary>
-        /// POST (create) resource for preview jobs.
-        /// </summary>
-        /// <param name="previewJob">Preview job (required).</param>
-        /// <returns>Saved preview job if created, error otherwise.</returns>
-        [HttpPost("{jobId}")]
-        public ActionResult<PreviewJob> Test(PreviewJob previewJob)
-        {
-            _logger.LogInformation($"Test() - previewJob.Id={previewJob.Id}.");
-            _previewManager.Test();
-            return previewJob;
         }
 
         /// <summary>
