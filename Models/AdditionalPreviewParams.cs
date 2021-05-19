@@ -5,7 +5,7 @@ namespace TptMain.Models
     /// <summary>
     /// Model for tracking parameters derived from Paratext project settings.
     /// </summary>
-    public class AdditionalPreviewParameters
+    public class AdditionalPreviewParams
     {
         /// <summary>
         /// Project's custom footnote markers.

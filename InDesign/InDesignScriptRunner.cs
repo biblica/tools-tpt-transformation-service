@@ -128,11 +128,9 @@ namespace TptMain.InDesign
         /// Execute typesetting preview generation synchronously, with optional cancellation.
         /// </summary>
         /// <param name="inputJob">Input preview job (required).</param>
-        /// <param name="additionalParams">Additional params used by the preview job (required).</param>
         /// <param name="cancellationToken">Cancellation token (optional, may be null).</param>
         public virtual void CreatePreview(
             PreviewJob inputJob,
-            AdditionalPreviewParameters additionalParams,
             CancellationToken? cancellationToken)
         {
             _logger.LogDebug($"CreatePreview() - inputJob.Id={inputJob.Id}.");
@@ -150,14 +148,14 @@ namespace TptMain.InDesign
             var txtFiles = GetTaggedTextFiles(txtDir);
 
             // Build custom footnotes into a CSV string, eg "a,d,e,ñ,h,Ä".
-            var customFootnotes = additionalParams.CustomFootnoteMarkers != null ? String.Join(',', additionalParams.CustomFootnoteMarkers) : null;
+            var customFootnotes = inputJob.AdditionalParams.CustomFootnoteMarkers != null ? String.Join(',', inputJob.AdditionalParams.CustomFootnoteMarkers) : null;
 
             // Create the InDesign Documents (IDTT files)
             _logger.LogDebug("Creating InDesign Documents");
             foreach (var txtFile in txtFiles)
             {
                 ct.ThrowIfCancellationRequested();
-                CreateDocument(jobId, txtFile, additionalParams.OverrideFont, customFootnotes, additionalParams.TextDirection);
+                CreateDocument(jobId, txtFile, inputJob.AdditionalParams.OverrideFont, customFootnotes, inputJob.AdditionalParams.TextDirection);
             }
 
             _logger.LogDebug("Finished creating InDesign Documents");

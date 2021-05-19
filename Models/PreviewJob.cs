@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace TptMain.Models
@@ -97,14 +98,20 @@ namespace TptMain.Models
         public string ErrorDetail { get; private set; }
 
         /// <summary>
-        /// Which Bible books to include
+        /// Which Bible books to include.
         /// </summary>
         public BibleSelectionParams BibleSelectionParams { get; set; } = new BibleSelectionParams();
 
         /// <summary>
-        /// Parameters to use for the typesetting preview
+        /// Parameters to use for the typesetting preview.
         /// </summary>
         public TypesettingParams TypesettingParams { get; set; } = new TypesettingParams();
+
+        /// <summary>
+        /// Additional parameters that are needed and calculated.
+        /// </summary>
+        [NotMapped]
+        public AdditionalPreviewParams AdditionalParams { get; set; } = new AdditionalPreviewParams();
 
         /// <summary>
         /// Function used for indicating an error occurred and provide a message for the reason.

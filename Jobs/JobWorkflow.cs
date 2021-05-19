@@ -115,35 +115,32 @@ namespace TptMain.Jobs
                     _jobValidator.ValidatePreviewJob(_previewJob);
                 }
 
-                // Track derived parameters that we'll pass on to InDesign
-                var additionalParams = new AdditionalPreviewParameters() {
-                    TextDirection = _paratextProjectService.GetTextDirection(_previewJob.BibleSelectionParams.ProjectName)
-                };
+                _previewJob.AdditionalParams.TextDirection = _paratextProjectService.GetTextDirection(_previewJob.BibleSelectionParams.ProjectName);
 
                 // Grab the project's footnote markers if configured to do so.
                 if (!IsJobCanceled && _previewJob.TypesettingParams.UseCustomFootnotes)
                 {
-                    additionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.BibleSelectionParams.ProjectName);
+                    _previewJob.AdditionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.BibleSelectionParams.ProjectName);
                     // Throw an error, if custom footnotes are requested but are not available.
                     // This allows us to set the user's expectations early, rather than waiting
                     // for a preview.
-                    if (additionalParams.CustomFootnoteMarkers == null || additionalParams.CustomFootnoteMarkers.Length == 0)
+                    if (_previewJob.AdditionalParams.CustomFootnoteMarkers == null || _previewJob.AdditionalParams.CustomFootnoteMarkers.Length == 0)
                     {
                         throw new PreviewJobException(_previewJob, "Custom footnotes requested, but aren't specified in the project.");
                     }
 
-                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", additionalParams.CustomFootnoteMarkers));
+                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", _previewJob.AdditionalParams.CustomFootnoteMarkers));
                 }
 
                 // If we're using the project font (rather than what's in the IDML) pass it as an override.
                 if (!IsJobCanceled && _previewJob.TypesettingParams.UseProjectFont)
                 {
-                    additionalParams.OverrideFont = _paratextProjectService.GetProjectFont(_previewJob.BibleSelectionParams.ProjectName);
+                    _previewJob.AdditionalParams.OverrideFont = _paratextProjectService.GetProjectFont(_previewJob.BibleSelectionParams.ProjectName);
 
-                    if (String.IsNullOrEmpty(additionalParams.OverrideFont))
+                    if (String.IsNullOrEmpty(_previewJob.AdditionalParams.OverrideFont))
                     {
                         _logger.LogInformation($"No font specified for project {_previewJob.BibleSelectionParams.ProjectName}. IDML font settings will not be modified.");
-                        additionalParams.OverrideFont = null;
+                        _previewJob.AdditionalParams.OverrideFont = null;
                     }
                 }
 
@@ -157,8 +154,7 @@ namespace TptMain.Jobs
 
                 if (!IsJobCanceled)
                 {
-                    _previewManager.ProcessJob(ref _previewJob,
-                        additionalParams);
+                    _previewManager.ProcessJob(_previewJob);
                 }
 
                 _logger.LogInformation($"Job finished: {_previewJob.Id}.");
@@ -195,7 +191,7 @@ namespace TptMain.Jobs
             {
                 _logger.LogInformation($"Canceling job: {_previewJob.Id}");
                 _cancellationTokenSource.Cancel();
-                _previewManager.CancelJob(ref _previewJob);
+                _previewManager.CancelJob(_previewJob);
                 _logger.LogInformation($"Job canceled: {_previewJob.Id}");
             }
             catch (OperationCanceledException ex)

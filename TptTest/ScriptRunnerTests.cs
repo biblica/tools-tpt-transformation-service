@@ -100,12 +100,12 @@ namespace TptTest
                     BibleSelectionParams = new BibleSelectionParams
                     {
                         ProjectName = ""
+                    },
+                    AdditionalParams = new AdditionalPreviewParams()
+                    {
+                        CustomFootnoteMarkers = "abcdef".Split(),
+                        OverrideFont = "A New Font"
                     }
-                },
-                new AdditionalPreviewParameters()
-                {
-                    CustomFootnoteMarkers = "abcdef".Split(),
-                    OverrideFont = "A New Font"
                 },
                 null
             );
