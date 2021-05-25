@@ -15,8 +15,12 @@
   "InDesign": {
     "Servers": [
       {
-        "Name": "IDS Server #1",
+        "Name": "IDS Server #1 (Port: 9876)",
         "ServerUri": "http://localhost:9876/service"
+      },
+      {
+        "Name": "IDS Server #2 (Port: 9877)",
+        "ServerUri": "http://localhost:9877/service"
       }
     ],
     "TimeoutInSec": "3600",

@@ -67,6 +67,11 @@ namespace TptMain.Jobs
         public CancellationTokenSource CancellationTokenSource => _cancellationTokenSource;
 
         /// <summary>
+        /// The time to wait between checking the status of a preview generation.
+        /// </summary>
+        public const int PREVIEW_CHECK_POLLING_PERIOD_IN_MS = 30 * 1000;
+
+        /// <summary>
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
@@ -155,10 +160,17 @@ namespace TptMain.Jobs
                 if (!IsJobCanceled)
                 {
                     _previewManager.ProcessJob(_previewJob);
+
+                    // check if we've hit any terminal state
+                    while (!IsJobCanceled && 
+                        !(_previewJob.State == PreviewJobState.PreviewGenerated || _previewJob.State == PreviewJobState.Error || _previewJob.State == PreviewJobState.Cancelled))
+                    {
+                        Thread.Sleep(PREVIEW_CHECK_POLLING_PERIOD_IN_MS);
+                        _previewManager.GetStatus(_previewJob);
+                    }
                 }
 
                 _logger.LogInformation($"Job finished: {_previewJob.Id}.");
-                _previewJob.State = PreviewJobState.PreviewGenerated;
             }
             catch (OperationCanceledException ex)
             {
@@ -190,8 +202,8 @@ namespace TptMain.Jobs
             try
             {
                 _logger.LogInformation($"Canceling job: {_previewJob.Id}");
-                _cancellationTokenSource.Cancel();
                 _previewManager.CancelJob(_previewJob);
+                _cancellationTokenSource.Cancel();
                 _logger.LogInformation($"Job canceled: {_previewJob.Id}");
             }
             catch (OperationCanceledException ex)

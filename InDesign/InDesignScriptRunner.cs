@@ -32,6 +32,11 @@ namespace TptMain.InDesign
         private readonly InDesignServerConfig _serverConfig;
 
         /// <summary>
+        /// Returns the name of the InDesign server configuration name.
+        /// </summary>
+        public string Name => _serverConfig.Name;
+
+        /// <summary>
         /// IDS request timeout in seconds (configured).
         /// </summary>
         private readonly int _idsTimeoutInMSec;

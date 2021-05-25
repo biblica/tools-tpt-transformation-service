@@ -1,12 +1,10 @@
-﻿using InDesignServer;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TptMain.InDesign;
@@ -60,7 +58,10 @@ namespace TptMain.Jobs
         /// </summary>
         private Dictionary<InDesignScriptRunner, Task> IdsTaskMap { get; } = new Dictionary<InDesignScriptRunner, Task>();
 
-        // TODO add map for cancellation tokens
+        /// <summary>
+        /// The map for cancellation token sources by jobs.
+        /// </summary>
+        private Dictionary<PreviewJob, CancellationTokenSource> CancellationSourceMap { get; } = new Dictionary<PreviewJob, CancellationTokenSource>();
 
         /// <summary>
         /// This FIFO collection tracks the order in which <code>PreviewJob</code>s came in so that they're processed in-order.
@@ -91,7 +92,7 @@ namespace TptMain.Jobs
                                                                 .IdsPreviewScriptDirKey)));
             _idttDocDir = new DirectoryInfo(configuration[ConfigConsts.IdttDocDirKey]
                            ?? throw new ArgumentNullException(
-                               ConfigConsts.IdsPreviewScriptNameFormatKey));
+                               ConfigConsts.IdttDocDirKey));
             _idmlDocDir = new DirectoryInfo(configuration[ConfigConsts.IdmlDocDirKey]
                            ?? throw new ArgumentNullException(
                                ConfigConsts.IdmlDocDirKey));
@@ -118,6 +119,8 @@ namespace TptMain.Jobs
 
             // put the job on the queue for processing
             JobQueue.Enqueue(previewJob);
+
+            CheckPreviewProcessing();
         }
 
         /// <summary>
@@ -125,13 +128,12 @@ namespace TptMain.Jobs
         /// </summary>
         private void CheckPreviewProcessing()
         {
-            // Get an available runner
-            InDesignScriptRunner availableRunner;
-            while ((availableRunner = GetAvailableRunner()) != null && JobQueue.Count > 0)
-            {
-                // hold on to the ability to cancel the task
-                var  tokenSource = new CancellationTokenSource();
+            _logger.LogInformation("Checking and updating preview processing...");
 
+            // Keep queuing jobs while we have a runner and jobs available.
+            InDesignScriptRunner availableRunner = GetAvailableRunner();
+            while (availableRunner != null && !JobQueue.IsEmpty)
+            {
                 // grab the next prioritized preview job
                 if (!JobQueue.TryDequeue(out var previewJob))
                 {
@@ -139,21 +141,38 @@ namespace TptMain.Jobs
                     return;
                 }
 
+                // hold on to the ability to cancel the task
+                var tokenSource = new CancellationTokenSource();
+
+                // track the token so that we can support job cancellation requests
+                CancellationSourceMap.TryAdd(previewJob, tokenSource);
+
+                // we copy the reference of the chosen runner, otherwise the task may run with an unexpected runner due to looping
+                var taskRunner = availableRunner;
                 var task = new Task(() =>
                 {
-                    var runner = availableRunner;
+                    _logger.LogDebug($"Assigning preview generation job '{previewJob.Id}' to IDS runner '{taskRunner.Name}'.");
+                    var runner = taskRunner;
 
                     previewJob.State = PreviewJobState.GeneratingPreview;
 
                     try
                     {
-                        runner.CreatePreview(previewJob, null);
+                        runner.CreatePreview(previewJob, tokenSource.Token);
+                        previewJob.State = PreviewJobState.PreviewGenerated;
                     }
                     catch (Exception ex)
                     {
                         previewJob.SetError("An error occurred while generating preview.", ex.Message);
                     }
                 }, tokenSource.Token);
+
+                IdsTaskMap.TryAdd(taskRunner, task);
+
+                task.Start();
+
+                // check to see if there's a still a runner available for the next job
+                availableRunner = GetAvailableRunner();
             }
         }
 
@@ -163,7 +182,7 @@ namespace TptMain.Jobs
         /// <param name="previewJob">The PreviewJob to query the status of.</param>
         public void GetStatus(PreviewJob previewJob)
         {
-            throw new NotSupportedException();
+            CheckPreviewProcessing();
         }
 
         /// <summary>
@@ -172,8 +191,15 @@ namespace TptMain.Jobs
         /// <param name="previewJob">The PreviewJob to cancel.</param>
         public void CancelJob(PreviewJob previewJob)
         {
-            _logger.LogInformation($"Preview job '{previewJob.Id}' has been cancelled.");
-            previewJob.State = PreviewJobState.Cancelled;
+            if (CancellationSourceMap.TryGetValue(previewJob, out var cancellationTokenSource))
+            {
+                cancellationTokenSource.Cancel();
+                _logger.LogInformation($"Preview job '{previewJob.Id}' has been cancelled.");
+                previewJob.State = PreviewJobState.Cancelled;
+            } else
+            {
+                _logger.LogWarning($"Preview job '{previewJob.Id}' has no running task to cancel.");
+            }
         }
 
         /// <summary>
@@ -185,12 +211,23 @@ namespace TptMain.Jobs
             InDesignScriptRunner availableRunner = null;
 
             IndesignScriptRunners.ForEach((idsRunner) => {
-                var isSuccess = IdsTaskMap.TryGetValue(idsRunner, out var task);
+                _logger.LogDebug($"Assessing '{idsRunner.Name}' for availability.") ;
 
-                // track if there's any actively running task
-                if (task == null || task.IsCompleted)
+                // break out if we've found a runner already
+                if (availableRunner == null)
                 {
-                    availableRunner = idsRunner;
+                    // determine if we have any running tasks for the selected runner
+                    var isSuccess = IdsTaskMap.TryGetValue(idsRunner, out var task);
+
+                    // track if there's any actively running task
+                    if (task == null || task.IsCompleted)
+                    {
+                        availableRunner = idsRunner;
+                    }
+                    else
+                    {
+                        _logger.LogDebug($"'{idsRunner.Name}' is currently running a task in state '${task.Status}'.");
+                    }
                 }
             });
 
@@ -213,6 +250,8 @@ namespace TptMain.Jobs
             {
                 throw new ArgumentException($"No server configurations were found in the configuration section '{ConfigConsts.IdsServersSectionKey}'");
             }
+
+            _logger.LogDebug($"{serverConfigs.Count} InDesign Server configurations found. \r\n" + JsonConvert.SerializeObject(serverConfigs));
 
             foreach(var config in serverConfigs)
             {

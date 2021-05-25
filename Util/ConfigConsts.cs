@@ -56,11 +56,6 @@
         public const string IdsPreviewScriptDirKey = "InDesign:PreviewScriptDirectory";
 
         /// <summary>
-        /// InDesign server preview script name format config key.
-        /// </summary>
-        public const string IdsPreviewScriptNameFormatKey = "InDesign:PreviewScriptNameFormat";
-
-        /// <summary>
         /// Paratext Server URI param key.
         /// </summary>
         public const string ParatextApiServerUriKey = "Paratext:API:ServerUri";
