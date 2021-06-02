@@ -180,7 +180,7 @@ namespace TptMain.Jobs
         /// </summary>
         /// <param name="previewJobId">The preview job id</param>
         /// <returns>TransformJobStatus based on the state of the S3 bucket</returns>
-        public TransformJobStatus GetTransformJobStatus(string previewJobId)
+        public virtual TransformJobStatus GetTransformJobStatus(string previewJobId)
         {
 
             // First, look for the job directory

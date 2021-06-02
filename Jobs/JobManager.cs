@@ -298,10 +298,7 @@ namespace TptMain.Jobs
             previewJob.Id = Guid.NewGuid().ToString();
             previewJob.BibleSelectionParams.Id = Guid.NewGuid().ToString();
             previewJob.TypesettingParams.Id = Guid.NewGuid().ToString();
-            previewJob.DateSubmitted = DateTime.UtcNow;
-            previewJob.DateStarted = null;
-            previewJob.DateCompleted = null;
-            previewJob.DateCancelled = null;
+            previewJob.State.Add(new PreviewJobState(JobStateEnum.Submitted));
 
             // project defaults
             previewJob.TypesettingParams.FontSizeInPts ??= MainConsts.ALLOWED_FONT_SIZE_IN_PTS.Default;

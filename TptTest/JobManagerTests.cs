@@ -258,8 +258,10 @@ namespace TptTest
             Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob2, out var outputJob2));
 
             // set the job's completed time to be before the threshold for deletion.
-            outputJob2.DateCompleted = DateTime.Now.AddSeconds(Int32.Parse(TestConsts.TEST_DOC_MAX_AGE_IN_SEC) * -2);
-
+            outputJob2.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated, 
+                JobStateSourceEnum.GeneralManagement,
+                DateTime.Now.AddSeconds(Int32.Parse(TestConsts.TEST_DOC_MAX_AGE_IN_SEC) * -2)));
+            
             // allow enough time for the check scheduled job to execute
             Thread.Sleep((int)(MainConsts.TIMER_STARTUP_DELAY_IN_SEC + (2 * MainConsts.MAX_AGE_CHECK_DIVISOR)) * 1000);
 
