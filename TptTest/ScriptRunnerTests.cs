@@ -44,7 +44,7 @@ namespace TptTest
 
             _testIdsConfig = new InDesignServerConfig()
             {
-                Name = "Chaddington",
+                Name = "Arbitrary InDesign Server Name",
                 ServerUri = TEST_IDS_URI
             };
         }
@@ -91,7 +91,7 @@ namespace TptTest
                 .Verifiable();
 
             scriptRunner
-                .Setup(runner => runner.SetUpInDesignClient(_testIdsConfig))
+                .Setup(runner => runner.SetUpInDesignClient())
                 .Returns(indesignClient.Object);
 
             scriptRunner.Object.CreatePreview(

@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using TptMain.Models;
+﻿using TptMain.Models;
 
 namespace TptMain.Jobs
 {

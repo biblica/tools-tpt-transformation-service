@@ -100,7 +100,7 @@ namespace TptMain.InDesign
             _idttDocDir = idttDocDir ?? throw new ArgumentNullException(nameof(idttDocDir));
             _pdfDocDir = pdfDocDir ?? throw new ArgumentNullException(nameof(pdfDocDir));
 
-            _serviceClient = SetUpInDesignClient(serverConfig);
+            _serviceClient = SetUpInDesignClient();
 
             _defaultDocScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
                 "CreateDocument.jsx"));
@@ -114,9 +114,8 @@ namespace TptMain.InDesign
         /// <summary>
         /// This function sets up the InDesign server client.
         /// </summary>
-        /// <param name="configuration">The configuration to aid setting up the Client.</param>
         /// <returns>The instanstiated InDesign server client.</returns>
-        public virtual ServicePortTypeClient SetUpInDesignClient(InDesignServerConfig configuration)
+        public virtual ServicePortTypeClient SetUpInDesignClient()
         {
             var serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,

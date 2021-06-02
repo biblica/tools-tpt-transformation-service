@@ -1,8 +1,4 @@
-﻿using InDesignServer;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-namespace TptMain.Jobs
+﻿namespace TptMain.Jobs
 {
     /// <summary>
     /// Preview Manager interface.
