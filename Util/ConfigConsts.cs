@@ -80,5 +80,15 @@
         /// </summary>
         public const string ParatextApiAllowedMemberRolesKey = "Paratext:API:AllowedMemberRoles";
 
+        /// <summary>
+        /// Template generation timeout config key.
+        /// </summary>
+        public const string TemplateGenerationTimeoutInSecKey = "Job:Template:TimeoutInSec";
+
+        /// <summary>
+        /// TaggedText generation timeout config key.
+        /// </summary>
+        public const string TaggedTextGenerationTimeoutInSecKey = "Job:TaggedText:TimeoutInSec";
+
     }
 }

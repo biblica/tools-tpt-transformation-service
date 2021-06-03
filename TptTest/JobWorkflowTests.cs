@@ -287,7 +287,7 @@ namespace TptTest
             _mockPreviewManager.Setup(runnerItem =>
                     runnerItem.CancelJob(testPreviewJob))
                 .Callback<PreviewJob>((previewItem) => {
-                    previewItem.State = PreviewJobState.Cancelled;
+                    previewItem.State.Add(new PreviewJobState(JobStateEnum.Cancelled));
                 })
                 .Verifiable();
             _mockJobManager.Setup(managerItem =>

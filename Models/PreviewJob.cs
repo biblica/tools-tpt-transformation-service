@@ -1,26 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace TptMain.Models
 {
-    /// <summary>
-    /// Represents the possible states of a Preview Job
-    /// </summary>
-    public enum PreviewJobState
-    {
-        Submitted,
-        Started,
-        GeneratingTemplate,
-        TemplateGenerated,
-        GeneratingTaggedText,
-        TaggedTextGenerated,
-        GeneratingPreview,
-        PreviewGenerated,
-        Cancelled,
-        Error
-    }
-    
     /// <summary>
     /// Model for tracking Typesetting Preview jobs.
     /// </summary>
@@ -34,22 +18,74 @@ namespace TptMain.Models
         /// <summary>
         /// The <c>DateTime</c> a job was submitted.
         /// </summary>
-        public DateTime? DateSubmitted { get; set; }
+        public DateTime? DateSubmitted
+        {
+            get
+            {
+                this.State.Sort();
+                PreviewJobState previewJobState = this.State.FindLast(
+                   (previewJobState) =>
+                    {
+                        return previewJobState.State == JobStateEnum.Submitted;
+                    }
+                );
+                return previewJobState != null ? previewJobState.DateSubmitted : null;
+            }
+        }
 
         /// <summary>
         /// The <c>DateTime</c> a job actually started execution.
         /// </summary>
-        public DateTime? DateStarted { get; set; }
+        public DateTime? DateStarted
+        {
+            get
+            {
+                this.State.Sort();
+                PreviewJobState previewJobState = this.State.FindLast(
+                   (previewJobState) =>
+                   {
+                       return previewJobState.State == JobStateEnum.Started;
+                   }
+                );
+                return previewJobState != null ? previewJobState.DateSubmitted : null;
+            }
+        }
 
         /// <summary>
         /// The <c>DateTime</c> a job was completed/
         /// </summary>
-        public DateTime? DateCompleted { get; set; }
+        public DateTime? DateCompleted
+        {
+            get
+            {
+                this.State.Sort();
+                PreviewJobState previewJobState = this.State.FindLast(
+                   (previewJobState) =>
+                   {
+                       return previewJobState.State == JobStateEnum.PreviewGenerated;
+                   }
+                );
+                return previewJobState != null ? previewJobState.DateSubmitted : null;
+            }
+        }
 
         /// <summary>
         /// The <c>DateTime</c> a job was cancelled.
         /// </summary>
-        public DateTime? DateCancelled { get; set; }
+        public DateTime? DateCancelled
+        {
+            get
+            {
+                this.State.Sort();
+                PreviewJobState previewJobState = this.State.FindLast(
+                    delegate (PreviewJobState previewJobState)
+                    {
+                        return previewJobState.State == JobStateEnum.Cancelled;
+                    }
+                );
+                return previewJobState != null ? previewJobState.DateSubmitted : null;
+            }
+        }
 
         /// <summary>
         /// The user requesting the job.
@@ -59,33 +95,36 @@ namespace TptMain.Models
         /// <summary>
         /// Whether the job was submitted or not.
         /// </summary>
-        public bool IsSubmitted => this.DateSubmitted != null;
+        public bool IsSubmitted => this.State.Contains(new PreviewJobState(JobStateEnum.Submitted));
 
         /// <summary>
         /// Whether or not the job has started execution or not.
         /// </summary>
-        public bool IsStarted => this.DateStarted != null;
+        public bool IsStarted => this.State.Contains(new PreviewJobState(JobStateEnum.Started));
 
         /// <summary>
         /// Whether the job has been completed or not.
         /// </summary>
-        public bool IsCompleted => this.DateCompleted != null;
+        public bool IsCompleted => this.State.Contains(new PreviewJobState(JobStateEnum.PreviewGenerated));
 
         /// <summary>
         ///  Whether the job has been cancelled or not.
         /// </summary>
-        public bool IsCancelled => this.DateCancelled != null;
+        public bool IsCancelled => this.State.Contains(new PreviewJobState(JobStateEnum.Cancelled));
 
         /// <summary>
         /// Whether or not there was an error during job execution.
         /// </summary>
-        public bool IsError => this.State.Equals(PreviewJobState.Error);
+        public bool IsError => this.State.Contains(new PreviewJobState(JobStateEnum.Error));
 
         /// <summary>
-        /// The current state of the Preview Job
+        /// The set of all states of the Preview Job over time
         /// </summary>
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public PreviewJobState State { get; set; } = PreviewJobState.Submitted;
+        public List<PreviewJobState> State { get; set; } = new List<PreviewJobState> {
+            // Instert a default job state that's populated with the
+            // right values for a first state in the list
+            new PreviewJobState(JobStateEnum.Submitted, JobStateSourceEnum.GeneralManagement)
+        };
 
         /// <summary>
         /// User-friendly message regarding the error; <c>null</c> otherwise.
@@ -124,7 +163,7 @@ namespace TptMain.Models
             this.ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
             this.ErrorDetail = errorDetail ?? throw new ArgumentNullException(nameof(errorDetail));
 
-            this.State = PreviewJobState.Error;
+            this.State.Add(new PreviewJobState(JobStateEnum.Error));
         }
     }
 }

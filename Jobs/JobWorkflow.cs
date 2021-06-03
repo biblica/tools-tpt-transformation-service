@@ -111,8 +111,7 @@ namespace TptMain.Jobs
             try
             {
                 _logger.LogInformation($"Job started: {_previewJob.Id}");
-                _previewJob.DateStarted = DateTime.UtcNow;
-                _previewJob.State = PreviewJobState.Started;
+                _previewJob.State.Add(new PreviewJobState(JobStateEnum.Started));
                 _jobManager.TryUpdateJob(_previewJob);
 
                 if (!IsJobCanceled)
@@ -163,7 +162,7 @@ namespace TptMain.Jobs
 
                     // check if we've hit any terminal state
                     while (!IsJobCanceled && 
-                        !(_previewJob.State == PreviewJobState.PreviewGenerated || _previewJob.State == PreviewJobState.Error || _previewJob.State == PreviewJobState.Cancelled))
+                        !(_previewJob.IsCompleted || _previewJob.IsError || _previewJob.IsCancelled ))
                     {
                         Thread.Sleep(PREVIEW_CHECK_POLLING_PERIOD_IN_MS);
                         _previewManager.GetStatus(_previewJob);
@@ -175,7 +174,7 @@ namespace TptMain.Jobs
             catch (OperationCanceledException ex)
             {
                 _logger.LogDebug(ex, $"Can't run job: {_previewJob.Id} (cancelled, ignoring).");
-                _previewJob.State = PreviewJobState.Cancelled;
+                _previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled));
             }
             catch (PreviewJobException ex)
             {
@@ -189,7 +188,7 @@ namespace TptMain.Jobs
             }
             finally
             {
-                _previewJob.DateCompleted = DateTime.UtcNow;
+                _previewJob.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated));
                 _jobManager.TryUpdateJob(_previewJob);
             }
         }
@@ -216,8 +215,7 @@ namespace TptMain.Jobs
             }
             finally
             {
-                _previewJob.DateCancelled = DateTime.UtcNow;
-                _previewJob.State = PreviewJobState.Cancelled;
+                _previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled));
                 _jobManager.TryUpdateJob(_previewJob);
             }
         }

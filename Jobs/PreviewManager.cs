@@ -154,12 +154,12 @@ namespace TptMain.Jobs
                     _logger.LogDebug($"Assigning preview generation job '{previewJob.Id}' to IDS runner '{taskRunner.Name}'.");
                     var runner = taskRunner;
 
-                    previewJob.State = PreviewJobState.GeneratingPreview;
+                    previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingPreview, JobStateSourceEnum.PreviewGeneration));
 
                     try
                     {
                         runner.CreatePreview(previewJob, tokenSource.Token);
-                        previewJob.State = PreviewJobState.PreviewGenerated;
+                        previewJob.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated, JobStateSourceEnum.PreviewGeneration));
                     }
                     catch (Exception ex)
                     {
@@ -195,7 +195,7 @@ namespace TptMain.Jobs
             {
                 cancellationTokenSource.Cancel();
                 _logger.LogInformation($"Preview job '{previewJob.Id}' has been cancelled.");
-                previewJob.State = PreviewJobState.Cancelled;
+                previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled, JobStateSourceEnum.PreviewGeneration));
             } else
             {
                 _logger.LogWarning($"Preview job '{previewJob.Id}' has no running task to cancel.");
