@@ -39,15 +39,20 @@ namespace TptMain
 
             services.AddSingleton<IPreviewJobValidator, PreviewJobValidator>();
             services.AddSingleton<IJobManager, JobManager>();
+            services.AddSingleton<IPreviewManager, PreviewManager>();
             services.AddSingleton<IProjectManager, ProjectManager>();
 
-            services.AddSingleton<ScriptRunner>();
+            services.AddSingleton<InDesignScriptRunner>();
             services.AddSingleton<ParatextApi>();
             services.AddSingleton<ParatextProjectService>();
             services.AddSingleton<JobScheduler>();
             services.AddSingleton<TemplateManager>();
             services.AddSingleton<WebRequestFactory>();
 
+            services.AddSingleton<TransformService>();
+
+            services.AddSingleton<TaggedTextJobManager>();
+            services.AddSingleton<TemplateJobManager>();
 
             services.AddControllers();
         }

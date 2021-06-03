@@ -40,7 +40,7 @@ namespace TptMain
                     foreach (PreviewJob previewJob in previewJobs)
                     {
                         previewJob.SetError("An internal server error occurred.", "Unrecoverable. The system restarted while the job was in progress.");
-                        previewJob.DateCompleted = DateTime.UtcNow;
+                        previewJob.State.Add(new PreviewJobState(JobStateEnum.Error));
                         context.PreviewJobs.Update(previewJob);
                     }
 

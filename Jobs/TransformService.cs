@@ -180,7 +180,7 @@ namespace TptMain.Jobs
         /// </summary>
         /// <param name="previewJobId">The preview job id</param>
         /// <returns>TransformJobStatus based on the state of the S3 bucket</returns>
-        public TransformJobStatus GetTransformJobStatus(string previewJobId)
+        public virtual TransformJobStatus GetTransformJobStatus(string previewJobId)
         {
 
             // First, look for the job directory
@@ -190,7 +190,7 @@ namespace TptMain.Jobs
             );
 
             // if the job directory isn't found, it must still be in the queue
-            if(string.IsNullOrEmpty(found))
+            if (string.IsNullOrEmpty(found))
             {
                 return TransformJobStatus.WAITING;
             }
@@ -202,7 +202,7 @@ namespace TptMain.Jobs
             );
 
             // if it's canceled, report that
-            if(!string.IsNullOrEmpty(cancelFile))
+            if (!string.IsNullOrEmpty(cancelFile))
             {
                 return TransformJobStatus.CANCELED;
             }
@@ -218,24 +218,24 @@ namespace TptMain.Jobs
                 bool transformComplete = completeFile.Contains(COMPLETE_TEMPLATE_MARKER);
                 bool taggedTextComplete = completeFile.Contains(COMPLETE_TAGGED_TEXT_MARKER);
 
-                if(transformComplete && taggedTextComplete)
+                if (transformComplete && taggedTextComplete)
                 {
                     return TransformJobStatus.ALL_COMPLETE;
                 }
 
-                if(transformComplete)
+                if (transformComplete)
                 {
                     return TransformJobStatus.TEMPLATE_COMPLETE;
                 }
 
-                if(taggedTextComplete)
+                if (taggedTextComplete)
                 {
                     return TransformJobStatus.TAGGED_TEXT_COMPLETE;
                 }
-                
+
                 // some very strange status where .complete file is there, but not specific
                 return TransformJobStatus.ERROR;
-                
+
             }
 
             // otherwise, it's in process
@@ -254,9 +254,9 @@ namespace TptMain.Jobs
             streamWriter.Flush();
             stream.Position = 0;
 
-            HttpStatusCode statusCode = _s3Service.PutFileStream( JOBS_DIRECTORY + previewJobId + "/" + CANCEL_MARKER, stream);
+            HttpStatusCode statusCode = _s3Service.PutFileStream(JOBS_DIRECTORY + previewJobId + "/" + CANCEL_MARKER, stream);
 
-            if(HttpStatusCode.OK != statusCode)
+            if (HttpStatusCode.OK != statusCode)
             {
                 throw new PreviewJobException("Could not cancel transformation job for previewJobId: " + previewJobId);
             }
