@@ -117,10 +117,13 @@ namespace TptMain.InDesign
         /// <returns>The instanstiated InDesign server client.</returns>
         public virtual ServicePortTypeClient SetUpInDesignClient()
         {
+            // validate inputs
+            _ = _serverConfig.ServerUri ?? throw new ArgumentNullException(nameof(_serverConfig.ServerUri));
+
             var serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
                 _serverConfig.ServerUri
-                ) ?? throw new ArgumentNullException(nameof(_serverConfig.ServerUri));
+                );
 
             serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
             serviceClient.Endpoint.Binding.ReceiveTimeout = serviceClient.Endpoint.Binding.SendTimeout;
@@ -189,8 +192,8 @@ namespace TptMain.InDesign
             )
         {
             var txtFileName = new FileInfo(txtFilePath).Name;
-            var idmlPath = $@"{_idmlDocDir}\preview-{jobId}.idml";
-            var docOutputPath = $@"{_idmlDocDir}\preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
+            var idmlPath = $@"{_idmlDocDir.FullName}\preview-{jobId}.idml";
+            var docOutputPath = $@"{_idmlDocDir.FullName}\preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
 
             _logger.LogDebug($"Creating '{docOutputPath}' from '{txtFileName}'");
             var docScriptRequest = new RunScriptRequest();
