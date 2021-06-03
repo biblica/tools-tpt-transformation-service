@@ -2,9 +2,6 @@
 using TptMain.Jobs;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Moq;
 using Microsoft.Extensions.Logging;
 using TptMain.Models;
@@ -13,12 +10,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using static TptMain.Jobs.TransformService;
 
-namespace TptMain
+namespace TptTest.Jobs
 {
     [TestClass()]
     public class TransformJobManagerTests
     {
-        private Microsoft.Extensions.Configuration.IConfiguration _testConfiguration;
+        private IConfiguration _testConfiguration;
         private TptServiceContext _context;
 
         private Mock<ILogger<TemplateJobManager>> _mockLogger;
