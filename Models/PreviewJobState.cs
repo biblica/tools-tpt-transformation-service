@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace TptMain.Models
 {
     /// <summary>
-    /// Represents the possible states of a Preview Job
+    /// Represents the possible states of a Preview Job. These are ordered by the steps within the processing workflow.
     /// </summary>
     public enum JobStateEnum
     {
@@ -50,12 +50,6 @@ namespace TptMain.Models
     /// </summary>
     public class PreviewJobState : IEquatable<PreviewJobState>, IComparable<PreviewJobState>
     {
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public PreviewJobState()
-        {
-        }
 
         /// <summary>
         /// Constructor, specifying state

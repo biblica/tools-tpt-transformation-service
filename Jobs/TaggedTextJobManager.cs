@@ -26,42 +26,19 @@ namespace TptMain.Jobs
         private readonly int _timeoutMills;
 
         /// <summary>
-        /// Constructor to pass in the logger factory and configuration
-        /// </summary>
-        /// <param name="loggerFactory">The factory to create the localized logger</param>
-        /// <param name="configuration">The set of configuration parameters</param>
-        public TaggedTextJobManager(
-            ILoggerFactory loggerFactory,
-            IConfiguration configuration)
-        {
-            _ = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-            _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
-
-            _logger = loggerFactory.CreateLogger<TaggedTextJobManager>();
-            _transformService = new TransformService(_logger);
-
-            // grab global settings for tagged text generation timeout
-
-            _timeoutMills = 1000 * int.Parse(configuration[ConfigConsts.TaggedTextGenerationTimeoutInSecKey] ?? throw new ArgumentNullException(ConfigConsts
-                                                                        .TaggedTextGenerationTimeoutInSecKey));
-        }
-
-        /// <summary>
         /// Constructor to pass in the logger, config, and the transform service...
         /// Used for passing in a mocked transform service in tests
         /// </summary>
-        /// <param name="loggerFactory">The factory to create the localized logger</param>
+        /// <param name="logger">The factory to create the localized logger</param>
         /// <param name="configuration">The set of configuration parameters</param>
-        /// <param name="transformService">When in a test, the mocked transform service</param>
+        /// <param name="transformService">Injected service instance</param>
         public TaggedTextJobManager(
-            ILoggerFactory loggerFactory,
+            ILogger logger,
             IConfiguration configuration,
             TransformService transformService)
         {
-            _ = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _logger = (ILogger<TaggedTextJobManager>)(logger ?? throw new ArgumentNullException(nameof(logger)));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
-
-            _logger = loggerFactory.CreateLogger<TaggedTextJobManager>();
 
             /// this is the only difference for this constructor
             _transformService = transformService;
@@ -100,24 +77,27 @@ namespace TptMain.Jobs
         {
             _logger.LogDebug($"Requesting status update for {previewJob.Id}");
             TransformJobStatus status = _transformService.GetTransformJobStatus(previewJob.Id);
+
+            /// This adds another state record to the list of states every time the status is checked. There may be multiple
+            /// of the same state with different timestamps to show that the processs is still working
             switch (status)
             {
                 case TransformJobStatus.WAITING:
                 case TransformJobStatus.PROCESSING:
                     previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTaggedText, JobStateSourceEnum.TaggedTextGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.GeneratingTaggedText.ToString()} for {previewJob.Id}");
+                    _logger.LogDebug($"Status reported as {JobStateEnum.GeneratingTaggedText} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.TAGGED_TEXT_COMPLETE:
                     previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTaggedText, JobStateSourceEnum.TaggedTextGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.TaggedTextGenerated.ToString()} for {previewJob.Id}");
+                    _logger.LogDebug($"Status reported as {JobStateEnum.TaggedTextGenerated} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.CANCELED:
                     previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled, JobStateSourceEnum.TaggedTextGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.Cancelled.ToString()} for {previewJob.Id}");
+                    _logger.LogDebug($"Status reported as {JobStateEnum.Cancelled} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.ERROR:
                     previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TaggedTextGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.Error.ToString()} for {previewJob.Id}");
+                    _logger.LogDebug($"Status reported as {JobStateEnum.Error} for {previewJob.Id}");
                     break;
             }
 
@@ -140,9 +120,11 @@ namespace TptMain.Jobs
 
             if (previewJobState == null)
             {
-                _logger.LogError($"PreviewJob has not started tagged text generation even when asked for status update. Cancelling: {previewJob.Id}");
+                _logger.LogError($"PreviewJob has not started TaggedText generation even when asked for status update. Cancelling: {previewJob.Id}");
                 previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TaggedTextGeneration));
-                CancelJob(previewJob);
+
+                previewJob.SetError("TaggedText generation error.", "Could not get state indicating that the TaggedText generation had been started.");
+                _transformService.CancelTransformJobs(previewJob.Id);
             }
             else
             {
@@ -150,9 +132,11 @@ namespace TptMain.Jobs
 
                 if (diff.TotalMilliseconds >= _timeoutMills)
                 {
-                    _logger.LogError($"PreviewJob has not completed tagged text generation, timed out! Cancelling: {previewJob.Id}");
+                    _logger.LogError($"PreviewJob has not completed TaggedText generation, timed out! Cancelling: {previewJob.Id}");
                     previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TaggedTextGeneration));
-                    CancelJob(previewJob);
+
+                    previewJob.SetError("TaggedText generation error, timed-out", $"The TaggedText generation timed out - timeout:{_timeoutMills}, diff:{diff}");
+                    _transformService.CancelTransformJobs(previewJob.Id);
                 }
             }
         }
