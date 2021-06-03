@@ -8,33 +8,63 @@ using static TptMain.Jobs.TransformService;
 
 namespace TptMain.Jobs
 {
-    public class JobTaggedTextManager : IPreviewJobProcessor
+    public class TaggedTextJobManager : IPreviewJobProcessor
     {
         /// <summary>
         /// Logger (injected).
         /// </summary>
-        private readonly ILogger<JobTaggedTextManager> _logger;
+        private readonly ILogger<TaggedTextJobManager> _logger;
 
         /// <summary>
         /// The service that's processing the transform job
         /// </summary>
         TransformService _transformService;
 
+        /// <summary>
+        /// The timeout period, in milliseconds, before the job is considered to be over-due, thus needing to be canceled and errored out
+        /// </summary>
         private readonly int _timeoutMills;
 
         /// <summary>
-        /// Constructor to pass in the logger
+        /// Constructor to pass in the logger factory and configuration
         /// </summary>
-        /// <param name="logger"></param>
-        public JobTaggedTextManager(
+        /// <param name="loggerFactory">The factory to create the localized logger</param>
+        /// <param name="configuration">The set of configuration parameters</param>
+        public TaggedTextJobManager(
             ILoggerFactory loggerFactory,
             IConfiguration configuration)
         {
             _ = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _logger = loggerFactory.CreateLogger<JobTaggedTextManager>();
+            _logger = loggerFactory.CreateLogger<TaggedTextJobManager>();
             _transformService = new TransformService(_logger);
+
+            // grab global settings for tagged text generation timeout
+
+            _timeoutMills = 1000 * int.Parse(configuration[ConfigConsts.TaggedTextGenerationTimeoutInSecKey] ?? throw new ArgumentNullException(ConfigConsts
+                                                                        .TaggedTextGenerationTimeoutInSecKey));
+        }
+
+        /// <summary>
+        /// Constructor to pass in the logger, config, and the transform service...
+        /// Used for passing in a mocked transform service in tests
+        /// </summary>
+        /// <param name="loggerFactory">The factory to create the localized logger</param>
+        /// <param name="configuration">The set of configuration parameters</param>
+        /// <param name="transformService">When in a test, the mocked transform service</param>
+        public TaggedTextJobManager(
+            ILoggerFactory loggerFactory,
+            IConfiguration configuration,
+            TransformService transformService)
+        {
+            _ = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
+
+            _logger = loggerFactory.CreateLogger<TaggedTextJobManager>();
+
+            /// this is the only difference for this constructor
+            _transformService = transformService;
 
             // grab global settings for tagged text generation timeout
 
@@ -45,7 +75,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Start a job process
         /// </summary>
-        /// <param name="previewJob"></param>
+        /// <param name="previewJob">The job to be worked</param>
         public void ProcessJob(PreviewJob previewJob)
         {
             previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTaggedText, JobStateSourceEnum.TaggedTextGeneration));
@@ -55,7 +85,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Force a cancelation of the job
         /// </summary>
-        /// <param name="previewJob"></param>
+        /// <param name="previewJob">The job to cancel</param>
         public void CancelJob(PreviewJob previewJob)
         {
             previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled, JobStateSourceEnum.TaggedTextGeneration));
@@ -65,12 +95,12 @@ namespace TptMain.Jobs
         /// <summary>
         /// Get the current status of the job
         /// </summary>
-        /// <param name="previewJob"></param>
+        /// <param name="previewJob">The job who's status needs updating</param>
         public void GetStatus(PreviewJob previewJob)
         {
             _logger.LogDebug($"Requesting status update for {previewJob.Id}");
             TransformJobStatus status = _transformService.GetTransformJobStatus(previewJob.Id);
-            switch(status)
+            switch (status)
             {
                 case TransformJobStatus.WAITING:
                 case TransformJobStatus.PROCESSING:
@@ -102,13 +132,13 @@ namespace TptMain.Jobs
         {
             previewJob.State.Sort();
             PreviewJobState previewJobState = previewJob.State.Find(
-            delegate (PreviewJobState previewJobState)
+                (previewJobState) =>
                 {
                     return previewJobState.State == JobStateEnum.GeneratingTaggedText;
                 }
             );
 
-            if(previewJobState == null)
+            if (previewJobState == null)
             {
                 _logger.LogError($"PreviewJob has not started tagged text generation even when asked for status update. Cancelling: {previewJob.Id}");
                 previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TaggedTextGeneration));
@@ -116,13 +146,9 @@ namespace TptMain.Jobs
             }
             else
             {
-                DateTime baseDate = new DateTime(1970, 1, 1);
-                long nowMills = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                long jobMills = (long)(previewJobState.DateSubmitted - baseDate).TotalMilliseconds;
+                TimeSpan diff = DateTime.UtcNow.Subtract(previewJobState.DateSubmitted);
 
-                long timeSpent = nowMills - jobMills;
-
-                if (timeSpent >= _timeoutMills)
+                if (diff.TotalMilliseconds >= _timeoutMills)
                 {
                     _logger.LogError($"PreviewJob has not completed tagged text generation, timed out! Cancelling: {previewJob.Id}");
                     previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TaggedTextGeneration));

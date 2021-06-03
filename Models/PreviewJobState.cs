@@ -84,6 +84,7 @@ namespace TptMain.Models
         /// </summary>
         /// <param name="state">The state to register</param>
         /// <param name="source">The source of the state</param>
+        /// <param name="dateTime">The date and time of the entry if not using the default (now)</param>
         public PreviewJobState(JobStateEnum state, JobStateSourceEnum source, DateTime dateTime) : this(state)
         {
             State = state;
@@ -120,19 +121,22 @@ namespace TptMain.Models
         /// Override for Sorting based on Date. If they are the same, compare based on status.
         /// </summary>
         /// <param name="other">The record to compare to</param>
-        /// <returns></returns>
+        /// <returns>Standard CompareTo responses, see IComparer.
+        /// In this case, return the comparison b/t states if the dates are equal, otherwise the date comparison.
+        /// </returns>
         public int CompareTo(PreviewJobState other)
         {
-            if( other == null)
+            if (other == null)
             {
                 return 1;
             }
             else
             {
-                if(this.DateSubmitted.Equals( other.DateSubmitted))
+                if (this.DateSubmitted.Equals(other.DateSubmitted))
                 {
-                    return ((int) this.State).CompareTo((int) other.State);
-                } else
+                    return ((int)this.State).CompareTo((int)other.State);
+                }
+                else
                 {
                     return this.DateSubmitted.CompareTo(other.DateSubmitted);
                 }
@@ -143,7 +147,7 @@ namespace TptMain.Models
         /// Override the Equals to just the state so that we can find if the set of states contains the looked for one
         /// </summary>
         /// <param name="other">The record to compare this one to</param>
-        /// <returns></returns>
+        /// <returns>Standard responses for Equals. In this case, comparing the State.</returns>
         public bool Equals(PreviewJobState other)
         {
             if (other == null) return false;

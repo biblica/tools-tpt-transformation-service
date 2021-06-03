@@ -49,6 +49,8 @@ namespace TptMain
             services.AddSingleton<TemplateManager>();
             services.AddSingleton<WebRequestFactory>();
 
+            services.AddSingleton<TaggedTextJobManager>();
+            services.AddSingleton<TemplateJobManager>();
 
             services.AddControllers();
         }

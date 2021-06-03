@@ -20,10 +20,11 @@ namespace TptMain.Models
         /// </summary>
         public DateTime? DateSubmitted
         {
-            get {
+            get
+            {
                 this.State.Sort();
                 PreviewJobState previewJobState = this.State.FindLast(
-                    delegate (PreviewJobState previewJobState)
+                   (previewJobState) =>
                     {
                         return previewJobState.State == JobStateEnum.Submitted;
                     }
@@ -41,10 +42,10 @@ namespace TptMain.Models
             {
                 this.State.Sort();
                 PreviewJobState previewJobState = this.State.FindLast(
-                    delegate (PreviewJobState previewJobState)
-                    {
-                        return previewJobState.State == JobStateEnum.Started;
-                    }
+                   (previewJobState) =>
+                   {
+                       return previewJobState.State == JobStateEnum.Started;
+                   }
                 );
                 return previewJobState != null ? previewJobState.DateSubmitted : null;
             }
@@ -59,10 +60,10 @@ namespace TptMain.Models
             {
                 this.State.Sort();
                 PreviewJobState previewJobState = this.State.FindLast(
-                    delegate (PreviewJobState previewJobState)
-                    {
-                        return previewJobState.State == JobStateEnum.PreviewGenerated;
-                    }
+                   (previewJobState) =>
+                   {
+                       return previewJobState.State == JobStateEnum.PreviewGenerated;
+                   }
                 );
                 return previewJobState != null ? previewJobState.DateSubmitted : null;
             }
@@ -120,6 +121,8 @@ namespace TptMain.Models
         /// The set of all states of the Preview Job over time
         /// </summary>
         public List<PreviewJobState> State { get; set; } = new List<PreviewJobState> {
+            // Instert a default job state that's populated with the
+            // right values for a first state in the list
             new PreviewJobState()
         };
 
@@ -160,7 +163,7 @@ namespace TptMain.Models
             this.ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
             this.ErrorDetail = errorDetail ?? throw new ArgumentNullException(nameof(errorDetail));
 
-            this.State.Add( new PreviewJobState(JobStateEnum.Error));
+            this.State.Add(new PreviewJobState(JobStateEnum.Error));
         }
     }
 }

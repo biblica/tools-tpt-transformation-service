@@ -17,12 +17,12 @@ using static TptMain.Jobs.TransformService;
 namespace TptMain.Jobs.Tests
 {
     [TestClass()]
-    public class JobTaggedTextManagerTests
+    public class TransformJobManagerTests
     {
         private Microsoft.Extensions.Configuration.IConfiguration _testConfiguration;
         private TptServiceContext _context;
 
-        private Mock<ILogger<JobTaggedTextManager>> _mockLogger;
+        private Mock<ILogger<TaggedTextJobManager>> _mockLogger;
         private Mock<ILoggerFactory> _mockLoggerFactory;
         private Mock<TransformService> _mockTransformService;
 
@@ -36,7 +36,7 @@ namespace TptMain.Jobs.Tests
         public void TestSetup()
         {
 
-            _mockLogger = new Mock<ILogger<JobTaggedTextManager>>();
+            _mockLogger = new Mock<ILogger<TaggedTextJobManager>>();
             _mockLoggerFactory = new Mock<ILoggerFactory>();
             _mockLoggerFactory.Setup(lm => lm.CreateLogger(It.IsAny<string>())).Returns(_mockLogger.Object);
 
@@ -62,7 +62,7 @@ namespace TptMain.Jobs.Tests
         [TestMethod()]
         public void GetStatusTest()
         {
-            JobTemplateManager jobTemplateManager = new JobTemplateManager(_mockLoggerFactory.Object, _testConfiguration, _mockTransformService.Object);
+            TemplateJobManager jobTemplateManager = new TemplateJobManager(_mockLoggerFactory.Object, _testConfiguration, _mockTransformService.Object);
 
             var jobId = "1234";
             var previewJob = new PreviewJob()
@@ -83,7 +83,7 @@ namespace TptMain.Jobs.Tests
         [TestMethod()]
         public void ErrorTest()
         {
-            JobTemplateManager jobTemplateManager = new JobTemplateManager(_mockLoggerFactory.Object, _testConfiguration, _mockTransformService.Object);
+            TemplateJobManager jobTemplateManager = new TemplateJobManager(_mockLoggerFactory.Object, _testConfiguration, _mockTransformService.Object);
 
             var jobId = "1234";
             var previewJob = new PreviewJob()
@@ -115,7 +115,7 @@ namespace TptMain.Jobs.Tests
                .AddInMemoryCollection(configKeys)
                .Build();
 
-            JobTemplateManager jobTemplateManager = new JobTemplateManager(_mockLoggerFactory.Object, testConfiguration, _mockTransformService.Object);
+            TemplateJobManager jobTemplateManager = new TemplateJobManager(_mockLoggerFactory.Object, testConfiguration, _mockTransformService.Object);
 
             var jobId = "1234";
             var previewJob = new PreviewJob()
@@ -127,6 +127,7 @@ namespace TptMain.Jobs.Tests
 
             _mockTransformService.Setup(ts => ts.GetTransformJobStatus(It.IsAny<string>())).Returns(TransformJobStatus.TAGGED_TEXT_COMPLETE);
 
+            // show that muliple calls adds to the stack of status in the list
             jobTemplateManager.GetStatus(previewJob);
             jobTemplateManager.GetStatus(previewJob);
             jobTemplateManager.GetStatus(previewJob);
