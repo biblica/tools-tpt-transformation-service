@@ -13,7 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using static TptMain.Jobs.TransformService;
 
-namespace TptMain.Jobs
+namespace TptMain
 {
     [TestClass()]
     public class TransformJobManagerTests
