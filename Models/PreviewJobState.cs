@@ -95,21 +95,17 @@ namespace TptMain.Models
         /// When this state was added to the job. This is for reference purposes and too see what the most recent state is
         /// </summary>
         public DateTime DateSubmitted { get; set; } = DateTime.UtcNow;
+
         /// <summary>
         /// The state of this state.
         /// </summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public JobStateEnum State { get; set; } = JobStateEnum.Submitted;
+        public JobStateEnum State { get; set; }
         /// <summary>
         /// The processing source of this state
         /// </summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public JobStateSourceEnum Source { get; set; } = JobStateSourceEnum.GeneralManagement;
-
-        /// <summary>
-        /// This is the reference to the preview job that this record is associated with
-        /// </summary>
-        public PreviewJob PreviewJob { get; set; }
 
         /// <summary>
         /// Override for Sorting based on Date. If they are the same, compare based on status.
