@@ -50,6 +50,13 @@ namespace TptMain.Models
     /// </summary>
     public class PreviewJobState : IEquatable<PreviewJobState>, IComparable<PreviewJobState>
     {
+        /// <summary>
+        /// Default constructor. The only reason we want this is due to the ability to deepclone using json serialization.
+        /// </summary>
+        public PreviewJobState()
+        {
+            State = JobStateEnum.Submitted;
+        }
 
         /// <summary>
         /// Constructor, specifying state
