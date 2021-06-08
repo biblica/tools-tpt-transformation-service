@@ -217,7 +217,7 @@ namespace TptMain.Jobs
                 if (availableRunner == null)
                 {
                     // determine if we have any running tasks for the selected runner
-                    var isSuccess = IdsTaskMap.TryGetValue(idsRunner, out var task);
+                    IdsTaskMap.TryGetValue(idsRunner, out var task);
 
                     // track if there's any actively running task
                     if (task == null || task.IsCompleted)

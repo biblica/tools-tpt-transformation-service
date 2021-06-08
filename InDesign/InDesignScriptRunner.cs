@@ -100,7 +100,7 @@ namespace TptMain.InDesign
             _idttDocDir = idttDocDir ?? throw new ArgumentNullException(nameof(idttDocDir));
             _pdfDocDir = pdfDocDir ?? throw new ArgumentNullException(nameof(pdfDocDir));
 
-            _serviceClient = SetUpInDesignClient(serverConfig);
+            _serviceClient = SetUpInDesignClient();
 
             _defaultDocScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
                 "CreateDocument.jsx"));
@@ -114,14 +114,16 @@ namespace TptMain.InDesign
         /// <summary>
         /// This function sets up the InDesign server client.
         /// </summary>
-        /// <param name="configuration">The configuration to aid setting up the Client.</param>
         /// <returns>The instanstiated InDesign server client.</returns>
-        public virtual ServicePortTypeClient SetUpInDesignClient(InDesignServerConfig configuration)
+        public virtual ServicePortTypeClient SetUpInDesignClient()
         {
+            // validate inputs
+            _ = _serverConfig.ServerUri ?? throw new ArgumentNullException(nameof(_serverConfig.ServerUri));
+
             var serviceClient = new ServicePortTypeClient(
                 ServicePortTypeClient.EndpointConfiguration.Service,
                 _serverConfig.ServerUri
-                ) ?? throw new ArgumentNullException(nameof(_serverConfig.ServerUri));
+                );
 
             serviceClient.Endpoint.Binding.SendTimeout = TimeSpan.FromMilliseconds(_idsTimeoutInMSec);
             serviceClient.Endpoint.Binding.ReceiveTimeout = serviceClient.Endpoint.Binding.SendTimeout;
@@ -190,8 +192,8 @@ namespace TptMain.InDesign
             )
         {
             var txtFileName = new FileInfo(txtFilePath).Name;
-            var idmlPath = $@"{_idmlDocDir}\preview-{jobId}.idml";
-            var docOutputPath = $@"{_idmlDocDir}\preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
+            var idmlPath = $@"{_idmlDocDir.FullName}\preview-{jobId}.idml";
+            var docOutputPath = $@"{_idmlDocDir.FullName}\preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
 
             _logger.LogDebug($"Creating '{docOutputPath}' from '{txtFileName}'");
             var docScriptRequest = new RunScriptRequest();

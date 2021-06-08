@@ -121,9 +121,6 @@ namespace TptMain.Models
         /// The set of all states of the Preview Job over time
         /// </summary>
         public List<PreviewJobState> State { get; set; } = new List<PreviewJobState> {
-            // Instert a default job state that's populated with the
-            // right values for a first state in the list
-            new PreviewJobState(JobStateEnum.Submitted, JobStateSourceEnum.GeneralManagement)
         };
 
         /// <summary>
