@@ -49,6 +49,7 @@ namespace TptMain
             services.AddSingleton<TemplateManager>();
             services.AddSingleton<WebRequestFactory>();
 
+            // These will be enabled with the implementation of the TPT 2.0 JobManager
             //services.AddSingleton<TransformService>();
 
             //services.AddSingleton<TaggedTextJobManager>();
