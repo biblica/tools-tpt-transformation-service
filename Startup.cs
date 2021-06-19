@@ -37,6 +37,7 @@ namespace TptMain
                 options => options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection")),
                ServiceLifetime.Singleton);
 
+            services.AddSingleton<IPreviewJobValidator, PreviewJobValidator>();
             services.AddSingleton<IJobManager, JobManager>();
             services.AddSingleton<IProjectManager, ProjectManager>();
 
