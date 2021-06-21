@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using TptMain.Exceptions;
 using TptMain.Models;
 using TptMain.ParatextProjects;
+using TptMain.Text;
 using TptMain.Util;
+using static System.String;
 
 namespace TptMain.Jobs
 {
@@ -57,7 +59,7 @@ namespace TptMain.Jobs
             _ = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
 
             // error tracking list and handler
-            var errors = new List<String>();
+            var errors = new List<string>();
             Action<string> errorHandlerFunc = (errorMessage) => errors.Add(errorMessage);
 
             // track parent prefix strings for cleaner error printouts and organization
@@ -73,7 +75,8 @@ namespace TptMain.Jobs
             try
             {
                 _paratextApi.IsUserAuthorizedOnProject(previewJob);
-            } catch (PreviewJobException ex)
+            }
+            catch (PreviewJobException ex)
             {
                 errorHandlerFunc($"'{modelRootPrefix}{nameof(previewJob.User)}' is not valid. {ex.Message}");
             }
@@ -83,6 +86,10 @@ namespace TptMain.Jobs
             ValidateString(
                 $"{modelBibleSelectionPrefix}{nameof(previewJob.BibleSelectionParams.ProjectName)}",
                 previewJob.BibleSelectionParams.ProjectName,
+                errorHandlerFunc);
+            ValidateBookIdList(
+                $"{modelBibleSelectionPrefix}{nameof(previewJob.BibleSelectionParams.SelectedBooks)}",
+                previewJob.BibleSelectionParams.SelectedBooks,
                 errorHandlerFunc);
 
             // validate typesetting parameters
@@ -119,8 +126,8 @@ namespace TptMain.Jobs
             // throw exception containing found errors, if any.
             if (errors.Count > 0)
             {
-                throw new ArgumentException($" '{nameof(previewJob)}' validation errors were encountered:{NEWLINE_TAB}" 
-                    + String.Join(NEWLINE_TAB, errors.ToArray()));
+                throw new ArgumentException($" '{nameof(previewJob)}' validation errors were encountered:{NEWLINE_TAB}"
+                                            + Join(NEWLINE_TAB, errors.ToArray()));
             }
         }
 
@@ -137,7 +144,7 @@ namespace TptMain.Jobs
             _ = handleError ?? throw new ArgumentNullException(nameof(handleError));
 
             // input validation
-            if (String.IsNullOrWhiteSpace(input))
+            if (IsNullOrWhiteSpace(input))
             {
                 handleError($"'{parameterName}' string was null, empty, or only whitespace.");
             }
@@ -162,7 +169,8 @@ namespace TptMain.Jobs
             try
             {
                 return allowedValues.ValidateValue(input);
-            } catch (ArgumentException ex)
+            }
+            catch (ArgumentException ex)
             {
                 handleError($"'{parameterName}' value was invalid: " + ex.Message);
             }
@@ -186,6 +194,47 @@ namespace TptMain.Jobs
             if (input == null)
             {
                 handleError($"'{parameterName}' object was null.");
+            }
+        }
+
+        /// <summary>
+        /// Validates a list of book IDs for eligibility.
+        /// </summary>
+        /// <param name="parameterName">Parameter name. (required)</param>
+        /// <param name="bookIdList">Comma-delimited book ID list to validate. (optional, may be null)</param>
+        /// <param name="handleError">Error handling function. (required)</param>
+        private void ValidateBookIdList(string parameterName, string bookIdList, Action<string> handleError)
+        {
+            // parameter validation
+            _ = parameterName ?? throw new ArgumentNullException(nameof(parameterName));
+            _ = handleError ?? throw new ArgumentNullException(nameof(handleError));
+
+            // null/empty = no book list, which is ok
+            if (IsNullOrWhiteSpace(bookIdList))
+            {
+                return;
+            }
+
+            // split & iterate book list
+            var idSet = new HashSet<string>();
+            foreach (var bookId in bookIdList.Split(","))
+            {
+                if (IsNullOrWhiteSpace(bookId))
+                {
+                    handleError($"Book id in list '{parameterName}' was empty or only whitespace.");
+                }
+                else
+                {
+                    var tempBookId = bookId.Trim();
+                    if (!BookUtil.BookIdsByCode.ContainsKey(tempBookId))
+                    {
+                        handleError($"Invalid book id '{tempBookId}' in book id list '{parameterName}'.");
+                    }
+                    if (!idSet.Add(tempBookId))
+                    {
+                        handleError($"Duplicate book id '{tempBookId}' in book id list '{parameterName}'.");
+                    }
+                }
             }
         }
 
