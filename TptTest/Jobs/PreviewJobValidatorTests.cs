@@ -1,22 +1,16 @@
-using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
 using TptMain.Exceptions;
-using TptMain.Http;
-using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
 using TptMain.ParatextProjects;
-using TptMain.Toolbox;
 using TptMain.Util;
 
-namespace TptTest
+namespace TptTest.Jobs
 {
     [TestClass]
     public class PreviewJobValidatorTests
@@ -82,18 +76,17 @@ namespace TptTest
                 new Mock<PreviewJobValidator>(
                     _mockLogger.Object,
                     _testConfiguration,
-                    _mockParatextApi.Object);
+                    _mockParatextApi.Object)
+                { CallBase = true };
             // call base functions unless overriden
-            serviceUnderTest.CallBase = true;
         }
 
         /// <summary>
-        /// Test validation fails for invalid parameter values.
+        /// Test validation fails for invalid typesetting parameter values.
         /// </summary>
         [TestMethod]
-        public void TestValidationFails()
+        public void TestTypesettingParamValidationFails()
         {
-
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
 
             // Set a couple preview job parameters value outside their allowed ranges
@@ -101,6 +94,50 @@ namespace TptTest
             testPreviewJob.TypesettingParams.FontLeadingInPts = MainConsts.ALLOWED_FONT_LEADING_IN_PTS.Max + 1;
 
             TestValidation(serviceUnderTest, testPreviewJob, new List<string> { "FontSizeInPts", "FontLeadingInPts" });
+        }
+
+        /// <summary>
+        /// Test validation success for valid bible selection parameter values.
+        /// </summary>
+        [TestMethod]
+        public void TestBibleSelectionParamsValidationSuccess()
+        {
+            var testPreviewJob1 = TestUtils.CreateTestPreviewJob();
+            testPreviewJob1.BibleSelectionParams.ProjectName = "TestProject1";
+            testPreviewJob1.BibleSelectionParams.SelectedBooks = "01GEN,02EXO,03LEV,04NUM,05DEU,06JOS,07JDG,08RUT,091SA,102SA,111KI,122KI,131CH,142CH,15EZR,16NEH,17EST,18JOB,19PSA,20PRO,21ECC,22SNG,23ISA,24JER,25LAM,26EZK,27DAN,28HOS,29JOL,30AMO,31OBA,32JON,33MIC,34NAM,35HAB,36ZEP,37HAG,38ZEC,39MAL,41MAT,42MRK,43LUK,44JHN,45ACT,46ROM,471CO,482CO,49GAL,50EPH,51PHP,52COL,531TH,542TH,551TI,562TI,57TIT,58PHM,59HEB,60JAS,611PE,622PE,631JN,642JN,653JN,66JUD,67REV,68TOB,69JDT,70ESG,71WIS,72SIR,73BAR,74LJE,75S3Y,76SUS,77BEL,781MA,792MA,803MA,814MA,821ES,832ES,84MAN,85PS2,86ODA,87PSS,A4EZA,A55EZ,A66EZ,B2DAG,B3PS3,B42BA,B5LBA,B6JUB,B7ENO,B81MQ,B92MQ,C03MQ,C1REP,C24BA,C3LAO,A0FRT,A1BAK,A2OTH,A7INT,A8CNC,A9GLO,B0TDX,B1NDX,94XXA,95XXB,96XXC,97XXD,98XXE,99XXF,100XXG";
+
+            TestValidation(serviceUnderTest, testPreviewJob1, new List<string>());
+
+            var testPreviewJob2 = TestUtils.CreateTestPreviewJob();
+            testPreviewJob2.BibleSelectionParams.ProjectName = "TestProject2";
+            testPreviewJob2.BibleSelectionParams.SelectedBooks = " 01GEN , 02EXO , 03LEV , 04NUM , 05DEU , 06JOS , 07JDG , 08RUT , 091SA , 102SA , 111KI , 122KI , 131CH , 142CH , 15EZR , 16NEH , 17EST , 18JOB , 19PSA , 20PRO , 21ECC , 22SNG , 23ISA , 24JER , 25LAM , 26EZK , 27DAN , 28HOS , 29JOL , 30AMO , 31OBA , 32JON , 33MIC , 34NAM , 35HAB , 36ZEP , 37HAG , 38ZEC , 39MAL , 41MAT , 42MRK , 43LUK , 44JHN , 45ACT , 46ROM , 471CO , 482CO , 49GAL , 50EPH , 51PHP , 52COL , 531TH , 542TH , 551TI , 562TI , 57TIT , 58PHM , 59HEB , 60JAS , 611PE , 622PE , 631JN , 642JN , 653JN , 66JUD , 67REV , 68TOB , 69JDT , 70ESG , 71WIS , 72SIR , 73BAR , 74LJE , 75S3Y , 76SUS , 77BEL , 781MA , 792MA , 803MA , 814MA , 821ES , 832ES , 84MAN , 85PS2 , 86ODA , 87PSS , A4EZA , A55EZ , A66EZ , B2DAG , B3PS3 , B42BA , B5LBA , B6JUB , B7ENO , B81MQ , B92MQ , C03MQ , C1REP , C24BA , C3LAO , A0FRT , A1BAK , A2OTH , A7INT , A8CNC , A9GLO , B0TDX , B1NDX , 94XXA , 95XXB , 96XXC , 97XXD , 98XXE , 99XXF , 100XXG ";
+
+            TestValidation(serviceUnderTest, testPreviewJob2, new List<string>());
+        }
+
+        /// <summary>
+        /// Test validation fails for invalid bible selection parameter values.
+        /// </summary>
+        [TestMethod]
+        public void TestBibleSelectionParamsValidationFails()
+        {
+            var testPreviewJob1 = TestUtils.CreateTestPreviewJob();
+            testPreviewJob1.BibleSelectionParams.ProjectName = "    ";
+            testPreviewJob1.BibleSelectionParams.SelectedBooks = "FOO,bar";
+
+            TestValidation(serviceUnderTest, testPreviewJob1, new List<string> { "ProjectName", "SelectedBooks", "SelectedBooks" });
+
+            var testPreviewJob2 = TestUtils.CreateTestPreviewJob();
+            testPreviewJob2.BibleSelectionParams.ProjectName = "";
+            testPreviewJob2.BibleSelectionParams.SelectedBooks = "01GEN, ,A0FRT";
+
+            TestValidation(serviceUnderTest, testPreviewJob2, new List<string> { "ProjectName", "SelectedBooks" });
+
+            var testPreviewJob3 = TestUtils.CreateTestPreviewJob();
+            testPreviewJob3.BibleSelectionParams.ProjectName = "Test1";
+            testPreviewJob3.BibleSelectionParams.SelectedBooks = "01GEN,01GEN,A0FRT";
+
+            TestValidation(serviceUnderTest, testPreviewJob3, new List<string> { "SelectedBooks" });
         }
 
         /// <summary>
@@ -124,7 +161,7 @@ namespace TptTest
         /// Test validation success for parameter values.
         /// </summary>
         [TestMethod]
-        public void TestValidationSuccess()
+        public void TestGeneralValidationSuccess()
         {
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
 
@@ -154,7 +191,8 @@ namespace TptTest
                 Assert.AreEqual(expectedFailedParameters.Count, ex.Message.Split(PreviewJobValidator.NEWLINE_TAB).Length - 1);
 
                 // we're expecting this exception to be thrown with a consolidation of error messages for every failed item.
-                expectedFailedParameters.ForEach(expectedFailParam => {
+                expectedFailedParameters.ForEach(expectedFailParam =>
+                {
                     Assert.IsTrue(ex.Message.Contains(expectedFailParam), $"Expected '{expectedFailParam}' validation error not found.");
                 });
             }
