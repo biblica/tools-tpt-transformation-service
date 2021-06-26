@@ -41,9 +41,9 @@
         public const string MaxConcurrentJobsKey = "Jobs:MaxConcurrent";
 
         /// <summary>
-        /// InDesign server uri config key.
+        /// InDesign servers section config key.
         /// </summary>
-        public const string IdsUriKey = "InDesign:ServerUri";
+        public const string IdsServersSectionKey = "InDesign:Servers";
 
         /// <summary>
         /// InDesign server request timeout config key.
@@ -54,11 +54,6 @@
         /// InDesign server preview script config key.
         /// </summary>
         public const string IdsPreviewScriptDirKey = "InDesign:PreviewScriptDirectory";
-
-        /// <summary>
-        /// InDesign server preview script name format config key.
-        /// </summary>
-        public const string IdsPreviewScriptNameFormatKey = "InDesign:PreviewScriptNameFormat";
 
         /// <summary>
         /// Paratext Server URI param key.
@@ -84,6 +79,16 @@
         /// Paratext API Password param key.
         /// </summary>
         public const string ParatextApiAllowedMemberRolesKey = "Paratext:API:AllowedMemberRoles";
+
+        /// <summary>
+        /// Template generation timeout config key.
+        /// </summary>
+        public const string TemplateGenerationTimeoutInSecKey = "Job:Template:TimeoutInSec";
+
+        /// <summary>
+        /// TaggedText generation timeout config key.
+        /// </summary>
+        public const string TaggedTextGenerationTimeoutInSecKey = "Job:TaggedText:TimeoutInSec";
 
     }
 }

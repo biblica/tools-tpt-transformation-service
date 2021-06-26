@@ -27,9 +27,9 @@ namespace TptMain.Jobs
         private readonly JobManager _jobManager;
 
         /// <summary>
-        /// Script runner.
+        /// Preview Manager.
         /// </summary>
-        private readonly ScriptRunner _scriptRunner;
+        private readonly IPreviewManager _previewManager;
 
         /// <summary>
         /// Template manager.
@@ -49,7 +49,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Preview job.
         /// </summary>
-        private readonly PreviewJob _previewJob;
+        private PreviewJob _previewJob;
 
         /// <summary>
         /// Cancellation token, for aborting jobs in progress.
@@ -67,11 +67,16 @@ namespace TptMain.Jobs
         public CancellationTokenSource CancellationTokenSource => _cancellationTokenSource;
 
         /// <summary>
+        /// The time to wait between checking the status of a preview generation.
+        /// </summary>
+        public const int PREVIEW_CHECK_POLLING_PERIOD_IN_MS = 30 * 1000;
+
+        /// <summary>
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
         /// <param name="jobManager">Job manager constructing this entry (required).</param>
-        /// <param name="scriptRunner">Script runner for IDS calls (required).</param>
+        /// <param name="previewManager">Preview Manager used to generate PDF/ID previews (required).</param>
         /// <param name="templateManager">Template manager for IDML retrieval (required).</param>
         /// <param name="paratextApi">Paratext API for verifiying user authorization on projects (required).</param>
         /// <param name="paratextProjectService">Paratext Project service for getting information related to local Paratext projects. (required).</param>
@@ -79,7 +84,7 @@ namespace TptMain.Jobs
         public JobWorkflow(
             ILogger<JobManager> logger,
             JobManager jobManager,
-            ScriptRunner scriptRunner,
+            IPreviewManager previewManager,
             TemplateManager templateManager,
             IPreviewJobValidator jobValidator,
             ParatextProjectService paratextProjectService,
@@ -88,7 +93,7 @@ namespace TptMain.Jobs
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
-            _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
+            _previewManager = previewManager ?? throw new ArgumentNullException(nameof(previewManager));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _previewJob = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
             _jobValidator = jobValidator ?? throw new ArgumentNullException(nameof(jobValidator));
@@ -106,8 +111,7 @@ namespace TptMain.Jobs
             try
             {
                 _logger.LogInformation($"Job started: {_previewJob.Id}");
-                _previewJob.DateStarted = DateTime.UtcNow;
-                _previewJob.State = PreviewJobState.Started;
+                _previewJob.State.Add(new PreviewJobState(JobStateEnum.Started));
                 _jobManager.TryUpdateJob(_previewJob);
 
                 if (!IsJobCanceled)
@@ -115,35 +119,32 @@ namespace TptMain.Jobs
                     _jobValidator.ValidatePreviewJob(_previewJob);
                 }
 
-                // Track derived parameters that we'll pass on to InDesign
-                var additionalParams = new AdditionalPreviewParameters() {
-                    TextDirection = _paratextProjectService.GetTextDirection(_previewJob.BibleSelectionParams.ProjectName)
-                };
+                _previewJob.AdditionalParams.TextDirection = _paratextProjectService.GetTextDirection(_previewJob.BibleSelectionParams.ProjectName);
 
                 // Grab the project's footnote markers if configured to do so.
                 if (!IsJobCanceled && _previewJob.TypesettingParams.UseCustomFootnotes)
                 {
-                    additionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.BibleSelectionParams.ProjectName);
+                    _previewJob.AdditionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.BibleSelectionParams.ProjectName);
                     // Throw an error, if custom footnotes are requested but are not available.
                     // This allows us to set the user's expectations early, rather than waiting
                     // for a preview.
-                    if (additionalParams.CustomFootnoteMarkers == null || additionalParams.CustomFootnoteMarkers.Length == 0)
+                    if (_previewJob.AdditionalParams.CustomFootnoteMarkers == null || _previewJob.AdditionalParams.CustomFootnoteMarkers.Length == 0)
                     {
                         throw new PreviewJobException(_previewJob, "Custom footnotes requested, but aren't specified in the project.");
                     }
 
-                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", additionalParams.CustomFootnoteMarkers));
+                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", _previewJob.AdditionalParams.CustomFootnoteMarkers));
                 }
 
                 // If we're using the project font (rather than what's in the IDML) pass it as an override.
                 if (!IsJobCanceled && _previewJob.TypesettingParams.UseProjectFont)
                 {
-                    additionalParams.OverrideFont = _paratextProjectService.GetProjectFont(_previewJob.BibleSelectionParams.ProjectName);
+                    _previewJob.AdditionalParams.OverrideFont = _paratextProjectService.GetProjectFont(_previewJob.BibleSelectionParams.ProjectName);
 
-                    if (String.IsNullOrEmpty(additionalParams.OverrideFont))
+                    if (String.IsNullOrEmpty(_previewJob.AdditionalParams.OverrideFont))
                     {
                         _logger.LogInformation($"No font specified for project {_previewJob.BibleSelectionParams.ProjectName}. IDML font settings will not be modified.");
-                        additionalParams.OverrideFont = null;
+                        _previewJob.AdditionalParams.OverrideFont = null;
                     }
                 }
 
@@ -157,18 +158,23 @@ namespace TptMain.Jobs
 
                 if (!IsJobCanceled)
                 {
-                    _scriptRunner.CreatePreview(_previewJob,
-                        additionalParams,
-                        _cancellationTokenSource.Token);
+                    _previewManager.ProcessJob(_previewJob);
+
+                    // check if we've hit any terminal state
+                    while (!IsJobCanceled && 
+                        !(_previewJob.IsCompleted || _previewJob.IsError || _previewJob.IsCancelled ))
+                    {
+                        Thread.Sleep(PREVIEW_CHECK_POLLING_PERIOD_IN_MS);
+                        _previewManager.GetStatus(_previewJob);
+                    }
                 }
 
                 _logger.LogInformation($"Job finished: {_previewJob.Id}.");
-                _previewJob.State = PreviewJobState.PreviewGenerated;
             }
             catch (OperationCanceledException ex)
             {
                 _logger.LogDebug(ex, $"Can't run job: {_previewJob.Id} (cancelled, ignoring).");
-                _previewJob.State = PreviewJobState.Cancelled;
+                _previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled));
             }
             catch (PreviewJobException ex)
             {
@@ -182,7 +188,7 @@ namespace TptMain.Jobs
             }
             finally
             {
-                _previewJob.DateCompleted = DateTime.UtcNow;
+                _previewJob.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated));
                 _jobManager.TryUpdateJob(_previewJob);
             }
         }
@@ -195,6 +201,7 @@ namespace TptMain.Jobs
             try
             {
                 _logger.LogInformation($"Canceling job: {_previewJob.Id}");
+                _previewManager.CancelJob(_previewJob);
                 _cancellationTokenSource.Cancel();
                 _logger.LogInformation($"Job canceled: {_previewJob.Id}");
             }
@@ -208,8 +215,7 @@ namespace TptMain.Jobs
             }
             finally
             {
-                _previewJob.DateCancelled = DateTime.UtcNow;
-                _previewJob.State = PreviewJobState.Cancelled;
+                _previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled));
                 _jobManager.TryUpdateJob(_previewJob);
             }
         }

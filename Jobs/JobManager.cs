@@ -31,9 +31,9 @@ namespace TptMain.Jobs
         private readonly TptServiceContext _tptServiceContext;
 
         /// <summary>
-        /// IDS server script runner (injected).
+        /// Preview Manager (injected).
         /// </summary>
-        private readonly ScriptRunner _scriptRunner;
+        private readonly IPreviewManager _previewManager;
 
         /// <summary>
         /// Template manager.
@@ -110,7 +110,7 @@ namespace TptMain.Jobs
             ILogger<JobManager> logger,
             IConfiguration configuration,
             TptServiceContext tptServiceContext,
-            ScriptRunner scriptRunner,
+            IPreviewManager previewManager,
             TemplateManager templateManager,
             IPreviewJobValidator jobValidator,
             ParatextProjectService paratextProjectService,
@@ -119,7 +119,7 @@ namespace TptMain.Jobs
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _tptServiceContext = tptServiceContext ?? throw new ArgumentNullException(nameof(tptServiceContext));
-            _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
+            _previewManager = previewManager ?? throw new ArgumentNullException(nameof(previewManager));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _jobValidator = jobValidator ?? throw new ArgumentNullException(nameof(jobValidator));
             _paratextProjectService = paratextProjectService ?? throw new ArgumentNullException(nameof(paratextProjectService));
@@ -275,7 +275,7 @@ namespace TptMain.Jobs
                     new JobWorkflow(
                         _logger,
                         this,
-                        _scriptRunner,
+                        _previewManager,
                         _templateManager,
                         _jobValidator,
                         _paratextProjectService,
@@ -298,10 +298,7 @@ namespace TptMain.Jobs
             previewJob.Id = Guid.NewGuid().ToString();
             previewJob.BibleSelectionParams.Id = Guid.NewGuid().ToString();
             previewJob.TypesettingParams.Id = Guid.NewGuid().ToString();
-            previewJob.DateSubmitted = DateTime.UtcNow;
-            previewJob.DateStarted = null;
-            previewJob.DateCompleted = null;
-            previewJob.DateCancelled = null;
+            previewJob.State.Add(new PreviewJobState(JobStateEnum.Submitted));
 
             // project defaults
             previewJob.TypesettingParams.FontSizeInPts ??= MainConsts.ALLOWED_FONT_SIZE_IN_PTS.Default;

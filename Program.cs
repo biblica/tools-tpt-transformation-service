@@ -33,14 +33,15 @@ namespace TptMain
 
                     // Find any dangling jobs.
                     IQueryable<PreviewJob> previewJobs = from job in context.PreviewJobs
-                                      where job.DateCompleted == null && job.DateCancelled == null
+                                      where !job.State.Any(state => state.State.Equals(JobStateEnum.PreviewGenerated))
+                                      && !job.State.Any(state => state.State.Equals(JobStateEnum.Cancelled))
                                       select job;
 
                     // Update dangling jobs to be errored out. They may still be running, but we can't reach them or resume them.
                     foreach (PreviewJob previewJob in previewJobs)
                     {
                         previewJob.SetError("An internal server error occurred.", "Unrecoverable. The system restarted while the job was in progress.");
-                        previewJob.DateCompleted = DateTime.UtcNow;
+                        previewJob.State.Add(new PreviewJobState(JobStateEnum.Error));
                         context.PreviewJobs.Update(previewJob);
                     }
 
