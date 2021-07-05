@@ -136,12 +136,12 @@ namespace TptMain.Models
         /// <summary>
         /// Which Bible books to include.
         /// </summary>
-        public BibleSelectionParams BibleSelectionParams { get; set; } = new BibleSelectionParams();
+        public virtual BibleSelectionParams BibleSelectionParams { get; set; }
 
         /// <summary>
         /// Parameters to use for the typesetting preview.
         /// </summary>
-        public TypesettingParams TypesettingParams { get; set; } = new TypesettingParams();
+        public virtual TypesettingParams TypesettingParams { get; set; }
 
         /// <summary>
         /// Additional parameters that are needed and calculated.
