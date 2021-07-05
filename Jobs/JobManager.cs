@@ -341,16 +341,17 @@ namespace TptMain.Jobs
         /// <summary>
         /// Update preview job.
         /// </summary>
-        /// <param name="nextJob">Preview job to update (required).</param>
+        /// <param name="job">Preview job to update (required).</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public virtual bool TryUpdateJob(PreviewJob nextJob)
+        public virtual bool TryUpdateJob(PreviewJob job)
         {
-            _logger.LogDebug($"TryUpdateJob() - nextJob={nextJob.Id}.");
+            _logger.LogDebug($"TryUpdateJob() - job={job.Id}.");
             lock (_tptServiceContext)
             {
-                if (IsJobId(nextJob.Id))
+                if (TryGetJob(job.Id, out var existing))
                 {
-                    _tptServiceContext.Entry(nextJob).State = EntityState.Modified;
+                    _tptServiceContext.Entry(existing).CurrentValues.SetValues(job);
+                    _tptServiceContext.Entry(existing).State = EntityState.Modified;
                     _tptServiceContext.SaveChanges();
 
                     return true;
@@ -373,7 +374,11 @@ namespace TptMain.Jobs
             _logger.LogDebug($"TryGetJob() - jobId={jobId}.");
             lock (_tptServiceContext)
             {
-                previewJob = _tptServiceContext.PreviewJobs.Find(jobId);
+                previewJob = _tptServiceContext.PreviewJobs
+                    .Include(x => x.BibleSelectionParams)
+                    .Include(x => x.TypesettingParams)
+                    .Include(x => x.State)
+                    .FirstOrDefault(job => job.Id.Equals(jobId));
                 return (previewJob != null);
             }
         }

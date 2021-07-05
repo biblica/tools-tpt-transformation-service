@@ -101,6 +101,10 @@ namespace TptTest
                     {
                         ProjectName = ""
                     },
+                    TypesettingParams = new TypesettingParams
+                    {
+                        BookFormat = BookFormat.cav
+                    },
                     AdditionalParams = new AdditionalPreviewParams()
                     {
                         CustomFootnoteMarkers = "abcdef".Split(),

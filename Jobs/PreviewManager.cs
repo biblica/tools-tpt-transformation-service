@@ -128,51 +128,58 @@ namespace TptMain.Jobs
         /// </summary>
         private void CheckPreviewProcessing()
         {
-            _logger.LogInformation("Checking and updating preview processing...");
-
-            // Keep queuing jobs while we have a runner and jobs available.
-            InDesignScriptRunner availableRunner = GetAvailableRunner();
-            while (availableRunner != null && !JobQueue.IsEmpty)
+            lock (IdsTaskMap)
             {
-                // grab the next prioritized preview job
-                if (!JobQueue.TryDequeue(out var previewJob))
+                _logger.LogInformation("Checking and updating preview processing...");
+
+                // Keep queuing jobs while we have a runner and jobs available.
+                InDesignScriptRunner availableRunner = GetAvailableRunner();
+                while (availableRunner != null && !JobQueue.IsEmpty)
                 {
-                    // nothing to dequeue
-                    return;
+                    // grab the next prioritized preview job
+                    if (!JobQueue.TryDequeue(out var previewJob))
+                    {
+                        // nothing to dequeue
+                        return;
+                    }
+
+                    // hold on to the ability to cancel the task
+                    var tokenSource = new CancellationTokenSource();
+
+                    // track the token so that we can support job cancellation requests
+                    CancellationSourceMap[previewJob] = tokenSource;
+
+                    // we copy the reference of the chosen runner, otherwise the task may run with an unexpected runner due to looping
+                    var taskRunner = availableRunner;
+                    var task = new Task(() =>
+                    {
+                        _logger.LogDebug($"Assigning preview generation job '{previewJob.Id}' to IDS runner '{taskRunner.Name}'.");
+                        var runner = taskRunner;
+
+                        previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingPreview, JobStateSourceEnum.PreviewGeneration));
+
+                        try
+                        {
+                            runner.CreatePreview(previewJob, tokenSource.Token);
+                            previewJob.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated, JobStateSourceEnum.PreviewGeneration));
+                        }
+                        catch (Exception ex)
+                        {
+                            previewJob.SetError("An error occurred while generating preview.", ex.Message);
+                        } 
+                        finally
+                        {
+                            CancellationSourceMap.Remove(previewJob);
+                        }
+                    }, tokenSource.Token);
+
+                    IdsTaskMap[taskRunner] = task;
+
+                    task.Start();
+
+                    // check to see if there's a still a runner available for the next job
+                    availableRunner = GetAvailableRunner();
                 }
-
-                // hold on to the ability to cancel the task
-                var tokenSource = new CancellationTokenSource();
-
-                // track the token so that we can support job cancellation requests
-                CancellationSourceMap.TryAdd(previewJob, tokenSource);
-
-                // we copy the reference of the chosen runner, otherwise the task may run with an unexpected runner due to looping
-                var taskRunner = availableRunner;
-                var task = new Task(() =>
-                {
-                    _logger.LogDebug($"Assigning preview generation job '{previewJob.Id}' to IDS runner '{taskRunner.Name}'.");
-                    var runner = taskRunner;
-
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingPreview, JobStateSourceEnum.PreviewGeneration));
-
-                    try
-                    {
-                        runner.CreatePreview(previewJob, tokenSource.Token);
-                        previewJob.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated, JobStateSourceEnum.PreviewGeneration));
-                    }
-                    catch (Exception ex)
-                    {
-                        previewJob.SetError("An error occurred while generating preview.", ex.Message);
-                    }
-                }, tokenSource.Token);
-
-                IdsTaskMap.TryAdd(taskRunner, task);
-
-                task.Start();
-
-                // check to see if there's a still a runner available for the next job
-                availableRunner = GetAvailableRunner();
             }
         }
 
@@ -191,14 +198,18 @@ namespace TptMain.Jobs
         /// <param name="previewJob">The PreviewJob to cancel.</param>
         public void CancelJob(PreviewJob previewJob)
         {
-            if (CancellationSourceMap.TryGetValue(previewJob, out var cancellationTokenSource))
+            lock (IdsTaskMap)
             {
-                cancellationTokenSource.Cancel();
-                _logger.LogInformation($"Preview job '{previewJob.Id}' has been cancelled.");
-                previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled, JobStateSourceEnum.PreviewGeneration));
-            } else
-            {
-                _logger.LogWarning($"Preview job '{previewJob.Id}' has no running task to cancel.");
+                if (CancellationSourceMap.TryGetValue(previewJob, out var cancellationTokenSource))
+                {
+                    cancellationTokenSource.Cancel();
+                    _logger.LogInformation($"Preview job '{previewJob.Id}' has been cancelled.");
+                    previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled, JobStateSourceEnum.PreviewGeneration));
+                }
+                else
+                {
+                    _logger.LogWarning($"Preview job '{previewJob.Id}' has no running task to cancel.");
+                }
             }
         }
 
@@ -211,22 +222,28 @@ namespace TptMain.Jobs
             InDesignScriptRunner availableRunner = null;
 
             IndesignScriptRunners.ForEach((idsRunner) => {
-                _logger.LogDebug($"Assessing '{idsRunner.Name}' for availability.") ;
 
                 // break out if we've found a runner already
                 if (availableRunner == null)
                 {
+                    _logger.LogDebug($"Assessing '{idsRunner.Name}' for availability.");
+
                     // determine if we have any running tasks for the selected runner
                     IdsTaskMap.TryGetValue(idsRunner, out var task);
 
                     // track if there's any actively running task
-                    if (task == null || task.IsCompleted)
+                    if (task == null)
                     {
+                        _logger.LogDebug($"'{idsRunner.Name}' has no task assigned and is available.");
+                        availableRunner = idsRunner;
+                    } else if (task.IsCompleted)
+                    {
+                        _logger.LogDebug($"'{idsRunner.Name}' has a task in the terminal state of '{task.Status}' and is available.");
                         availableRunner = idsRunner;
                     }
                     else
                     {
-                        _logger.LogDebug($"'{idsRunner.Name}' is currently running a task in state '${task.Status}'.");
+                        _logger.LogDebug($"'{idsRunner.Name}' is currently running a task in state '{task.Status}'.");
                     }
                 }
             });
