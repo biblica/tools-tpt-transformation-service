@@ -38,7 +38,7 @@ namespace TptTest
         /// <summary>
         /// Mock script runner.
         /// </summary>
-        private Mock<ScriptRunner> _mockScriptRunner;
+        private Mock<InDesignScriptRunner> _mockScriptRunner;
 
         /// <summary>
         /// Mock request factory.
@@ -61,6 +61,11 @@ namespace TptTest
         private Mock<ParatextProjectService> _mockParatextProjectService;
 
         /// <summary>
+        /// Mock Preview Manager.
+        /// </summary>
+        private Mock<IPreviewManager> _mockPreviewManager;
+
+        /// <summary>
         /// Mock job scheduler.
         /// </summary>
         private Mock<JobScheduler> _mockJobScheduler;
@@ -76,10 +81,6 @@ namespace TptTest
             IDictionary<string, string> configKeys = new Dictionary<string, string>();
 
             // Configuration Parameters
-            // - ScriptRunner
-            configKeys[ScriptRunnerTests.TEST_IDS_URI_KEY] = ScriptRunnerTests.TEST_IDS_URI;
-            configKeys[ScriptRunnerTests.TEST_IDS_TIMEOUT_KEY] = ScriptRunnerTests.TEST_IDS_TIMEOUT;
-            configKeys[ScriptRunnerTests.TEST_IDS_PREVIEW_SCRIPT_DIR_KEY] = ScriptRunnerTests.TEST_IDS_TIMEOUT;
 
             // - TemplateManager
             configKeys[TemplateManagerTests.TEST_TEMPLATE_SERVER_URI_KEY] = TemplateManagerTests.TEST_TEMPLATE_SERVER_URI;
@@ -108,8 +109,8 @@ namespace TptTest
                     .Options);
 
             // mock: script runner
-            var mockScriptRunnerLogger = new Mock<ILogger<ScriptRunner>>();
-            _mockScriptRunner = new Mock<ScriptRunner>(
+            var mockScriptRunnerLogger = new Mock<ILogger<InDesignScriptRunner>>();
+            _mockScriptRunner = new Mock<InDesignScriptRunner>(
                 mockScriptRunnerLogger.Object, _testConfiguration);
 
             // mock: web request factory
@@ -133,6 +134,9 @@ namespace TptTest
             _mockParatextProjectService = new Mock<ParatextProjectService>(MockBehavior.Strict,
                 _mockParatextProjectServiceLogger.Object, _testConfiguration);
 
+            // mock: preview manager
+            _mockPreviewManager = new Mock<IPreviewManager>();
+
             // mock: job scheduler
             var mockJobSchedulerLogger = new Mock<ILogger<JobScheduler>>();
             _mockJobScheduler = new Mock<JobScheduler>(
@@ -150,7 +154,7 @@ namespace TptTest
                 _mockLogger.Object,
                 _testConfiguration,
                 _context,
-                _mockScriptRunner.Object,
+                _mockPreviewManager.Object,
                 _mockTemplateManager.Object,
                 _mockJobValidator.Object,
                 _mockParatextProjectService.Object,
@@ -174,7 +178,7 @@ namespace TptTest
                     _mockLogger.Object,
                 _testConfiguration,
                 _context,
-                _mockScriptRunner.Object,
+                _mockPreviewManager.Object,
                 _mockTemplateManager.Object,
                 _mockJobValidator.Object,
                 _mockParatextProjectService.Object,
@@ -226,7 +230,7 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockScriptRunner.Object,
+                    _mockPreviewManager.Object,
                     _mockTemplateManager.Object,
                     _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
@@ -254,8 +258,10 @@ namespace TptTest
             Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob2, out var outputJob2));
 
             // set the job's completed time to be before the threshold for deletion.
-            outputJob2.DateCompleted = DateTime.Now.AddSeconds(Int32.Parse(TestConsts.TEST_DOC_MAX_AGE_IN_SEC) * -2);
-
+            outputJob2.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated, 
+                JobStateSourceEnum.GeneralManagement,
+                DateTime.Now.AddSeconds(Int32.Parse(TestConsts.TEST_DOC_MAX_AGE_IN_SEC) * -2)));
+            
             // allow enough time for the check scheduled job to execute
             Thread.Sleep((int)(MainConsts.TIMER_STARTUP_DELAY_IN_SEC + (2 * MainConsts.MAX_AGE_CHECK_DIVISOR)) * 1000);
 
@@ -278,7 +284,7 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockScriptRunner.Object,
+                    _mockPreviewManager.Object,
                     _mockTemplateManager.Object,
                     _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
@@ -327,7 +333,7 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockScriptRunner.Object,
+                    _mockPreviewManager.Object,
                     _mockTemplateManager.Object,
                     _mockJobValidator.Object,
                     _mockParatextProjectService.Object,
@@ -353,7 +359,7 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockScriptRunner.Object,
+                    _mockPreviewManager.Object,
                     _mockTemplateManager.Object,
                     _mockJobValidator.Object,
                     _mockParatextProjectService.Object,

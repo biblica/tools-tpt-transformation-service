@@ -24,7 +24,8 @@ namespace TptTest
                 Id = Guid.Empty.ToString(),
                 BibleSelectionParams = new BibleSelectionParams
                 {
-                    ProjectName = TestConsts.TEST_PROJECT_NAME
+                    ProjectName = TestConsts.TEST_PROJECT_NAME,
+                    SelectedBooks = null
                 },
                 User = TestConsts.TEST_USER,
                 TypesettingParams = new TypesettingParams

@@ -43,7 +43,7 @@ namespace TptMain.Util
         /// <summary>
         /// Timer startup delay, in seconds.
         /// </summary>
-        public const int TIMER_STARTUP_DELAY_IN_SEC = 60;
+        public const int TIMER_STARTUP_DELAY_IN_SEC = 30;
 
         /// <summary>
         /// What fraction of a max age to check for expiration.

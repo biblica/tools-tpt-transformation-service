@@ -31,9 +31,9 @@ namespace TptMain.Jobs
         private readonly TptServiceContext _tptServiceContext;
 
         /// <summary>
-        /// IDS server script runner (injected).
+        /// Preview Manager (injected).
         /// </summary>
-        private readonly ScriptRunner _scriptRunner;
+        private readonly IPreviewManager _previewManager;
 
         /// <summary>
         /// Template manager.
@@ -110,7 +110,7 @@ namespace TptMain.Jobs
             ILogger<JobManager> logger,
             IConfiguration configuration,
             TptServiceContext tptServiceContext,
-            ScriptRunner scriptRunner,
+            IPreviewManager previewManager,
             TemplateManager templateManager,
             IPreviewJobValidator jobValidator,
             ParatextProjectService paratextProjectService,
@@ -119,7 +119,7 @@ namespace TptMain.Jobs
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _tptServiceContext = tptServiceContext ?? throw new ArgumentNullException(nameof(tptServiceContext));
-            _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
+            _previewManager = previewManager ?? throw new ArgumentNullException(nameof(previewManager));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _jobValidator = jobValidator ?? throw new ArgumentNullException(nameof(jobValidator));
             _paratextProjectService = paratextProjectService ?? throw new ArgumentNullException(nameof(paratextProjectService));
@@ -275,7 +275,7 @@ namespace TptMain.Jobs
                     new JobWorkflow(
                         _logger,
                         this,
-                        _scriptRunner,
+                        _previewManager,
                         _templateManager,
                         _jobValidator,
                         _paratextProjectService,
@@ -298,10 +298,7 @@ namespace TptMain.Jobs
             previewJob.Id = Guid.NewGuid().ToString();
             previewJob.BibleSelectionParams.Id = Guid.NewGuid().ToString();
             previewJob.TypesettingParams.Id = Guid.NewGuid().ToString();
-            previewJob.DateSubmitted = DateTime.UtcNow;
-            previewJob.DateStarted = null;
-            previewJob.DateCompleted = null;
-            previewJob.DateCancelled = null;
+            previewJob.State.Add(new PreviewJobState(JobStateEnum.Submitted));
 
             // project defaults
             previewJob.TypesettingParams.FontSizeInPts ??= MainConsts.ALLOWED_FONT_SIZE_IN_PTS.Default;
@@ -344,16 +341,17 @@ namespace TptMain.Jobs
         /// <summary>
         /// Update preview job.
         /// </summary>
-        /// <param name="nextJob">Preview job to update (required).</param>
+        /// <param name="job">Preview job to update (required).</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public virtual bool TryUpdateJob(PreviewJob nextJob)
+        public virtual bool TryUpdateJob(PreviewJob job)
         {
-            _logger.LogDebug($"TryUpdateJob() - nextJob={nextJob.Id}.");
+            _logger.LogDebug($"TryUpdateJob() - job={job.Id}.");
             lock (_tptServiceContext)
             {
-                if (IsJobId(nextJob.Id))
+                if (TryGetJob(job.Id, out var existing))
                 {
-                    _tptServiceContext.Entry(nextJob).State = EntityState.Modified;
+                    _tptServiceContext.Entry(existing).CurrentValues.SetValues(job);
+                    _tptServiceContext.Entry(existing).State = EntityState.Modified;
                     _tptServiceContext.SaveChanges();
 
                     return true;
@@ -376,7 +374,11 @@ namespace TptMain.Jobs
             _logger.LogDebug($"TryGetJob() - jobId={jobId}.");
             lock (_tptServiceContext)
             {
-                previewJob = _tptServiceContext.PreviewJobs.Find(jobId);
+                previewJob = _tptServiceContext.PreviewJobs
+                    .Include(x => x.BibleSelectionParams)
+                    .Include(x => x.TypesettingParams)
+                    .Include(x => x.State)
+                    .FirstOrDefault(job => job.Id.Equals(jobId));
                 return (previewJob != null);
             }
         }
