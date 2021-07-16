@@ -53,7 +53,7 @@ namespace TptMain.Jobs
         /// <param name="previewJob"><para>PreviewJob</para> to validate. (required)</param>
         /// <exception cref="ArgumentNullException">Thrown if the parameters is null.</exception>
         /// <exception cref="ArgumentException">Thrown for an invalid parameter.</exception>
-        public void ValidatePreviewJob(PreviewJob previewJob)
+        public void ProcessJob(PreviewJob previewJob)
         {
             // Input validation
             _ = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
@@ -126,8 +126,11 @@ namespace TptMain.Jobs
             // throw exception containing found errors, if any.
             if (errors.Count > 0)
             {
-                throw new ArgumentException($" '{nameof(previewJob)}' validation errors were encountered:{NEWLINE_TAB}"
+                previewJob.SetError("There were validation errors.", $" '{nameof(previewJob)}' validation errors were encountered:{NEWLINE_TAB}"
                                             + Join(NEWLINE_TAB, errors.ToArray()));
+            } else
+            {
+                previewJob.State.Add(new PreviewJobState(JobStateEnum.Started, JobStateSourceEnum.JobValidation));
             }
         }
 
@@ -244,6 +247,18 @@ namespace TptMain.Jobs
         public void Dispose()
         {
             _logger.LogDebug("Dispose().");
+        }
+
+        ///<inheritdoc/>
+        public void GetStatus(PreviewJob previewJob)
+        {
+            // no op
+        }
+
+        ///<inheritdoc/>
+        public void CancelJob(PreviewJob previewJob)
+        {
+            previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled, JobStateSourceEnum.JobValidation));
         }
     }
 }
