@@ -55,63 +55,63 @@ namespace TptMain.Jobs
         /// <summary>
         /// The directory where job status is stored
         /// </summary>
-        private static string JOBS_DIRECTORY = "jobs/";
+        private const string JobsDirectory = "jobs/";
 
         /// <summary>
         /// A flag/marker that a preview job has been canceled
         /// </summary>
-        private static string CANCEL_MARKER = ".cancel";
+        private const string CancelMarker = ".cancel";
 
         /// <summary>
         /// A flag that some part of the processing is complete. This is
         /// the prefix to a full file name like '.complete-template'
         /// </summary>
-        private static string COMPLETE_MARKER = ".complete";
+        private const string CompleteMarker = ".complete";
 
         /// <summary>
-        /// A flag for the tranform processing is complete
+        /// A flag for the transform processing is complete
         /// </summary>
-        private static string COMPLETE_TEMPLATE_MARKER = "-template";
+        private const string CompleteTemplateMarker = "-template";
 
         /// <summary>
         /// A flag that the tagged text is complete
         /// </summary>
-        private static string COMPLETE_TAGGED_TEXT_MARKER = "-tagged-text";
+        private const string CompleteTaggedTextMarker = "-tagged-text";
 
         /// <summary>
         /// AWS security key as baked into the application from development environment variables
         /// </summary>
-        private string _accessKey = AWSCredentials.AWS_ACCESS_KEY_ID;
+        private const string AccessKey = AWSCredentials.AWS_ACCESS_KEY_ID;
 
         /// <summary>
         ///  AWS security secret as baked into the application from development environment variables
         /// </summary>
-        private string _secretKey = AWSCredentials.AWS_ACCESS_KEY_SECRET;
+        private const string SecretKey = AWSCredentials.AWS_ACCESS_KEY_SECRET;
 
         /// <summary>
         /// The URL to the queue based on an environment variable (AWS_TPT_SQS_QUEUE_URL_TAGGED_TEXT), or the default.
         /// </summary>
-        private string _awsSqsQueueURLTaggedText = AWSCredentials.AWS_TPT_SQS_QUEUE_URL_TAGGED_TEXT;
+        private const string AwsSqsQueueUrlTaggedText = AWSCredentials.AWS_TPT_SQS_QUEUE_URL_TAGGED_TEXT;
 
         /// <summary>
         /// The URL to the queue based on an environment variable (AWS_TPT_SQS_QUEUE_URL_TEMPLATE), or the default.
         /// </summary>
-        private string _awsSqsQueueURLTemplate = AWSCredentials.AWS_TPT_SQS_QUEUE_URL_TEMPLATE;
+        private const string AwsSqsQueueUrlTemplate = AWSCredentials.AWS_TPT_SQS_QUEUE_URL_TEMPLATE;
 
         /// <summary>
-        /// Unless otherwise specified, as baked into the application from development envrionment variables, use us-east-2 for testing
+        /// Unless otherwise specified, as baked into the application from development environment variables, use us-east-2 for testing
         /// </summary>
-        private RegionEndpoint _region = RegionEndpoint.GetBySystemName(AWSCredentials.AWS_TPT_REGION) ?? RegionEndpoint.USEast2;
+        private readonly RegionEndpoint _region = RegionEndpoint.GetBySystemName(AWSCredentials.AWS_TPT_REGION) ?? RegionEndpoint.USEast2;
 
         /// <summary>
         /// The AWS SQS client
         /// </summary>
-        private AmazonSQSClient _amazonSQSClient;
+        private readonly AmazonSQSClient _amazonSqsClient;
 
         /// <summary>
         /// The S3Service to talk to S3 to verify status and get results
         /// </summary>
-        private S3Service _s3Service;
+        private readonly S3Service _s3Service;
 
         /// <summary>
         /// Simple constructor to be used by the managers. Creates the connection to AWS. It's ok if there
@@ -122,7 +122,7 @@ namespace TptMain.Jobs
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             _s3Service = new S3Service();
-            _amazonSQSClient = new AmazonSQSClient(_accessKey, _secretKey, _region);
+            _amazonSqsClient = new AmazonSQSClient(AccessKey, SecretKey, _region);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace TptMain.Jobs
         {
             try
             {
-                string jobJson = JsonConvert.SerializeObject(previewJob);
+                var jobJson = JsonConvert.SerializeObject(previewJob);
                 SubmitMessage(jobJson, previewJob.Id, TransformTypeEnum.TEMPLATE);
 
             }
@@ -158,7 +158,7 @@ namespace TptMain.Jobs
         {
             try
             {
-                string jobJson = JsonConvert.SerializeObject(previewJob);
+                var jobJson = JsonConvert.SerializeObject(previewJob);
                 SubmitMessage(jobJson, previewJob.Id, TransformTypeEnum.TAGGED_TEXT);
             }
             catch (AmazonSQSException ex)
@@ -184,8 +184,8 @@ namespace TptMain.Jobs
         {
 
             // First, look for the job directory
-            List<string> outputJobs = _s3Service.ListAllFiles(JOBS_DIRECTORY + previewJobId);
-            string found = outputJobs.Find(x =>
+            var outputJobs = _s3Service.ListAllFiles(JobsDirectory + previewJobId);
+            var found = outputJobs.Find(x =>
                x.Contains(previewJobId)
             );
 
@@ -196,9 +196,9 @@ namespace TptMain.Jobs
             }
 
             // if it's there, look to see if it was canceled
-            List<string> outputFiles = _s3Service.ListAllFiles(found);
-            string cancelFile = outputFiles.Find(x =>
-              x.Contains(CANCEL_MARKER)
+            var outputFiles = _s3Service.ListAllFiles(found);
+            var cancelFile = outputFiles.Find(x =>
+              x.Contains(CancelMarker)
             );
 
             // if it's canceled, report that
@@ -208,15 +208,15 @@ namespace TptMain.Jobs
             }
 
             // look for a complete marker
-            string completeFile = outputFiles.Find(x =>
-              x.Contains(COMPLETE_MARKER)
+            var completeFile = outputFiles.Find(x =>
+              x.Contains(CompleteMarker)
             );
 
             // if the complete marker is there, then respond thus
             if (!string.IsNullOrEmpty(completeFile))
             {
-                bool transformComplete = completeFile.Contains(COMPLETE_TEMPLATE_MARKER);
-                bool taggedTextComplete = completeFile.Contains(COMPLETE_TAGGED_TEXT_MARKER);
+                var transformComplete = completeFile.Contains(CompleteTemplateMarker);
+                var taggedTextComplete = completeFile.Contains(CompleteTaggedTextMarker);
 
                 if (transformComplete && taggedTextComplete)
                 {
@@ -248,13 +248,13 @@ namespace TptMain.Jobs
         /// <param name="previewJobId"></param>
         public void CancelTransformJobs(string previewJobId)
         {
-            MemoryStream stream = new MemoryStream();
-            StreamWriter streamWriter = new StreamWriter(stream);
+            var stream = new MemoryStream();
+            var streamWriter = new StreamWriter(stream);
             streamWriter.WriteLine("canceled"); // doesn't matter what goes in the file
             streamWriter.Flush();
             stream.Position = 0;
 
-            HttpStatusCode statusCode = _s3Service.PutFileStream(JOBS_DIRECTORY + previewJobId + "/" + CANCEL_MARKER, stream);
+            var statusCode = _s3Service.PutFileStream(JobsDirectory + previewJobId + "/" + CancelMarker, stream);
 
             if (HttpStatusCode.OK != statusCode)
             {
@@ -268,24 +268,25 @@ namespace TptMain.Jobs
         /// <param name="message">The message: the json representation of the previewJob itself</param>
         /// <param name="transformType">Whether to do template generation or tagged text</param>
         /// <returns>A unique id for the submitted job & generation work. This should be used to look up job status in S3.</returns>
-        void SubmitMessage(string message, string uniqueId, TransformTypeEnum transformType)
+        private void SubmitMessage(string message, string uniqueId, TransformTypeEnum transformType)
         {
             _logger.LogDebug("Submitting new {TYPE} job: {MSG}", transformType.ToString(), message);
 
             // Put the message onto the queue
-            SendMessageRequest sendMessageRequest = new SendMessageRequest
+            var sendMessageRequest = new SendMessageRequest
             {
-                QueueUrl = transformType.Equals(TransformTypeEnum.TAGGED_TEXT) ? _awsSqsQueueURLTaggedText : _awsSqsQueueURLTemplate,
+                QueueUrl = transformType.Equals(TransformTypeEnum.TAGGED_TEXT)                                 
+                    ? AwsSqsQueueUrlTaggedText : AwsSqsQueueUrlTemplate,
                 MessageBody = message,
-                MessageGroupId = transformType.ToString(),
+                MessageGroupId = uniqueId,
                 MessageDeduplicationId = uniqueId
             };
 
             // Wait for the message to be submitted
-            Task<SendMessageResponse> responseTask = _amazonSQSClient.SendMessageAsync(sendMessageRequest);
+            var responseTask = _amazonSqsClient.SendMessageAsync(sendMessageRequest);
             responseTask.Wait();
 
-            SendMessageResponse response = responseTask.Result;
+            var response = responseTask.Result;
 
             _logger.LogDebug("Job {TYPE} job {UNIQUE_ID} / {MSG_ID} submitted successfully", transformType.ToString(), uniqueId, response.MessageId);
         }
