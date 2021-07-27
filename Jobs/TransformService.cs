@@ -24,7 +24,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
-        private readonly ILogger _logger;
+        private readonly ILogger<TransformService> _logger;
 
         /// <summary>
         /// The current two types of jobs to submit to the queue. These turn into group ids to separate the two
@@ -100,7 +100,7 @@ namespace TptMain.Jobs
 
         /// <summary>
         /// Unless otherwise specified, as baked into the application from development envrionment variables, use us-east-2 for testing
-        /// </summary>
+        /// </summary>D
         private RegionEndpoint _region = RegionEndpoint.GetBySystemName(AWSCredentials.AWS_TPT_REGION) ?? RegionEndpoint.USEast2;
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace TptMain.Jobs
         /// Simple constructor to be used by the managers. Creates the connection to AWS. It's ok if there
         /// are more than one of these at a time.
         /// </summary>
-        public TransformService(ILogger logger)
+        public TransformService(ILogger<TransformService> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 

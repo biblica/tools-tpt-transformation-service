@@ -121,7 +121,7 @@ namespace TptTest
             // mock: preview job validator
             _mockJobValidator = new Mock<IPreviewJobValidator>();
             _mockJobValidator.Setup(validator =>
-                validator.ValidatePreviewJob(It.IsAny<PreviewJob>()))
+                validator.ProcessJob(It.IsAny<PreviewJob>()))
                 .Verifiable();
 
             // mock: paratext project service
@@ -275,7 +275,7 @@ namespace TptTest
                     It.Is<FileInfo>(it => it.FullName.Equals(testFileInfo.FullName)), It.IsAny<CancellationToken?>()))
                 .Verifiable();
             _mockPreviewManager.Setup(runnerItem =>
-                    runnerItem.ProcessJob(testPreviewJob))
+                    runnerItem.ProcessJob(It.IsAny<PreviewJob>()))
                 .Callback<PreviewJob>((previewItem) => {
                     isTaskRun = true;
                     while (!previewItem.IsCancelled)

@@ -33,11 +33,11 @@ namespace TptMain.Jobs
         /// <param name="configuration">The set of configuration parameters</param>
         /// <param name="transformService">Injected service instance</param>
         public TaggedTextJobManager(
-            ILogger logger,
+            ILogger<TaggedTextJobManager> logger,
             IConfiguration configuration,
             TransformService transformService)
         {
-            _logger = (ILogger<TaggedTextJobManager>)(logger ?? throw new ArgumentNullException(nameof(logger)));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             /// this is the only difference for this constructor

@@ -76,7 +76,7 @@ namespace TptMain.Jobs
         private readonly int _maxDocAgeInSec;
 
         /// <summary>
-        /// PDF expiration check timer.
+        /// TODO rename
         /// </summary>
         private readonly Timer _docCheckTimer;
 
@@ -131,6 +131,7 @@ namespace TptMain.Jobs
 
             _maxDocAgeInSec = int.Parse(configuration[ConfigConsts.MaxDocAgeInSecKey]
                                         ?? throw new ArgumentNullException(ConfigConsts.MaxDocAgeInSecKey));
+            // TODO use variables based on the expected usage. EG: job check timer
             _docCheckTimer = new Timer((stateObject) => { ProcessJobs(); }, null,
                  TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
                  TimeSpan.FromSeconds(_maxDocAgeInSec / MainConsts.MAX_AGE_CHECK_DIVISOR));
@@ -175,98 +176,30 @@ namespace TptMain.Jobs
         /// </summary>
         public void ProcessJobs()
         {
-            // todo handle jobs additional parameters
+            // TODO handle cancels
 
             foreach (var test in StateToProcessorMap)
             {
                 var initiationState = test.Key;
                 var handlingProcessor = test.Value;
 
-                if(TryGetJobsByCurrentState(initiationState, out var previewJobs))
+                if(TryGetJobsByCurrentState(initiationState, out var previewJobsByState))
                 {
-                    previewJobs.ForEach(previewJob =>
+                    previewJobsByState.ForEach(previewJob =>
                     {
-                        // TODO handle cancels
                         handlingProcessor.ProcessJob(previewJob);
                     });
                 }
             }
 
-
-//            _jobManager.TryUpdateJob(_previewJob);
-
-//            _previewJob.AdditionalParams.TextDirection = _paratextProjectService.GetTextDirection(_previewJob.BibleSelectionParams.ProjectName);
-
-//            // Grab the project's footnote markers if configured to do so.
-//            if (!IsJobCanceled && _previewJob.TypesettingParams.UseCustomFootnotes)
-//            {
-//                _previewJob.AdditionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.BibleSelectionParams.ProjectName);
-//                // Throw an error, if custom footnotes are requested but are not available.
-//                // This allows us to set the user's expectations early, rather than waiting
-//                // for a preview.
-//                if (_previewJob.AdditionalParams.CustomFootnoteMarkers == null || _previewJob.AdditionalParams.CustomFootnoteMarkers.Length == 0)
-//                {
-//                    throw new PreviewJobException(_previewJob, "Custom footnotes requested, but aren't specified in the project.");
-//                }
-
-//                _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", _previewJob.AdditionalParams.CustomFootnoteMarkers));
-//            }
-
-//            // If we're using the project font (rather than what's in the IDML) pass it as an override.
-//            if (!IsJobCanceled && _previewJob.TypesettingParams.UseProjectFont)
-//            {
-//                _previewJob.AdditionalParams.OverrideFont = _paratextProjectService.GetProjectFont(_previewJob.BibleSelectionParams.ProjectName);
-
-//                if (String.IsNullOrEmpty(_previewJob.AdditionalParams.OverrideFont))
-//                {
-//                    _logger.LogInformation($"No font specified for project {_previewJob.BibleSelectionParams.ProjectName}. IDML font settings will not be modified.");
-//                    _previewJob.AdditionalParams.OverrideFont = null;
-//                }
-//            }
-
-//            if (!IsJobCanceled)
-//            {
-//                _templateManager.DownloadTemplateFile(_previewJob,
-//                    new FileInfo(Path.Combine(_jobManager.IdmlDirectory.FullName,
-//                        $"{MainConsts.PREVIEW_FILENAME_PREFIX}{_previewJob.Id}.idml")),
-//                    _cancellationTokenSource.Token);
-//            }
-
-//            if (!IsJobCanceled)
-//            {
-//                _previewManager.ProcessJob(_previewJob);
-
-//                // check if we've hit any terminal state
-//                while (!IsJobCanceled &&
-//                    !(_previewJob.IsCompleted || _previewJob.IsError || _previewJob.IsCancelled))
-//                {
-//                    Thread.Sleep(PREVIEW_CHECK_POLLING_PERIOD_IN_MS);
-//                    _previewManager.GetStatus(_previewJob);
-//                }
-//            }
-
-//            _logger.LogInformation($"Job finished: {_previewJob.Id}.");
-//        }
-//            catch (OperationCanceledException ex)
-//            {
-//                _logger.LogDebug(ex, $"Can't run job: {_previewJob.Id} (cancelled, ignoring).");
-//                _previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled));
-//            }
-//            catch (PreviewJobException ex)
-//            {
-//                _logger.LogWarning($"Can't run job: {ex}");
-//                _previewJob.SetError("Can't generate preview.", ex.Message);
-//            }
-//            catch (Exception ex)
-//{
-//    _logger.LogWarning(ex, $"Can't run job: {_previewJob.Id}");
-//    _previewJob.SetError("An internal server error occurred.", ex.Message);
-//}
-//finally
-//{
-//    _previewJob.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated));
-//    _jobManager.TryUpdateJob(_previewJob);
-//}
+            // update all jobs against the DB.
+            if (TryGetJobs(out var previewJobs))
+            {
+                previewJobs.ForEach(job =>
+                {
+                    TryUpdateJob(job);
+                });
+            }
         }
 
         /// <summary>
@@ -306,8 +239,12 @@ namespace TptMain.Jobs
         {
             // identifying information
             previewJob.Id = Guid.NewGuid().ToString();
+            previewJob.BibleSelectionParams ??= new BibleSelectionParams();
             previewJob.BibleSelectionParams.Id = Guid.NewGuid().ToString();
+            previewJob.TypesettingParams ??= new TypesettingParams();
             previewJob.TypesettingParams.Id = Guid.NewGuid().ToString();
+            previewJob.AdditionalParams ??= new AdditionalPreviewParams();
+            previewJob.AdditionalParams.Id = Guid.NewGuid().ToString();
             previewJob.State.Add(new PreviewJobState(JobStateEnum.Submitted));
 
             // project defaults
@@ -398,9 +335,26 @@ namespace TptMain.Jobs
             _logger.LogDebug($"TryGetJobs().");
             lock (_tptServiceContext)
             {
-                previewJobs = PreviewJobs
-                    .Select(jobKvp => jobKvp.Value)
-                    .ToList();
+                if (PreviewJobs is null)
+                {
+                    previewJobs = _tptServiceContext.PreviewJobs
+                        .Include(x => x.BibleSelectionParams)
+                        .Include(x => x.TypesettingParams)
+                        .Include(x => x.State)
+                        .ToList();
+
+                    // populate the cache
+                    PreviewJobs = previewJobs.ToDictionary(
+                        job => job.Id,
+                        job => job
+                    );
+                }
+                else
+                {
+                    previewJobs = PreviewJobs
+                        .Select(jobKvp => jobKvp.Value)
+                        .ToList();
+                }
 
                 return previewJobs != null && previewJobs.Count > 0;
             }
@@ -436,7 +390,7 @@ namespace TptMain.Jobs
             _logger.LogDebug($"IsJobId() - jobId={jobId}.");
             lock (_tptServiceContext)
             {
-                return _tptServiceContext.PreviewJobs.Find(jobId) != null;
+                return PreviewJobs.ContainsKey(jobId);
             }
         }
 

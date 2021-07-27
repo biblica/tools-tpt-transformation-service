@@ -181,7 +181,7 @@ namespace TptTest.Jobs
             try
             {
                 // Perform the validation.
-                validator.Object.ValidatePreviewJob(previewJob);
+                validator.Object.ProcessJob(previewJob);
             }
             catch (ArgumentException ex)
             {

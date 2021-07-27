@@ -107,7 +107,7 @@ namespace TptTest
                     },
                     AdditionalParams = new AdditionalPreviewParams()
                     {
-                        CustomFootnoteMarkers = "abcdef".Split(),
+                        CustomFootnoteMarkers = "a,b,c,d,e,f",
                         OverrideFont = "A New Font"
                     }
                 },

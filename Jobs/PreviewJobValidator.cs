@@ -32,6 +32,12 @@ namespace TptMain.Jobs
         private readonly ParatextApi _paratextApi;
 
         /// <summary>
+        /// Paratext Project service used to get information related to local Paratext projects.
+        /// </summary>
+        private readonly ParatextProjectService _paratextProjectService;
+
+
+        /// <summary>
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
@@ -40,11 +46,13 @@ namespace TptMain.Jobs
         public PreviewJobValidator(
             ILogger<PreviewJobValidator> logger,
             IConfiguration configuration,
+            ParatextProjectService paratextProjectService,
             ParatextApi paratextApi)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _paratextApi = paratextApi ?? throw new ArgumentNullException(nameof(paratextApi));
+            _paratextProjectService = paratextProjectService ?? throw new ArgumentNullException(nameof(paratextProjectService));
         }
 
         /// <summary>
@@ -122,6 +130,19 @@ namespace TptMain.Jobs
                 previewJob.TypesettingParams.PageHeaderInPts,
                 MainConsts.ALLOWED_PAGE_HEADER_IN_PTS,
                 errorHandlerFunc);
+
+            // Generate calculated needed fields
+            if (errors.Count > 0)
+            {
+                try
+                {
+                    GenerateAdditionalParams(previewJob);
+                }
+                catch (Exception ex)
+                {
+                    errorHandlerFunc($"'{modelRootPrefix}{nameof(previewJob.AdditionalParams)}' was unable to be generated. {ex.Message}");
+                }
+            }
 
             // throw exception containing found errors, if any.
             if (errors.Count > 0)
@@ -237,6 +258,45 @@ namespace TptMain.Jobs
                     {
                         handleError($"Duplicate book id '{tempBookId}' in book id list '{parameterName}'.");
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Generate any calculated fields that we will need.
+        /// </summary>
+        /// <param name="previewJob">The Job to generate the calculated fields for.</param>
+        private void GenerateAdditionalParams(PreviewJob previewJob)
+        {
+            // parameter validation
+            _ = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
+
+            previewJob.AdditionalParams.TextDirection = _paratextProjectService.GetTextDirection(previewJob.BibleSelectionParams.ProjectName);
+
+            // Grab the project's footnote markers if configured to do so.
+            if (previewJob.TypesettingParams.UseCustomFootnotes)
+            {
+                previewJob.AdditionalParams.CustomFootnoteMarkers = String.Join(',', _paratextProjectService.GetFootnoteCallerSequence(previewJob.BibleSelectionParams.ProjectName));
+                // Throw an error, if custom footnotes are requested but are not available.
+                // This allows us to set the user's expectations early, rather than waiting
+                // for a preview.
+                if (String.IsNullOrEmpty(previewJob.AdditionalParams.CustomFootnoteMarkers))
+                {
+                    throw new PreviewJobException(previewJob, "Custom footnotes requested, but aren't specified in the project.");
+                }
+
+                _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + previewJob.AdditionalParams.CustomFootnoteMarkers);
+            }
+
+            // If we're using the project font (rather than what's in the IDML) pass it as an override.
+            if (previewJob.TypesettingParams.UseProjectFont)
+            {
+                previewJob.AdditionalParams.OverrideFont = _paratextProjectService.GetProjectFont(previewJob.BibleSelectionParams.ProjectName);
+
+                if (String.IsNullOrEmpty(previewJob.AdditionalParams.OverrideFont))
+                {
+                    _logger.LogInformation($"No font specified for project {previewJob.BibleSelectionParams.ProjectName}. IDML font settings will not be modified.");
+                    previewJob.AdditionalParams.OverrideFont = null;
                 }
             }
         }

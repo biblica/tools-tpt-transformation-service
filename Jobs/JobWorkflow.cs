@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using TptMain.Exceptions;
@@ -116,7 +117,7 @@ namespace TptMain.Jobs
 
                 if (!IsJobCanceled)
                 {
-                    _jobValidator.ValidatePreviewJob(_previewJob);
+                    _jobValidator.ProcessJob(_previewJob);
                 }
 
                 _previewJob.AdditionalParams.TextDirection = _paratextProjectService.GetTextDirection(_previewJob.BibleSelectionParams.ProjectName);
@@ -124,16 +125,16 @@ namespace TptMain.Jobs
                 // Grab the project's footnote markers if configured to do so.
                 if (!IsJobCanceled && _previewJob.TypesettingParams.UseCustomFootnotes)
                 {
-                    _previewJob.AdditionalParams.CustomFootnoteMarkers = _paratextProjectService.GetFootnoteCallerSequence(_previewJob.BibleSelectionParams.ProjectName);
+                    _previewJob.AdditionalParams.CustomFootnoteMarkers = String.Join(',', _paratextProjectService.GetFootnoteCallerSequence(_previewJob.BibleSelectionParams.ProjectName));
                     // Throw an error, if custom footnotes are requested but are not available.
                     // This allows us to set the user's expectations early, rather than waiting
                     // for a preview.
-                    if (_previewJob.AdditionalParams.CustomFootnoteMarkers == null || _previewJob.AdditionalParams.CustomFootnoteMarkers.Length == 0)
+                    if (String.IsNullOrEmpty(_previewJob.AdditionalParams.CustomFootnoteMarkers))
                     {
                         throw new PreviewJobException(_previewJob, "Custom footnotes requested, but aren't specified in the project.");
                     }
 
-                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + String.Join(", ", _previewJob.AdditionalParams.CustomFootnoteMarkers));
+                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + _previewJob.AdditionalParams.CustomFootnoteMarkers);
                 }
 
                 // If we're using the project font (rather than what's in the IDML) pass it as an override.

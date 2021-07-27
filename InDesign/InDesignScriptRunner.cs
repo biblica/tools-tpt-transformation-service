@@ -155,7 +155,7 @@ namespace TptMain.InDesign
             var txtFiles = GetTaggedTextFiles(txtDir);
 
             // Build custom footnotes into a CSV string, eg "a,d,e,ñ,h,Ä".
-            var customFootnotes = inputJob.AdditionalParams.CustomFootnoteMarkers != null ? String.Join(',', inputJob.AdditionalParams.CustomFootnoteMarkers) : null;
+            var customFootnotes = inputJob.AdditionalParams.CustomFootnoteMarkers;
 
             // Create the InDesign Documents (IDTT files)
             _logger.LogDebug("Creating InDesign Documents");

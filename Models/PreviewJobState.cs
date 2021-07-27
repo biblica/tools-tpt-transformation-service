@@ -14,12 +14,12 @@ namespace TptMain.Models
         Started = 2,
         GeneratingTemplate = 3,
         TemplateGenerated = 4,
-        GeneratingTaggedText = 3,
-        TaggedTextGenerated = 4,
-        GeneratingPreview = 5,
-        Cancelled = 6,
-        Error = 7,
-        PreviewGenerated = 8
+        GeneratingTaggedText = 5,
+        TaggedTextGenerated = 6,
+        GeneratingPreview = 7,
+        Cancelled = 8,
+        Error = 9,
+        PreviewGenerated = 10
     }
 
     /// <summary>

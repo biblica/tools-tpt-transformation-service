@@ -146,8 +146,7 @@ namespace TptMain.Models
         /// <summary>
         /// Additional parameters that are needed and calculated.
         /// </summary>
-        [NotMapped]
-        public AdditionalPreviewParams AdditionalParams { get; set; } = new AdditionalPreviewParams();
+        public AdditionalPreviewParams AdditionalParams { get; set; }
 
         /// <summary>
         /// Function used for indicating an error occurred and provide a message for the reason.

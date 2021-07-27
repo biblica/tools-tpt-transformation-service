@@ -126,7 +126,7 @@ namespace TptTest
             // mock: preview job validator
             _mockJobValidator = new Mock<IPreviewJobValidator>();
             _mockJobValidator.Setup(validator =>
-                validator.ValidatePreviewJob(It.IsAny<PreviewJob>()))
+                validator.ProcessJob(It.IsAny<PreviewJob>()))
                 .Verifiable();
 
             // mock: paratext project service
