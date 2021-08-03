@@ -172,12 +172,10 @@ namespace TptMain.Jobs
         }
 
         /// <summary>
-        /// TODO name and doc
+        /// This function handles the processing of TPT jobs, and delgating work to individual managers based on state.
         /// </summary>
         public void ProcessJobs()
         {
-            // TODO handle cancels
-
             foreach (var test in StateToProcessorMap)
             {
                 var initiationState = test.Key;
@@ -269,6 +267,12 @@ namespace TptMain.Jobs
             {
                 if (TryGetJob(jobId, out var foundJob))
                 {
+                    // try to cancel against every processor
+                    foreach(var stateToProcessor in StateToProcessorMap)
+                    {
+                        stateToProcessor.Value.CancelJob(foundJob);
+                    }
+
                     PreviewJobs.Remove(foundJob.Id);
                     _tptServiceContext.PreviewJobs.Remove(foundJob);
                     _tptServiceContext.SaveChanges();

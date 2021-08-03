@@ -16,10 +16,9 @@ namespace TptTest.Jobs
     public class TransformJobManagerTests
     {
         private IConfiguration _testConfiguration;
-        private TptServiceContext _context;
 
-        private Mock<ILogger<TemplateJobManager>> _mockLogger;
-        private Mock<ILoggerFactory> _mockLoggerFactory;
+        private Mock<ILogger<TemplateJobManager>> _mockTemplateManagerLogger;
+        private Mock<ILogger<TransformService>> _mockTransformServiceLogger;
         private Mock<TransformService> _mockTransformService;
 
         private const string TIMEOUT_IN_SECS = "3600";
@@ -32,10 +31,6 @@ namespace TptTest.Jobs
         public void TestSetup()
         {
 
-            _mockLogger = new Mock<ILogger<TemplateJobManager>>();
-            _mockLoggerFactory = new Mock<ILoggerFactory>();
-            _mockLoggerFactory.Setup(lm => lm.CreateLogger(It.IsAny<string>())).Returns(_mockLogger.Object);
-
             IDictionary<string, string> configKeys = new Dictionary<string, string>();
             configKeys[ConfigConsts.TemplateGenerationTimeoutInSecKey] = TIMEOUT_IN_SECS;
 
@@ -43,12 +38,12 @@ namespace TptTest.Jobs
                .AddInMemoryCollection(configKeys)
                .Build();
 
-            _context = new TptServiceContext(
-                new DbContextOptionsBuilder<TptServiceContext>()
-                    .UseInMemoryDatabase(Guid.NewGuid().ToString())
-                    .Options);
+            // mock: template job manager
+            _mockTemplateManagerLogger = new Mock<ILogger<TemplateJobManager>>();
 
-            _mockTransformService = new Mock<TransformService>(_mockLogger.Object);
+            // mock: transform service
+            _mockTransformServiceLogger = new Mock<ILogger<TransformService>>();
+            _mockTransformService = new Mock<TransformService>(_mockTransformServiceLogger.Object);
 
         }
 
@@ -58,7 +53,7 @@ namespace TptTest.Jobs
         [TestMethod()]
         public void GetStatusTest()
         {
-            TemplateJobManager jobTemplateManager = new TemplateJobManager(_mockLogger.Object, _testConfiguration, _mockTransformService.Object);
+            TemplateJobManager jobTemplateManager = new TemplateJobManager(_mockTemplateManagerLogger.Object, _testConfiguration, _mockTransformService.Object);
 
             var jobId = "1234";
             var previewJob = new PreviewJob()
@@ -79,7 +74,7 @@ namespace TptTest.Jobs
         [TestMethod()]
         public void ErrorTest()
         {
-            TemplateJobManager jobTemplateManager = new TemplateJobManager(_mockLogger.Object, _testConfiguration, _mockTransformService.Object);
+            TemplateJobManager jobTemplateManager = new TemplateJobManager(_mockTemplateManagerLogger.Object, _testConfiguration, _mockTransformService.Object);
 
             var jobId = "1234";
             var previewJob = new PreviewJob()
@@ -111,7 +106,7 @@ namespace TptTest.Jobs
                .AddInMemoryCollection(configKeys)
                .Build();
 
-            TemplateJobManager jobTemplateManager = new TemplateJobManager(_mockLogger.Object, testConfiguration, _mockTransformService.Object);
+            TemplateJobManager jobTemplateManager = new TemplateJobManager(_mockTemplateManagerLogger.Object, testConfiguration, _mockTransformService.Object);
 
             var jobId = "1234";
             var previewJob = new PreviewJob()

@@ -31,6 +31,11 @@ namespace TptTest.Jobs
         private Mock<ParatextApi> _mockParatextApi;
 
         /// <summary>
+        /// Mock Paratext Project Service.
+        /// </summary>
+        private Mock<ParatextProjectService> _mockParatextProjectService;
+
+        /// <summary>
         /// The service under test: PreviewJobValidator
         /// </summary>
         private Mock<PreviewJobValidator> serviceUnderTest;
@@ -57,6 +62,9 @@ namespace TptTest.Jobs
                 configKeys[ConfigConsts.ParatextApiAllowedMemberRolesKey + ":" + i] = ParatextApiTests.TEST_PT_API_ALLOWED_MEMBER_ROLES[i].ToString();
             }
 
+            // mock: Paratext Project Service
+            configKeys[ConfigConsts.ParatextDocDirKey] = TestConsts.TEST_PARATEXT_DOC_DIR;
+
             // The InMemoryCollection will snapshot the parameters upon creation, have to first populate the dictionary before passing it.
             _testConfiguration = new ConfigurationBuilder()
                .AddInMemoryCollection(configKeys)
@@ -71,11 +79,18 @@ namespace TptTest.Jobs
                 paratextApi.IsUserAuthorizedOnProject(It.IsAny<PreviewJob>()))
                 .Verifiable();
 
+            // mock: Paratext Project Service
+            var mockParatextProjectServiceLogger = new Mock<ILogger<ParatextProjectService>>();
+            _mockParatextProjectService = new Mock<ParatextProjectService>(
+                mockParatextProjectServiceLogger.Object,
+                _testConfiguration);
+
             // setup service under test
             serviceUnderTest =
                 new Mock<PreviewJobValidator>(
                     _mockLogger.Object,
                     _testConfiguration,
+                    _mockParatextProjectService.Object,
                     _mockParatextApi.Object)
                 { CallBase = true };
             // call base functions unless overriden
@@ -177,28 +192,27 @@ namespace TptTest.Jobs
         /// <param name="expectedFailedParameters">The parameters that we expect to fail. (required)</param>
         private void TestValidation(Mock<PreviewJobValidator> validator, PreviewJob previewJob, List<string> expectedFailedParameters)
         {
-            var exceptionThrown = false;
-            try
+            var errorOccured = false;
+
+            // Perform the validation.
+            validator.Object.ProcessJob(previewJob);
+
+            if(previewJob.IsError)
             {
-                // Perform the validation.
-                validator.Object.ProcessJob(previewJob);
-            }
-            catch (ArgumentException ex)
-            {
-                exceptionThrown = true;
+                errorOccured = true;
 
                 // ensure we got the expected number of errors by counting the separators (minus 1)
-                Assert.AreEqual(expectedFailedParameters.Count, ex.Message.Split(PreviewJobValidator.NEWLINE_TAB).Length - 1);
+                Assert.AreEqual(expectedFailedParameters.Count, previewJob.ErrorDetail.Split(PreviewJobValidator.NEWLINE_TAB).Length - 1);
 
                 // we're expecting this exception to be thrown with a consolidation of error messages for every failed item.
                 expectedFailedParameters.ForEach(expectedFailParam =>
                 {
-                    Assert.IsTrue(ex.Message.Contains(expectedFailParam), $"Expected '{expectedFailParam}' validation error not found.");
+                    Assert.IsTrue(previewJob.ErrorDetail.Contains(expectedFailParam), $"Expected '{expectedFailParam}' validation error not found.");
                 });
             }
 
             // make sure an exception was thrown when there were errors
-            Assert.AreEqual(exceptionThrown, expectedFailedParameters.Count > 0);
+            Assert.AreEqual(errorOccured, expectedFailedParameters.Count > 0);
         }
     }
 }

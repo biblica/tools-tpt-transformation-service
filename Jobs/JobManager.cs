@@ -296,8 +296,12 @@ namespace TptMain.Jobs
         {
             // identifying information
             previewJob.Id = Guid.NewGuid().ToString();
+            previewJob.BibleSelectionParams ??= new BibleSelectionParams();
             previewJob.BibleSelectionParams.Id = Guid.NewGuid().ToString();
+            previewJob.TypesettingParams ??= new TypesettingParams();
             previewJob.TypesettingParams.Id = Guid.NewGuid().ToString();
+            previewJob.AdditionalParams ??= new AdditionalPreviewParams();
+            previewJob.AdditionalParams.Id = Guid.NewGuid().ToString();
             previewJob.State.Add(new PreviewJobState(JobStateEnum.Submitted));
 
             // project defaults
