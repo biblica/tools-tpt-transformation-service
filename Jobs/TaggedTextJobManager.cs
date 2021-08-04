@@ -85,19 +85,20 @@ namespace TptMain.Jobs
                 case TransformJobStatus.WAITING:
                 case TransformJobStatus.PROCESSING:
                     previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTaggedText, JobStateSourceEnum.TaggedTextGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.GeneratingTaggedText} for {previewJob.Id}");
+                    _logger.LogDebug($"Status reported as {JobStateEnum.GeneratingTemplate} for {previewJob.Id}");
                     break;
-                case TransformJobStatus.TAGGED_TEXT_COMPLETE:
+                case TransformJobStatus.TEMPLATE_COMPLETE:
                     previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTaggedText, JobStateSourceEnum.TaggedTextGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.TaggedTextGenerated} for {previewJob.Id}");
+                    _logger.LogDebug($"Status reported as {JobStateEnum.TemplateGenerated} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.CANCELED:
                     previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled, JobStateSourceEnum.TaggedTextGeneration));
                     _logger.LogDebug($"Status reported as {JobStateEnum.Cancelled} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.ERROR:
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TaggedTextGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.Error} for {previewJob.Id}");
+                    var errorMessage = $"Status reported as {JobStateEnum.Error} for {previewJob.Id}";
+                    _logger.LogDebug(errorMessage);
+                    previewJob.SetError(errorMessage, null, JobStateSourceEnum.TaggedTextGeneration);
                     break;
             }
 

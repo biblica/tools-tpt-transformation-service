@@ -36,6 +36,11 @@
         public const string MaxDocAgeInSecKey = "Docs:MaxAgeInSec";
 
         /// <summary>
+        /// Job processing interval in seconds config key.
+        /// </summary>
+        public const string JobProcessIntervalInSecKey = "Jobs:Processing:ProcessIntervalInSec";
+
+        /// <summary>
         /// Max concurrent jobs config key.
         /// </summary>
         public const string MaxConcurrentJobsKey = "Jobs:MaxConcurrent";

@@ -96,8 +96,9 @@ namespace TptMain.Jobs
                     _logger.LogDebug($"Status reported as {JobStateEnum.Cancelled} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.ERROR:
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TemplateGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.Error} for {previewJob.Id}");
+                    var errorMessage = $"Status reported as {JobStateEnum.Error} for {previewJob.Id}";
+                    _logger.LogDebug(errorMessage);
+                    previewJob.SetError(errorMessage, null, JobStateSourceEnum.TemplateGeneration);
                     break;
             }
 
@@ -120,10 +121,9 @@ namespace TptMain.Jobs
 
             if (previewJobState == null)
             {
-                _logger.LogError($"PreviewJob has not started Template generation even when asked for status update. Cancelling: {previewJob.Id}");
-                previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TemplateGeneration));
-
-                previewJob.SetError("Template generation error.", "Could not get state indicating that the Template generation had been started.");
+                var errorMessage = $"PreviewJob has not started Template generation even when asked for status update. Cancelling: {previewJob.Id}";
+                _logger.LogError(errorMessage);
+                previewJob.SetError("Template generation error.", errorMessage, JobStateSourceEnum.TemplateGeneration);
                 _transformService.CancelTransformJobs(previewJob.Id);
             }
             else
@@ -132,10 +132,9 @@ namespace TptMain.Jobs
 
                 if (diff.TotalMilliseconds >= _timeoutMills)
                 {
-                    _logger.LogError($"PreviewJob has not completed Template generation, timed out! Cancelling: {previewJob.Id}");
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TemplateGeneration));
-
-                    previewJob.SetError("Template generation error, timed-out", $"The Template generation timed out - timeout:{_timeoutMills}, diff:{diff}");
+                    var errorMessage = $"The Template generation timed out on job {previewJob.Id} - timeout:{_timeoutMills}, diff:{diff}";
+                    _logger.LogError(errorMessage);
+                    previewJob.SetError("Template generation error.", errorMessage, JobStateSourceEnum.TemplateGeneration);
                     _transformService.CancelTransformJobs(previewJob.Id);
                 }
             }

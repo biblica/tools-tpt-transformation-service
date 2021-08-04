@@ -155,11 +155,22 @@ namespace TptMain.Models
         /// <param name="errorDetail">Information about why the error occurred. (Required)</param>
         public void SetError(string errorMessage, string errorDetail)
         {
+            SetError(errorMessage, errorDetail, JobStateSourceEnum.GeneralManagement);
+        }
+
+        /// <summary>
+        /// Function used for indicating an error occurred and provide a message for the reason.
+        /// </summary>
+        /// <param name="errorMessage">User-friendly error message. (Required)</param>
+        /// <param name="errorDetail">Information about why the error occurred. (Required)</param>
+        /// <param name="jobStateSourceEnum">The source entity of the error job state. (Required)</param>
+        public void SetError(string errorMessage, string errorDetail, JobStateSourceEnum jobStateSourceEnum)
+        {
             // validate inputs
             this.ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
             this.ErrorDetail = errorDetail ?? throw new ArgumentNullException(nameof(errorDetail));
 
-            this.State.Add(new PreviewJobState(JobStateEnum.Error));
+            this.State.Add(new PreviewJobState(JobStateEnum.Error, jobStateSourceEnum));
         }
     }
 }

@@ -7,10 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading;
-using TptMain.InDesign;
 using TptMain.Models;
-using TptMain.ParatextProjects;
-using TptMain.Toolbox;
 using TptMain.Util;
 
 namespace TptMain.Jobs
@@ -76,9 +73,19 @@ namespace TptMain.Jobs
         private readonly int _maxDocAgeInSec;
 
         /// <summary>
-        /// TODO rename
+        /// Check timer and files
         /// </summary>
         private readonly Timer _docCheckTimer;
+
+        /// <summary>
+        /// Interval in between job processing functions run.
+        /// </summary>
+        private readonly int _jobProcessIntervalInSec;
+
+        /// <summary>
+        /// Check timer for jobs
+        /// </summary>
+        private readonly Timer _processRunTimer;
 
         /// <summary>
         /// Template (IDML) storage directory.
@@ -86,11 +93,16 @@ namespace TptMain.Jobs
         public DirectoryInfo IdmlDirectory => _idmlDirectory;
 
         /// <summary>
-        /// TODO doc
+        /// This dictionary maps the state that will determine which processor will process a job next.
         /// </summary>
-        private Dictionary<JobStateEnum, IPreviewJobProcessor> StateToProcessorMap { get; set; }
+        private Dictionary<JobStateEnum, IPreviewJobProcessor> StateToProcessorProcessMap { get; set; } 
 
-        // TODO create cache of jobs as they'll be updated repeatedly in processors.
+        /// <summary>
+        /// This dictionary maps the state that will determine which processor will update the job next.
+        /// </summary>
+        private Dictionary<JobStateEnum, IPreviewJobProcessor> StateToProcessorUpdateMap { get; set; } 
+
+        // Cache of jobs as they'll be updated repeatedly in processors.
         private Dictionary<string, PreviewJob> PreviewJobs{ get; set; }
 
         /// <summary>
@@ -128,13 +140,15 @@ namespace TptMain.Jobs
                                               ?? throw new ArgumentNullException(ConfigConsts.PdfDocDirKey));
             _zipDirectory = new DirectoryInfo(configuration[ConfigConsts.ZipDocDirKey]
                                               ?? throw new ArgumentNullException(ConfigConsts.ZipDocDirKey));
-
             _maxDocAgeInSec = int.Parse(configuration[ConfigConsts.MaxDocAgeInSecKey]
                                         ?? throw new ArgumentNullException(ConfigConsts.MaxDocAgeInSecKey));
-            // TODO use variables based on the expected usage. EG: job check timer
-            _docCheckTimer = new Timer((stateObject) => { ProcessJobs(); }, null,
+            _jobProcessIntervalInSec = int.Parse(configuration[ConfigConsts.JobProcessIntervalInSecKey]
+                                        ?? throw new ArgumentNullException(ConfigConsts.JobProcessIntervalInSecKey));
+
+            _processRunTimer = new Timer((stateObject) => { ProcessJobs(); }, 
+                null, 
                  TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
-                 TimeSpan.FromSeconds(_maxDocAgeInSec / MainConsts.MAX_AGE_CHECK_DIVISOR));
+                 TimeSpan.FromSeconds(_jobProcessIntervalInSec));
 
             if (!Directory.Exists(_pdfDirectory.FullName))
             {
@@ -147,16 +161,22 @@ namespace TptMain.Jobs
             }
 
             // map the events that kick them off to their respective processors
-            StateToProcessorMap = new Dictionary<JobStateEnum, IPreviewJobProcessor>()
+            StateToProcessorProcessMap = new Dictionary<JobStateEnum, IPreviewJobProcessor>()
             {
                 { JobStateEnum.Submitted, _jobValidator },
                 { JobStateEnum.Started, _templateManager },
                 { JobStateEnum.TemplateGenerated, _taggedTextManager },
                 { JobStateEnum.TaggedTextGenerated, _previewManager }
             };
+            StateToProcessorUpdateMap = new Dictionary<JobStateEnum, IPreviewJobProcessor>()
+            {
+                { JobStateEnum.GeneratingTemplate, _templateManager },
+                { JobStateEnum.GeneratingTaggedText, _taggedTextManager },
+                { JobStateEnum.GeneratingPreview, _previewManager }
+            };
 
             // grab and cache the jobs from the database
-            if(TryGetJobs(out var previewJobs))
+            if (TryGetJobs(out var previewJobs))
             {
                 PreviewJobs = previewJobs.ToDictionary(
                     job => job.Id,
@@ -176,7 +196,10 @@ namespace TptMain.Jobs
         /// </summary>
         public void ProcessJobs()
         {
-            foreach (var test in StateToProcessorMap)
+            _logger.LogDebug("JobManager2.ProcessJobs()");
+
+            // handle initial processing
+            foreach (var test in StateToProcessorProcessMap)
             {
                 var initiationState = test.Key;
                 var handlingProcessor = test.Value;
@@ -185,7 +208,28 @@ namespace TptMain.Jobs
                 {
                     previewJobsByState.ForEach(previewJob =>
                     {
-                        handlingProcessor.ProcessJob(previewJob);
+                        if (!IsJobTerminated(previewJob))
+                        {
+                            handlingProcessor.ProcessJob(previewJob);
+                        }
+                    });
+                }
+            }
+
+            // handle follow-on updates
+            foreach (var test in StateToProcessorUpdateMap)
+            {
+                var initiationState = test.Key;
+                var handlingProcessor = test.Value;
+
+                if(TryGetJobsByCurrentState(initiationState, out var previewJobsByState))
+                {
+                    previewJobsByState.ForEach(previewJob =>
+                    {
+                        if (!IsJobTerminated(previewJob))
+                        {
+                            handlingProcessor.GetStatus(previewJob);
+                        }
                     });
                 }
             }
@@ -201,6 +245,16 @@ namespace TptMain.Jobs
         }
 
         /// <summary>
+        /// Return whether a job has entered a terminal state.
+        /// </summary>
+        /// <param name="job">Job to assess.</param>
+        /// <returns>true: job has terminated; false job has not terminated.</returns>
+        public virtual bool IsJobTerminated(PreviewJob job)
+        {
+            return job.IsCancelled || job.IsCompleted || job.IsError;
+        }
+
+        /// <summary>
         /// Create and schedule a new preview job.
         /// </summary>
         /// <param name="inputJob">Preview job to be added (required).</param>
@@ -208,7 +262,6 @@ namespace TptMain.Jobs
         /// <returns>True if job created successfully, false otherwise.</returns>
         public virtual bool TryAddJob(PreviewJob inputJob, out PreviewJob outputJob)
         {
-            _logger.LogDebug($"TryAddJob() - inputJob.Id={inputJob.Id}.");
             if (inputJob.Id != null
                 || inputJob.BibleSelectionParams.ProjectName == null
                 || inputJob.BibleSelectionParams.ProjectName.Any(charItem => !char.IsLetterOrDigit(charItem)))
@@ -216,7 +269,10 @@ namespace TptMain.Jobs
                 outputJob = null;
                 return false;
             }
-            this.InitPreviewJob(inputJob);
+
+            InitPreviewJob(inputJob);
+
+            _logger.LogDebug($"TryAddJob() - inputJob.Id={inputJob.Id}.");
 
             lock (_tptServiceContext)
             {
@@ -268,7 +324,7 @@ namespace TptMain.Jobs
                 if (TryGetJob(jobId, out var foundJob))
                 {
                     // try to cancel against every processor
-                    foreach(var stateToProcessor in StateToProcessorMap)
+                    foreach(var stateToProcessor in StateToProcessorProcessMap)
                     {
                         stateToProcessor.Value.CancelJob(foundJob);
                     }
