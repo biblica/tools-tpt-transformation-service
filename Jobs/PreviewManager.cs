@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Amazon.S3.Transfer;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -24,6 +25,16 @@ namespace TptMain.Jobs
         private readonly ILogger<PreviewManager> _logger;
 
         /// <summary>
+        /// Job File Manager (injected).
+        /// </summary>
+        private readonly JobFileManager _jobFileManager;
+
+        /// <summary>
+        /// The S3Service to talk to S3 to verify status and get results (instantiated).
+        /// </summary>
+        private readonly S3Service _s3Service;
+
+        /// <summary>
         /// IDS request timeout in seconds (configured).
         /// </summary>
         private readonly int _idsTimeoutInMSec;
@@ -32,21 +43,6 @@ namespace TptMain.Jobs
         /// Preview script (JSX) path (configured).
         /// </summary>
         private readonly DirectoryInfo _idsPreviewScriptDirectory;
-
-        /// <summary>
-        /// Directory where IDTT files are located.
-        /// </summary>
-        private readonly DirectoryInfo _idttDocDir;
-
-        /// <summary>
-        /// Directory where IDML files are located.
-        /// </summary>
-        private readonly DirectoryInfo _idmlDocDir;
-
-        /// <summary>
-        /// Directory where PDF files are output.
-        /// </summary>
-        private readonly DirectoryInfo _pdfDocDir;
 
         /// <summary>
         /// All configured InDesign script runners.
@@ -73,13 +69,15 @@ namespace TptMain.Jobs
         /// </summary>
         /// <param name="logger">Type-specific logger (required).</param>
         /// <param name="configuration">System configuration (required).</param>
+        /// <param name="jobFileManager">Job File Manager (required).</param>
         public PreviewManager(
             ILoggerFactory loggerFactory,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            JobFileManager jobFileManager)
         {
             _ = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
-
+            _jobFileManager = jobFileManager ?? throw new ArgumentNullException(nameof(jobFileManager));
             _logger = loggerFactory.CreateLogger<PreviewManager>();
 
             // grab global settings that apply to every InDesignScriptRunner
@@ -90,20 +88,13 @@ namespace TptMain.Jobs
             _idsPreviewScriptDirectory = new DirectoryInfo((configuration[ConfigConsts.IdsPreviewScriptDirKey]
                                                             ?? throw new ArgumentNullException(ConfigConsts
                                                                 .IdsPreviewScriptDirKey)));
-            _idttDocDir = new DirectoryInfo(configuration[ConfigConsts.IdttDocDirKey]
-                           ?? throw new ArgumentNullException(
-                               ConfigConsts.IdttDocDirKey));
-            _idmlDocDir = new DirectoryInfo(configuration[ConfigConsts.IdmlDocDirKey]
-                           ?? throw new ArgumentNullException(
-                               ConfigConsts.IdmlDocDirKey));
-            _pdfDocDir = new DirectoryInfo(configuration[ConfigConsts.PdfDocDirKey]
-                          ?? throw new ArgumentNullException(
-                              ConfigConsts.PdfDocDirKey));
 
             // grab the individual InDesignScriptRunner settings and create servers for each configuration
             var serversSection = configuration.GetSection(ConfigConsts.IdsServersSectionKey);
             var serversConfig = serversSection.Get<List<InDesignServerConfig>>();
             SetUpInDesignScriptRunners(loggerFactory, serversConfig);
+
+            _s3Service = new S3Service();
 
             _logger.LogDebug("PreviewManager()");
         }
@@ -160,6 +151,14 @@ namespace TptMain.Jobs
 
                         try
                         {
+                            // download the input template and IDTT files
+                            var transferUtilty = new TransferUtility(_s3Service.S3Client);
+                            transferUtilty.DownloadDirectory(
+                                _s3Service.BucketName,
+                                $"jobs/{previewJob.Id}",
+                                _jobFileManager.GetProjectDirectoryById(previewJob.Id).FullName
+                                );
+
                             runner.CreatePreview(previewJob, tokenSource.Token);
                             previewJob.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated, JobStateSourceEnum.PreviewGeneration));
                         }
@@ -286,9 +285,7 @@ namespace TptMain.Jobs
                         config, 
                         _idsTimeoutInMSec,
                         _idsPreviewScriptDirectory,
-                        _idmlDocDir,
-                        _idttDocDir,
-                        _pdfDocDir
+                        _jobFileManager
                         ));
             }
         }

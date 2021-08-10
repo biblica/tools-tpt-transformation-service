@@ -28,17 +28,22 @@ namespace TptMain.Jobs
         private readonly TptServiceContext _tptServiceContext;
 
         /// <summary>
-        /// Job Validation service for ensuring feasible and authorized jobs.
+        /// Job File Manager (injected).
+        /// </summary>
+        private readonly JobFileManager _jobFileManager;
+
+        /// <summary>
+        /// Job Validation service for ensuring feasible and authorized jobs (injected).
         /// </summary>
         private readonly IPreviewJobValidator _jobValidator;
 
         /// <summary>
-        /// Template manager.
+        /// Template manager (injected).
         /// </summary>
         private readonly TemplateJobManager _templateManager;
 
         /// <summary>
-        /// Tagged text manager.
+        /// Tagged text manager (injected).
         /// </summary>
         private readonly TaggedTextJobManager _taggedTextManager;
 
@@ -46,31 +51,6 @@ namespace TptMain.Jobs
         /// Preview Manager (injected).
         /// </summary>
         private readonly IPreviewManager _previewManager;
-
-        /// <summary>
-        /// Template (IDML) storage directory (configured).
-        /// </summary>
-        private readonly DirectoryInfo _idmlDirectory;
-
-        /// <summary>
-        /// Tagged Text (IDTT) storage directory (configured).
-        /// </summary>
-        private readonly DirectoryInfo _idttDirectory;
-
-        /// <summary>
-        /// Preview PDF storage directory (configured).
-        /// </summary>
-        private readonly DirectoryInfo _pdfDirectory;
-
-        /// <summary>
-        /// Preview zip storage directory (configured).
-        /// </summary>
-        private readonly DirectoryInfo _zipDirectory;
-
-        /// <summary>
-        /// Max document (IDML, PDF) age, in seconds (configured).
-        /// </summary>
-        private readonly int _maxDocAgeInSec;
 
         /// <summary>
         /// Check timer and files
@@ -86,11 +66,6 @@ namespace TptMain.Jobs
         /// Check timer for jobs
         /// </summary>
         private readonly Timer _processRunTimer;
-
-        /// <summary>
-        /// Template (IDML) storage directory.
-        /// </summary>
-        public DirectoryInfo IdmlDirectory => _idmlDirectory;
 
         /// <summary>
         /// This dictionary maps the state that will determine which processor will process a job next.
@@ -111,14 +86,14 @@ namespace TptMain.Jobs
         /// <param name="logger">Type-specific logger (required).</param>
         /// <param name="configuration">System configuration (required).</param>
         /// <param name="tptServiceContext">Database context (persistence; required).</param>
-        /// <param name="scriptRunner">Script runner (required).</param>
+        /// <param name="jobFileManager">Job File Manager (required).</param>
         /// <param name="templateManager">Template manager (required).</param>
         /// <param name="jobValidator">Preview Job Validator used for ensuring job feasibility and authorization on projects (required).</param>
-        /// <param name="jobScheduler">Job scheduler (required).</param>
         public JobManager2(
             ILogger<JobManager2> logger,
             IConfiguration configuration,
             TptServiceContext tptServiceContext,
+            JobFileManager jobFileManager,
             IPreviewJobValidator jobValidator,
             TemplateJobManager templateManager,
             TaggedTextJobManager taggedTextManager,
@@ -127,21 +102,12 @@ namespace TptMain.Jobs
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _tptServiceContext = tptServiceContext ?? throw new ArgumentNullException(nameof(tptServiceContext));
+            _jobFileManager = jobFileManager ?? throw new ArgumentNullException(nameof(jobFileManager));
             _jobValidator = jobValidator ?? throw new ArgumentNullException(nameof(jobValidator));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
             _taggedTextManager = taggedTextManager ?? throw new ArgumentNullException(nameof(taggedTextManager));
             _previewManager = previewManager ?? throw new ArgumentNullException(nameof(previewManager));
 
-            _idmlDirectory = new DirectoryInfo(configuration[ConfigConsts.IdmlDocDirKey]
-                                               ?? throw new ArgumentNullException(ConfigConsts.IdmlDocDirKey));
-            _idttDirectory = new DirectoryInfo(configuration[ConfigConsts.IdttDocDirKey]
-                                               ?? throw new ArgumentNullException(ConfigConsts.IdttDocDirKey));
-            _pdfDirectory = new DirectoryInfo(configuration[ConfigConsts.PdfDocDirKey]
-                                              ?? throw new ArgumentNullException(ConfigConsts.PdfDocDirKey));
-            _zipDirectory = new DirectoryInfo(configuration[ConfigConsts.ZipDocDirKey]
-                                              ?? throw new ArgumentNullException(ConfigConsts.ZipDocDirKey));
-            _maxDocAgeInSec = int.Parse(configuration[ConfigConsts.MaxDocAgeInSecKey]
-                                        ?? throw new ArgumentNullException(ConfigConsts.MaxDocAgeInSecKey));
             _jobProcessIntervalInSec = int.Parse(configuration[ConfigConsts.JobProcessIntervalInSecKey]
                                         ?? throw new ArgumentNullException(ConfigConsts.JobProcessIntervalInSecKey));
 
@@ -149,16 +115,6 @@ namespace TptMain.Jobs
                 null, 
                  TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
                  TimeSpan.FromSeconds(_jobProcessIntervalInSec));
-
-            if (!Directory.Exists(_pdfDirectory.FullName))
-            {
-                Directory.CreateDirectory(_pdfDirectory.FullName);
-            }
-
-            if (!Directory.Exists(_zipDirectory.FullName))
-            {
-                Directory.CreateDirectory(_zipDirectory.FullName);
-            }
 
             // map the events that kick them off to their respective processors
             StateToProcessorProcessMap = new Dictionary<JobStateEnum, IPreviewJobProcessor>()
@@ -476,6 +432,8 @@ namespace TptMain.Jobs
                 {
                     try
                     {
+                        var pdfDirectory = _jobFileManager.GetPreviewDirectoryById(jobId).FullName;
+
                         if (archive)
                         {
                             _logger.LogDebug($"Preparing archive for job: {jobId}");
@@ -484,8 +442,11 @@ namespace TptMain.Jobs
                             var bookFormatStr = Enum.GetName(typeof(BookFormat), BookFormat.cav);
 
                             /// Archive all typesetting preview files
+
                             // Create the initial zip file.
-                            var zipFilePath = Path.Combine(_zipDirectory.FullName, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.zip");
+                            var archiveDirectory = _jobFileManager.GetArchiveDirectoryById(jobId).FullName;
+                            FileUtil.CheckAndCreateDirectory(archiveDirectory);
+                            var zipFilePath = Path.Combine(archiveDirectory, $"{previewJob.Id}.zip");
 
                             // Return file if it already exists
                             if (File.Exists(zipFilePath))
@@ -502,33 +463,32 @@ namespace TptMain.Jobs
                             var zip = ZipFile.Open(zipFilePath, ZipArchiveMode.Create);
 
                             //IDML
-                            //"{{Properties::Docs::IDML::Directory}}\preview-{{PreviewJob::id}}.idml"
-                            var idmlDirectory = $@"{_idmlDirectory}";
-                            var idmlFilePattern = $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.idml";
+                            //"{{Properties::Docs::IDML::Directory}}\{{PreviewJob::id}}.idml"
+                            var idmlDirectory = _jobFileManager.GetTemplateDirectoryById(jobId).FullName;
+                            var idmlFilePattern = $"{previewJob.Id}.idml";
                             AddFilesToZip(zip, idmlDirectory, idmlFilePattern, "IDML");
 
                             //IDTT / TXT
-                            //"{{Properties::Docs::IDTT::Directory}}\{{PreviewJob::bookFormat}}\{{PreviewJob::projectName}}\book*.txt"
-                            var idttDirectory = Path.Combine(_idttDirectory.FullName, bookFormatStr, previewJob.BibleSelectionParams.ProjectName);
+                            //"{{Properties::Docs::IDTT::Directory}}\book*.txt"
+                            var idttDirectory = _jobFileManager.GetTaggedTextDirectoryById(jobId).FullName;
                             var idttFilePattern = "book*.txt";
                             AddFilesToZip(zip, idttDirectory, idttFilePattern, "IDTT");
 
                             //INDD
-                            //"{{Properties::Docs::IDML::Directory}}\preview-{{PreviewJob::id}}-*.indd"
-                            var inddDirectory = _idmlDirectory.FullName;
-                            var inddFilePattern = $"{ MainConsts.PREVIEW_FILENAME_PREFIX}{ previewJob.Id}-*.indd";
+                            //"{{Properties::Docs::IDML::Directory}}\{{PreviewJob::id}}-*.indd"
+                            var inddDirectory = idmlDirectory;
+                            var inddFilePattern = $"{previewJob.Id}-*.indd";
                             AddFilesToZip(zip, inddDirectory, inddFilePattern, "INDD");
 
                             //INDB
-                            //"{{Properties::Docs::IDML::Directory}}\preview-{{PreviewJob::id}}.indb"
-                            var indbDirectory = _idmlDirectory.FullName;
-                            var indbFilePattern = $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.indb";
+                            //"{{Properties::Docs::IDML::Directory}}\{{PreviewJob::id}}.indb"
+                            var indbDirectory = idmlDirectory;
+                            var indbFilePattern = $"{previewJob.Id}.indb";
                             AddFilesToZip(zip, indbDirectory, indbFilePattern, "INDB");
 
                             //PDF
-                            //"{{Properties::Docs::PDF::Directory}}\preview-{{PreviewJob::id}}.pdf"
-                            var pdfDirectory = _pdfDirectory.FullName;
-                            var pdfFilePattern = $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.pdf";
+                            //"{{Properties::Docs::PDF::Directory}}\{{PreviewJob::id}}.pdf"
+                            var pdfFilePattern = $"{previewJob.Id}.pdf";
                             AddFilesToZip(zip, pdfDirectory, pdfFilePattern, "PDF");
 
                             // finalize the zip file writing
@@ -546,7 +506,7 @@ namespace TptMain.Jobs
                         {
                             // Return the preview PDF
                             fileStream = File.Open(
-                                Path.Combine(_pdfDirectory.FullName, $"preview-{previewJob.Id}.pdf"),
+                                Path.Combine(pdfDirectory, $"{previewJob.Id}.pdf"),
                                 FileMode.Open, FileAccess.Read);
                             return true;
                         }

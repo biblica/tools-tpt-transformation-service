@@ -6,6 +6,11 @@
     public static class ConfigConsts
     {
         /// <summary>
+        /// Processed Job Files Root Directory Key
+        /// </summary>
+        public const string ProcessedJobFilesRootDirKey = "Docs:Job:Processed:RootDirectory";
+
+        /// <summary>
         /// IDML directory config key.
         /// </summary>
         public const string IdmlDocDirKey = "Docs:IDML:Directory";

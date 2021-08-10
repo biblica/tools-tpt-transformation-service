@@ -84,7 +84,6 @@ namespace TptMain.Jobs
             {
                 case TransformJobStatus.WAITING:
                 case TransformJobStatus.PROCESSING:
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTemplate, JobStateSourceEnum.TemplateGeneration));
                     _logger.LogDebug($"Status reported as {JobStateEnum.GeneratingTemplate} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.TEMPLATE_COMPLETE:

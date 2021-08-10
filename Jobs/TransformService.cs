@@ -74,7 +74,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// A flag that the tagged text is complete
         /// </summary>
-        private const string CompleteTaggedTextMarker = "-tagged-text";
+        private const string CompleteTaggedTextMarker = "-idtt";
 
         /// <summary>
         /// AWS security key as baked into the application from development environment variables

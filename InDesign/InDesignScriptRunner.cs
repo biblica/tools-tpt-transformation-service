@@ -1,11 +1,11 @@
 ﻿using InDesignServer;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using TptMain.Jobs;
 using TptMain.Models;
 using TptMain.Util;
 
@@ -20,6 +20,11 @@ namespace TptMain.InDesign
         /// Logger (injected).
         /// </summary>
         private readonly ILogger _logger;
+
+        /// <summary>
+        /// Job File Manager (injected).
+        /// </summary>
+        private readonly JobFileManager _jobFileManager;
 
         /// <summary>
         /// IDS server client (injected).
@@ -47,21 +52,6 @@ namespace TptMain.InDesign
         private readonly DirectoryInfo _idsPreviewScriptDirectory;
 
         /// <summary>
-        /// Directory where IDML files are located.
-        /// </summary>
-        private readonly DirectoryInfo _idmlDocDir;
-
-        /// <summary>
-        /// Directory where IDTT files are located.
-        /// </summary>
-        private readonly DirectoryInfo _idttDocDir;
-
-        /// <summary>
-        /// Directory where PDF files are output.
-        /// </summary>
-        private readonly DirectoryInfo _pdfDocDir;
-
-        /// <summary>
         /// Default (Document Creation) script file.
         /// </summary>
         private readonly FileInfo _defaultDocScriptFile;
@@ -78,27 +68,21 @@ namespace TptMain.InDesign
         /// <param name="serverConfig">InDesign server configuration (required).</param>
         /// <param name="idsTimeoutInMSec">IDS request timeout in seconds (required).</param>
         /// <param name="scriptDir">Preview script (JSX) path (required).</param>
-        /// <param name="idmlDocDir">Directory where IDML files are located. (required).</param>
-        /// <param name="idttDocDir">Directory where IDTT files are located. (required).</param>
-        /// <param name="pdfDocDir">Directory where PDF files are output (required).</param>
+        /// <param name="jobFileManager">Job File Manager for access necessary file paths (required).</param>
         public InDesignScriptRunner(
             ILogger logger,
             InDesignServerConfig serverConfig,
             int idsTimeoutInMSec,
             DirectoryInfo scriptDir,
-            DirectoryInfo idmlDocDir,
-            DirectoryInfo idttDocDir,
-            DirectoryInfo pdfDocDir
+            JobFileManager jobFileManager
             )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _jobFileManager = jobFileManager ?? throw new ArgumentNullException(nameof(jobFileManager));
             _serverConfig = serverConfig ?? throw new ArgumentNullException(nameof(serverConfig));
 
             _idsTimeoutInMSec = idsTimeoutInMSec;
             _idsPreviewScriptDirectory = scriptDir ?? throw new ArgumentNullException(nameof(scriptDir));
-            _idmlDocDir = idmlDocDir ?? throw new ArgumentNullException(nameof(idmlDocDir));
-            _idttDocDir = idttDocDir ?? throw new ArgumentNullException(nameof(idttDocDir));
-            _pdfDocDir = pdfDocDir ?? throw new ArgumentNullException(nameof(pdfDocDir));
 
             _serviceClient = SetUpInDesignClient();
 
@@ -149,9 +133,7 @@ namespace TptMain.InDesign
             var jobId = inputJob.Id;
 
             // Create a list of all the tagged text files that will be turned into documents
-            var projectName = inputJob.BibleSelectionParams.ProjectName;
-            var bookFormat = inputJob.TypesettingParams.BookFormat.ToString();
-            var txtDir = $@"{_idttDocDir}\{bookFormat}\{projectName}\";
+            var txtDir = _jobFileManager.GetTaggedTextDirectoryById(jobId).FullName;
             var txtFiles = GetTaggedTextFiles(txtDir);
 
             // Build custom footnotes into a CSV string, eg "a,d,e,ñ,h,Ä".
@@ -192,8 +174,9 @@ namespace TptMain.InDesign
             )
         {
             var txtFileName = new FileInfo(txtFilePath).Name;
-            var idmlPath = $@"{_idmlDocDir.FullName}\preview-{jobId}.idml";
-            var docOutputPath = $@"{_idmlDocDir.FullName}\preview-{jobId}-{txtFileName.Replace(".txt", ".indd")}";
+            var idmlDir = _jobFileManager.GetTemplateDirectoryById(jobId).FullName;
+            var idmlPath = Path.Combine(idmlDir, $"{jobId}.idml");
+            var docOutputPath = Path.Combine(idmlDir, $"{jobId}-{txtFileName.Replace(".txt", ".indd")}");
 
             _logger.LogDebug($"Creating '{docOutputPath}' from '{txtFileName}'");
             var docScriptRequest = new RunScriptRequest();
@@ -250,13 +233,16 @@ namespace TptMain.InDesign
         /// <exception cref="ScriptException">An InDesign Server exception that resulted from executing the script</exception>
         private void CreateBook(string jobId)
         {
-            var docPattern = $"preview-{jobId}-*.indd";
-            var pdfOutputPath = $@"{_pdfDocDir}\preview-{jobId}.pdf";
-            var bookOutputPath = $@"{_idmlDocDir}\preview-{jobId}.indb";
+            var docPattern = $"{jobId}-*.indd";
+            var templateDir = _jobFileManager.GetTemplateDirectoryById(jobId).FullName;
+            var pdfDir = _jobFileManager.GetPreviewDirectoryById(jobId).FullName;
+            FileUtil.CheckAndCreateDirectory(pdfDir);
+            var pdfOutputPath = Path.Combine(pdfDir, $"{jobId}.pdf");
+            var bookOutputPath = Path.Combine(templateDir, $"{ jobId}.indb");
 
             _logger.LogDebug("Creating InDesign Book and PDF");
             IList<IDSPScriptArg> bookScriptArgs = new List<IDSPScriptArg>();
-            AddNewArgToIdsArgs(ref bookScriptArgs, "docPath", _idmlDocDir.FullName);
+            AddNewArgToIdsArgs(ref bookScriptArgs, "docPath", templateDir);
             AddNewArgToIdsArgs(ref bookScriptArgs, "docPattern", docPattern);
             AddNewArgToIdsArgs(ref bookScriptArgs, "bookPath", bookOutputPath);
             AddNewArgToIdsArgs(ref bookScriptArgs, "pdfPath", pdfOutputPath);

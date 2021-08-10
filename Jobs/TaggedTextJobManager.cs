@@ -84,12 +84,13 @@ namespace TptMain.Jobs
             {
                 case TransformJobStatus.WAITING:
                 case TransformJobStatus.PROCESSING:
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTaggedText, JobStateSourceEnum.TaggedTextGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.GeneratingTemplate} for {previewJob.Id}");
-                    break;
                 case TransformJobStatus.TEMPLATE_COMPLETE:
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTaggedText, JobStateSourceEnum.TaggedTextGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.TemplateGenerated} for {previewJob.Id}");
+                    _logger.LogDebug($"Status reported as {JobStateEnum.GeneratingTaggedText} for {previewJob.Id}");
+                    break;
+                case TransformJobStatus.TAGGED_TEXT_COMPLETE:
+                case TransformJobStatus.ALL_COMPLETE:
+                    previewJob.State.Add(new PreviewJobState(JobStateEnum.TaggedTextGenerated, JobStateSourceEnum.TaggedTextGeneration));
+                    _logger.LogDebug($"Status reported as {JobStateEnum.TaggedTextGenerated} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.CANCELED:
                     previewJob.State.Add(new PreviewJobState(JobStateEnum.Cancelled, JobStateSourceEnum.TaggedTextGeneration));

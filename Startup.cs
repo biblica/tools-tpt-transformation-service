@@ -37,6 +37,7 @@ namespace TptMain
                 options => options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection")),
                ServiceLifetime.Singleton);
 
+            services.AddSingleton<JobFileManager>();
             services.AddSingleton<TransformService>();
             services.AddSingleton<TaggedTextJobManager>();
             services.AddSingleton<TemplateJobManager>();
