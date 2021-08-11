@@ -120,11 +120,11 @@ namespace TptMain.Jobs
             _jobProcessIntervalInSec = int.Parse(configuration[ConfigConsts.JobProcessIntervalInSecKey]
                                         ?? throw new ArgumentNullException(ConfigConsts.JobProcessIntervalInSecKey));
 
-            _docCheckTimer = new Timer((stateObject) => { ProcessJobs(); }, 
+            _docCheckTimer = new Timer((stateObject) => { CheckDocFiles(); }, 
                 null, 
                  TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
                  TimeSpan.FromSeconds(_maxDocAgeInSec));
-            _processRunTimer = new Timer((stateObject) => { ProcessJobs(); }, 
+            _processRunTimer = new Timer((stateObject) => { ProcessJobs(); },
                 null, 
                  TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
                  TimeSpan.FromSeconds(_jobProcessIntervalInSec));
@@ -163,7 +163,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// This function handles the processing of TPT jobs, and delgating work to individual managers based on state.
         /// </summary>
-        public void ProcessJobs()
+        public virtual void ProcessJobs()
         {
             _logger.LogDebug("JobManager.ProcessJobs()");
 
@@ -210,6 +210,40 @@ namespace TptMain.Jobs
                 {
                     TryUpdateJob(job);
                 });
+            }
+        }
+
+        /// <summary>
+        /// Iterate through generated preview job directories and clean up old ones.
+        /// </summary>
+        private void CheckDocFiles()
+        {
+            try
+            {
+                _logger.LogDebug("Checking job directories...");
+
+                var checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
+
+                foreach (var jobDirectory in _jobFileManager.JobFilesRootDir.GetDirectories())
+                {
+                    if (jobDirectory.CreationTimeUtc < checkTime)
+                    {
+                        try
+                        {
+                            jobDirectory.Delete();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, $"Can't delete directory (will retry): {jobDirectory}.");
+                        }
+                    }
+                }
+
+                _logger.LogDebug("...Job directories checked.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Can't check job directories.");
             }
         }
 

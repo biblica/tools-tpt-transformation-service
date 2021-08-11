@@ -82,7 +82,7 @@ namespace TptTest
             // - TaggedTextJobManager
             configKeys[ConfigConsts.TaggedTextGenerationTimeoutInSecKey] = "3600";
             // - JobManager
-            configKeys[ConfigConsts.JobProcessIntervalInSecKey] = "5";
+            configKeys[ConfigConsts.JobProcessIntervalInSecKey] = "30";
             configKeys[ConfigConsts.MaxDocAgeInSecKey] = "60";
 
             // The InMemoryCollection will snapshot the parameters upon creation, have to first populate the dictionary before passing it.
@@ -171,7 +171,7 @@ namespace TptTest
         {
             // setup service under test
             var mockJobManager =
-                new Mock<JobManager>(MockBehavior.Strict,
+                new Mock<JobManager>(
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
@@ -215,120 +215,119 @@ namespace TptTest
             Assert.AreEqual(Path.GetExtension(filestream.Name), ".zip");
         }
 
-        ///// <summary>
-        ///// Test that the CheckPreviewJobs and that works with the JobScheduler.
-        ///// </summary>
-        //[TestMethod]
-        //public void TestCheckPreviewJobRun()
-        //{
-        //    // setup service under test
-        //    var mockJobManager =
-        //        new Mock<JobManager>(
-        //            _mockLogger.Object,
-        //            _testConfiguration,
-        //            _context,
-        //            _mockPreviewManager.Object,
-        //            _mockTemplateManager.Object,
-        //            _mockJobValidator.Object,
-        //            _mockParatextProjectService.Object,
-        //            _mockJobScheduler.Object);
-        //    // call base functions unless overriden
-        //    mockJobManager.CallBase = true;
-        //    _mockJobScheduler.CallBase = true;
+        /// <summary>
+        /// Test that the CheckPreviewJobs and that works with the JobScheduler.
+        /// </summary>
+        [TestMethod]
+        public void TestCheckPreviewJobRun()
+        {
+            // setup service under test
+            var mockJobManager =
+                new Mock<JobManager>(
+                    _mockLogger.Object,
+                    _testConfiguration,
+                    _context,
+                    _mockJobFileManager.Object,
+                    _mockJobValidator.Object,
+                    _mockTemplateJobManager.Object,
+                    _mockTaggedTextJobManager.Object,
+                    _mockPreviewManager.Object);
+            // call base functions unless overriden
+            mockJobManager.CallBase = true;
 
-        //    mockJobManager
-        //        .Setup(jm => jm.CheckPreviewJobs())
-        //        .CallBase()
-        //        .Verifiable();
+            mockJobManager
+                .Setup(jm => jm.ProcessJobs())
+                .CallBase()
+                .Verifiable();
 
-        //    // Add a couple of jobs to check
-        //    var testPreviewJob1 = TestUtils.CreateTestPreviewJob();
-        //    // this function expects a null Id.
-        //    testPreviewJob1.Id = null;
+            // Add a couple of jobs to check
+            var testPreviewJob1 = TestUtils.CreateTestPreviewJob();
+            // this function expects a null Id.
+            testPreviewJob1.Id = null;
 
-        //    Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob1, out var outputJob1));
+            Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob1, out var outputJob1));
 
-        //    var testPreviewJob2 = TestUtils.CreateTestPreviewJob();
-        //    // this function expects a null Id.
-        //    testPreviewJob2.Id = null;
+            var testPreviewJob2 = TestUtils.CreateTestPreviewJob();
+            // this function expects a null Id.
+            testPreviewJob2.Id = null;
 
-        //    Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob2, out var outputJob2));
+            Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob2, out var outputJob2));
 
-        //    // allow enough time for the check scheduled job to execute
-        //    Thread.Sleep((int)(MainConsts.TIMER_STARTUP_DELAY_IN_SEC + (2 * MainConsts.MAX_AGE_CHECK_DIVISOR)) * 1000);
+            // allow enough time for the check scheduled job to execute
+            Thread.Sleep((int)(MainConsts.TIMER_STARTUP_DELAY_IN_SEC + (2 * MainConsts.MAX_AGE_CHECK_DIVISOR)) * 1000);
 
-        //    // verify that check jobs was called.
-        //    mockJobManager.Verify(jm => jm.CheckPreviewJobs(), Times.Once);
-        //    // verify that the "old" job was deleted, and the "young" job hasn't been.
-        //    Assert.IsNotNull(_context.PreviewJobs.Find(outputJob1.Id));
-        //    Assert.IsNotNull(_context.PreviewJobs.Find(outputJob2.Id));
-        //}
+            // verify that check jobs was called.
+            mockJobManager.Verify(jm => jm.ProcessJobs(), Times.Once);
+            // verify that the "old" job was deleted, and the "young" job hasn't been.
+            Assert.IsNotNull(_context.PreviewJobs.Find(outputJob1.Id));
+            Assert.IsNotNull(_context.PreviewJobs.Find(outputJob2.Id));
+        }
 
-        ///// <summary>
-        ///// test a failed job add
-        ///// </summary>
-        //[TestMethod]
-        //public void TestFailedAddJob()
-        //{
-        //    // setup service under test
-        //    var mockJobManager =
-        //        new Mock<JobManager>(
-        //            _mockLogger.Object,
-        //            _testConfiguration,
-        //            _context,
-        //            _mockPreviewManager.Object,
-        //            _mockTemplateManager.Object,
-        //            _mockJobValidator.Object,
-        //            _mockParatextProjectService.Object,
-        //            _mockJobScheduler.Object);
-        //    // call base functions unless overriden
-        //    mockJobManager.CallBase = true;
+        /// <summary>
+        /// test a failed job add
+        /// </summary>
+        [TestMethod]
+        public void TestFailedAddJob()
+        {
+            // setup service under test
+            var mockJobManager =
+                new Mock<JobManager>(
+                    _mockLogger.Object,
+                    _testConfiguration,
+                    _context,
+                    _mockJobFileManager.Object,
+                    _mockJobValidator.Object,
+                    _mockTemplateJobManager.Object,
+                    _mockTaggedTextJobManager.Object,
+                    _mockPreviewManager.Object);
+            // call base functions unless overriden
+            mockJobManager.CallBase = true;
 
-        //    var testPreviewJob = TestUtils.CreateTestPreviewJob();
+            var testPreviewJob = TestUtils.CreateTestPreviewJob();
 
-        //    // This will fail due to an Id being set on the input job.
-        //    Assert.IsFalse(mockJobManager.Object.TryAddJob(testPreviewJob, out var outputJob));
-        //}
+            // This will fail due to an Id being set on the input job.
+            Assert.IsFalse(mockJobManager.Object.TryAddJob(testPreviewJob, out var outputJob));
+        }
 
-        ///// <summary>
-        ///// test a successful job add
-        ///// </summary>
-        //[TestMethod]
-        //public void TestSuccessfulAddAndDeleteJob()
-        //{
-        //    // setup service under test
-        //    var mockJobManager =
-        //        new Mock<JobManager>(
-        //            _mockLogger.Object,
-        //            _testConfiguration,
-        //            _context,
-        //            _mockPreviewManager.Object,
-        //            _mockTemplateManager.Object,
-        //            _mockJobValidator.Object,
-        //            _mockParatextProjectService.Object,
-        //            _mockJobScheduler.Object);
-        //    // call base functions unless overriden
-        //    mockJobManager.CallBase = true;
+        /// <summary>
+        /// test a successful job add
+        /// </summary>
+        [TestMethod]
+        public void TestSuccessfulAddAndDeleteJob()
+        {
+            // setup service under test
+            var mockJobManager =
+                new Mock<JobManager>(
+                    _mockLogger.Object,
+                    _testConfiguration,
+                    _context,
+                    _mockJobFileManager.Object,
+                    _mockJobValidator.Object,
+                    _mockTemplateJobManager.Object,
+                    _mockTaggedTextJobManager.Object,
+                    _mockPreviewManager.Object);
+            // call base functions unless overriden
+            mockJobManager.CallBase = true;
 
-        //    var testPreviewJob = TestUtils.CreateTestPreviewJob();
-        //    // this function expects a null Id.
-        //    testPreviewJob.Id = null;
-        //    // reset some of the values so that defaults are set.
-        //    testPreviewJob.TypesettingParams.FontSizeInPts = null;
-        //    testPreviewJob.TypesettingParams.FontLeadingInPts = null;
-        //    testPreviewJob.TypesettingParams.PageWidthInPts = null;
-        //    testPreviewJob.TypesettingParams.PageHeightInPts = null;
-        //    testPreviewJob.TypesettingParams.PageHeaderInPts = null;
-        //    testPreviewJob.TypesettingParams.BookFormat = null;
+            var testPreviewJob = TestUtils.CreateTestPreviewJob();
+            // this function expects a null Id.
+            testPreviewJob.Id = null;
+            // reset some of the values so that defaults are set.
+            testPreviewJob.TypesettingParams.FontSizeInPts = null;
+            testPreviewJob.TypesettingParams.FontLeadingInPts = null;
+            testPreviewJob.TypesettingParams.PageWidthInPts = null;
+            testPreviewJob.TypesettingParams.PageHeightInPts = null;
+            testPreviewJob.TypesettingParams.PageHeaderInPts = null;
+            testPreviewJob.TypesettingParams.BookFormat = null;
 
-        //    // This will fail due to an Id being set on the input job.
-        //    Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob, out var createdJob));
+            // This will fail due to an Id being set on the input job.
+            Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob, out var createdJob));
 
-        //    // Let's ensure that we can now delete this new job
-        //    Assert.IsTrue(mockJobManager.Object.TryDeleteJob(createdJob.Id, out var deletedJob));
+            // Let's ensure that we can now delete this new job
+            Assert.IsTrue(mockJobManager.Object.TryDeleteJob(createdJob.Id, out var deletedJob));
 
-        //    // make sure that it's the job that we expect
-        //    Assert.AreEqual(deletedJob, createdJob);
-        //}
+            // make sure that it's the job that we expect
+            Assert.AreEqual(deletedJob, createdJob);
+        }
     }
 }

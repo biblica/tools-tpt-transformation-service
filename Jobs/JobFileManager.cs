@@ -29,7 +29,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Base directory of the processed job files.
         /// </summary>
-        private readonly DirectoryInfo _jobFilesRootDir;
+        public DirectoryInfo JobFilesRootDir { get; private set; }
 
         /// <summary>
         /// Simple constructor.
@@ -40,7 +40,7 @@ namespace TptMain.Jobs
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            _jobFilesRootDir = new DirectoryInfo(configuration[ConfigConsts.ProcessedJobFilesRootDirKey]
+            JobFilesRootDir = new DirectoryInfo(configuration[ConfigConsts.ProcessedJobFilesRootDirKey]
                                                  ?? throw new ArgumentNullException(ConfigConsts.ProcessedJobFilesRootDirKey));
 
             _logger.LogInformation("JobFileManager()");
@@ -54,7 +54,7 @@ namespace TptMain.Jobs
         public DirectoryInfo GetProjectDirectoryById(string id)
         {
             CheckString(id);
-            return new DirectoryInfo(Path.Combine(_jobFilesRootDir.FullName, id));
+            return new DirectoryInfo(Path.Combine(JobFilesRootDir.FullName, id));
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace TptMain.Jobs
         public virtual DirectoryInfo GetTemplateDirectoryById(string id)
         {
             CheckString(id);
-            return new DirectoryInfo(Path.Combine(_jobFilesRootDir.FullName, id, "template"));
+            return new DirectoryInfo(Path.Combine(JobFilesRootDir.FullName, id, "template"));
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace TptMain.Jobs
         public virtual DirectoryInfo GetTaggedTextDirectoryById(string id)
         {
             CheckString(id);
-            return new DirectoryInfo(Path.Combine(_jobFilesRootDir.FullName, id, "idtt"));
+            return new DirectoryInfo(Path.Combine(JobFilesRootDir.FullName, id, "idtt"));
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace TptMain.Jobs
         public virtual DirectoryInfo GetPreviewDirectoryById(string id)
         {
             CheckString(id);
-            return new DirectoryInfo(Path.Combine(_jobFilesRootDir.FullName, id, "pdf"));
+            return new DirectoryInfo(Path.Combine(JobFilesRootDir.FullName, id, "pdf"));
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace TptMain.Jobs
         public DirectoryInfo GetArchiveDirectoryById(string id)
         {
             CheckString(id);
-            return new DirectoryInfo(Path.Combine(_jobFilesRootDir.FullName, id, "zip"));
+            return new DirectoryInfo(Path.Combine(JobFilesRootDir.FullName, id, "zip"));
         }
 
         /// <summary>
