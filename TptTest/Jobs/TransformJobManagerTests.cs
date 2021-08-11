@@ -65,7 +65,7 @@ namespace TptTest.Jobs
             jobTemplateManager.GetStatus(previewJob);
 
             Assert.IsFalse(previewJob.IsError);
-            Assert.AreEqual(2, previewJob.State.Count);
+            Assert.AreEqual(1, previewJob.State.Count);
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace TptTest.Jobs
             jobTemplateManager.GetStatus(previewJob);
             jobTemplateManager.GetStatus(previewJob);
 
-            Assert.AreEqual(7, previewJob.State.Count);
+            Assert.AreEqual(4, previewJob.State.Count);
             Assert.IsTrue(previewJob.IsError);
         }
     }

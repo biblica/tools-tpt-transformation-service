@@ -67,7 +67,7 @@ namespace TptMain.Jobs
         /// </summary>
         /// <param name="id">Project ID to get directory for (required)</param>
         /// <returns>Project template directory.</returns>
-        public DirectoryInfo GetTemplateDirectoryById(string id)
+        public virtual DirectoryInfo GetTemplateDirectoryById(string id)
         {
             CheckString(id);
             return new DirectoryInfo(Path.Combine(_jobFilesRootDir.FullName, id, "template"));
@@ -78,7 +78,7 @@ namespace TptMain.Jobs
         /// </summary>
         /// <param name="id">Project ID to get directory for (required)</param>
         /// <returns>Project tagged text directory.</returns>
-        public DirectoryInfo GetTaggedTextDirectoryById(string id)
+        public virtual DirectoryInfo GetTaggedTextDirectoryById(string id)
         {
             CheckString(id);
             return new DirectoryInfo(Path.Combine(_jobFilesRootDir.FullName, id, "idtt"));
@@ -89,7 +89,7 @@ namespace TptMain.Jobs
         /// </summary>
         /// <param name="id">Project ID to get directory for (required)</param>
         /// <returns>Project preview directory.</returns>
-        public DirectoryInfo GetPreviewDirectoryById(string id)
+        public virtual DirectoryInfo GetPreviewDirectoryById(string id)
         {
             CheckString(id);
             return new DirectoryInfo(Path.Combine(_jobFilesRootDir.FullName, id, "pdf"));
