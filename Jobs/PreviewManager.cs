@@ -109,6 +109,7 @@ namespace TptMain.Jobs
             _ = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
 
             // put the job on the queue for processing
+            previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingPreview, JobStateSourceEnum.PreviewGeneration));
             JobQueue.Enqueue(previewJob);
 
             CheckPreviewProcessing();
@@ -146,8 +147,6 @@ namespace TptMain.Jobs
                     {
                         _logger.LogDebug($"Assigning preview generation job '{previewJob.Id}' to IDS runner '{taskRunner.Name}'.");
                         var runner = taskRunner;
-
-                        previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingPreview, JobStateSourceEnum.PreviewGeneration));
 
                         try
                         {
