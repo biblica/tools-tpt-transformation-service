@@ -4,13 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using TptMain.Http;
 using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
 using TptMain.ParatextProjects;
 using TptMain.Projects;
-using TptMain.Toolbox;
 
 namespace TptMain
 {
@@ -38,19 +36,18 @@ namespace TptMain
                ServiceLifetime.Singleton);
 
             services.AddSingleton<JobFileManager>();
-            services.AddSingleton<TransformService>();
+            services.AddSingleton<ITransformService, TransformService>();
             services.AddSingleton<TaggedTextJobManager>();
             services.AddSingleton<TemplateJobManager>();
             services.AddSingleton<IPreviewManager, PreviewManager>();
 
             services.AddSingleton<IProjectManager, ProjectManager>();
-            services.AddSingleton<IJobManager, JobManager2>();
+            services.AddSingleton<IJobManager, JobManager>();
             services.AddSingleton<IPreviewJobValidator, PreviewJobValidator>();
 
             services.AddSingleton<InDesignScriptRunner>();
             services.AddSingleton<ParatextApi>();
             services.AddSingleton<ParatextProjectService>();
-            services.AddSingleton<WebRequestFactory>();
 
             services.AddControllers();
         }

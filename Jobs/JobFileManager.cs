@@ -32,11 +32,6 @@ namespace TptMain.Jobs
         private readonly DirectoryInfo _jobFilesRootDir;
 
         /// <summary>
-        /// The S3Service to talk to S3 to verify status and get results
-        /// </summary>
-        private readonly S3Service _s3Service;
-
-        /// <summary>
         /// Simple constructor.
         /// </summary>
         public JobFileManager(
@@ -48,7 +43,7 @@ namespace TptMain.Jobs
             _jobFilesRootDir = new DirectoryInfo(configuration[ConfigConsts.ProcessedJobFilesRootDirKey]
                                                  ?? throw new ArgumentNullException(ConfigConsts.ProcessedJobFilesRootDirKey));
 
-            _s3Service = new S3Service();
+            _logger.LogInformation("JobFileManager()");
         }
 
         /// <summary>

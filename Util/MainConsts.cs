@@ -56,11 +56,6 @@ namespace TptMain.Util
         public const string DEFAULT_PROJECT_PREFIX = "Default";
 
         /// <summary>
-        /// Preview file name prefix.
-        /// </summary>
-        public const string PREVIEW_FILENAME_PREFIX = "preview-";
-
-        /// <summary>
         /// Paratext project settings filename.
         /// </summary>
         public const string SETTINGS_FILE_PATH = "Settings.xml";

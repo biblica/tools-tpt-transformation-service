@@ -18,7 +18,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// The service that's processing the transform job
         /// </summary>
-        private TransformService _transformService;
+        private ITransformService _transformService;
 
         /// <summary>
         /// The timeout period, in milliseconds, before the job is considered to be over-due, thus needing to be canceled and errored out
@@ -35,7 +35,7 @@ namespace TptMain.Jobs
         public TemplateJobManager(
             ILogger<TemplateJobManager> logger,
             IConfiguration configuration,
-            TransformService transformService)
+            ITransformService transformService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
@@ -44,7 +44,6 @@ namespace TptMain.Jobs
             _transformService = transformService;
 
             // grab global settings for template generation timeout
-
             _timeoutMills = 1000 * int.Parse(configuration[ConfigConsts.TemplateGenerationTimeoutInSecKey] ?? throw new ArgumentNullException(ConfigConsts
                                                                         .TemplateGenerationTimeoutInSecKey));
         }

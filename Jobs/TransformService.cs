@@ -17,7 +17,7 @@ namespace TptMain.Jobs
     /// This class is for submitting jobs, either TEMPLATE GENERATION, or TAGGED TEXT, to the SQS queue in AWS.
     /// These jobs will then be picked up by the template generation ability and processed.
     /// </summary>
-    public class TransformService
+    public class TransformService : ITransformService
     {
         /// <summary>
         /// Type-specific logger (injected).

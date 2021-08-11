@@ -17,11 +17,6 @@ namespace TptMain.Projects
     public class ProjectManager : IDisposable, IProjectManager
     {
         /// <summary>
-        /// IDTT directory config key.
-        /// </summary>
-        public const string IdttDirKey = "Docs:IDTT:Directory";
-
-        /// <summary>
         /// Paratext directory config key.
         /// </summary>
         public const string ParatextDirKey = "Docs:Paratext:Directory";
@@ -29,7 +24,7 @@ namespace TptMain.Projects
         /// <summary>
         /// IDTT update interval config key.
         /// </summary>
-        public const string ProjectUpdateIntervalKey = "Docs:IDTT:CheckIntervalInSec";
+        public const string ProjectUpdateIntervalKey = "Docs:Paratext:CheckIntervalInSec";
 
         /// <summary>
         /// The number of seconds before updating the project details since the previous the update.
@@ -40,11 +35,6 @@ namespace TptMain.Projects
         /// Type-specific logger (injected).
         /// </summary>
         private readonly ILogger<ProjectManager> _logger;
-
-        /// <summary>
-        /// IDTT directory (configured).
-        /// </summary>
-        private readonly DirectoryInfo _idttDirectory;
 
         /// <summary>
         /// Paratext directory (configured).
@@ -73,8 +63,6 @@ namespace TptMain.Projects
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            _idttDirectory = new DirectoryInfo(configuration[IdttDirKey]
-                                               ?? throw new ArgumentNullException(IdttDirKey));
             _paratextDirectory = new DirectoryInfo(configuration[ParatextDirKey]
                                                    ?? throw new ArgumentNullException(ParatextDirKey));
 
@@ -82,10 +70,6 @@ namespace TptMain.Projects
             _ = configuration[ProjectUpdateIntervalKey] ?? throw new ArgumentNullException(ProjectUpdateIntervalKey);
             _checkIntervalInSec = Int32.Parse(configuration[ProjectUpdateIntervalKey]);
 
-            if (!Directory.Exists(_idttDirectory.FullName))
-            {
-                Directory.CreateDirectory(_idttDirectory.FullName);
-            }
             if (!Directory.Exists(_paratextDirectory.FullName))
             {
                 Directory.CreateDirectory(_paratextDirectory.FullName);
@@ -115,43 +99,29 @@ namespace TptMain.Projects
                             if (sfmFiles.Length > 0)
                             {
                                 var projectName = projectDir.Name;
-                                var formatDirs = new[] {
-                                    new DirectoryInfo(
-                                        Path.Join(_idttDirectory.FullName,
-                                            BookFormat.cav.ToString(),
-                                            projectName)),
-                                    new DirectoryInfo(
-                                        Path.Join(_idttDirectory.FullName,
-                                            BookFormat.tbotb.ToString(),
-                                            projectName))
-                                };
 
-                                if (formatDirs.All(dirItem => dirItem.Exists))
+                                newProjectDetails[projectName] = new ProjectDetails
                                 {
-                                    newProjectDetails[projectName] = new ProjectDetails
-                                    {
-                                        ProjectName = projectName,
-                                        // Find the modified date of the latest IDTT file for the project
-                                        ProjectUpdated =
-                                            formatDirs
-                                                .SelectMany(dirItem => dirItem.GetFiles("book*.txt")
-                                                    .Select(fileItem => fileItem.LastWriteTimeUtc))
-                                                .Aggregate(DateTime.MinValue,
-                                                    (lastTimeUtc, writeTimeUtc) =>
-                                                        writeTimeUtc > lastTimeUtc ? writeTimeUtc : lastTimeUtc)
-                                    };
-                                }
+                                    ProjectName = projectName,
+                                    // Find the modified date of the latest IDTT file for the project
+                                    ProjectUpdated =
+                                        projectDir.GetFiles()
+                                            .Select(fileItem => fileItem.LastWriteTimeUtc)
+                                            .Aggregate(DateTime.MinValue,
+                                                (lastTimeUtc, writeTimeUtc) =>
+                                                    writeTimeUtc > lastTimeUtc ? writeTimeUtc : lastTimeUtc)
+                                };
                             }
                         }
 
                         // Update the project details and the time in which we did so
                         LastProjectUpdatedFileTime = DateTime.UtcNow;
                         _projectDetails = newProjectDetails.ToImmutableDictionary();
-                        _logger.LogDebug("...IDTT files checked.");
+                        _logger.LogDebug("...Paratext files checked.");
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Can't check IDTT files.");
+                        _logger.LogWarning(ex, "Can't check Paratext files.");
                     }
                 }
             }

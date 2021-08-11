@@ -18,7 +18,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// The service that's processing the transform job
         /// </summary>
-        TransformService _transformService;
+        ITransformService _transformService;
 
         /// <summary>
         /// The timeout period, in milliseconds, before the job is considered to be over-due, thus needing to be canceled and errored out
@@ -35,7 +35,7 @@ namespace TptMain.Jobs
         public TaggedTextJobManager(
             ILogger<TaggedTextJobManager> logger,
             IConfiguration configuration,
-            TransformService transformService)
+            ITransformService transformService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
