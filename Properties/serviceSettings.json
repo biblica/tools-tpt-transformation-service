@@ -65,7 +65,8 @@
       }
     },
     "Paratext": {
-      "Directory": "C:\\Work\\Paratext"
+      "Directory": "C:\\Work\\Paratext",
+      "CheckIntervalInSec": "60"
     }
   }
 }
