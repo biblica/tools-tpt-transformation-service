@@ -90,12 +90,12 @@ namespace TptMain.Projects
                 {
                     try
                     {
-                        _logger.LogDebug("Checking IDTT files...");
+                        _logger.LogDebug("Checking Paratext files...");
 
                         IDictionary<string, ProjectDetails> newProjectDetails = new SortedDictionary<string, ProjectDetails>();
                         foreach (var projectDir in _paratextDirectory.GetDirectories())
                         {
-                            var sfmFiles = projectDir.GetFiles("*.SFM");
+                            var sfmFiles = projectDir.GetFiles("*.usx");
                             if (sfmFiles.Length > 0)
                             {
                                 var projectName = projectDir.Name;
