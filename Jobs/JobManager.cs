@@ -230,7 +230,7 @@ namespace TptMain.Jobs
                     {
                         try
                         {
-                            jobDirectory.Delete();
+                            jobDirectory.Delete(true);
                         }
                         catch (Exception ex)
                         {
