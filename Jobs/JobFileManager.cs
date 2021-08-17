@@ -1,15 +1,7 @@
-
-using Amazon;
-using Amazon.SQS;
-using Amazon.SQS.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.IO;
-using System.Net;
-using TptMain.Exceptions;
-using TptMain.Models;
 using TptMain.Util;
 
 namespace TptMain.Jobs
@@ -23,8 +15,6 @@ namespace TptMain.Jobs
         /// Type-specific logger (injected).
         /// </summary>
         private readonly ILogger<JobFileManager> _logger;
-
-        // A number of consts for later processing
 
         /// <summary>
         /// Base directory of the processed job files.

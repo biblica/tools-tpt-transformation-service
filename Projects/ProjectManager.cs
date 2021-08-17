@@ -95,17 +95,17 @@ namespace TptMain.Projects
                         IDictionary<string, ProjectDetails> newProjectDetails = new SortedDictionary<string, ProjectDetails>();
                         foreach (var projectDir in _paratextDirectory.GetDirectories())
                         {
-                            var sfmFiles = projectDir.GetFiles("*.usx");
-                            if (sfmFiles.Length > 0)
+                            var projectFiles = projectDir.GetFiles("*.usx");
+                            if (projectFiles.Length > 0)
                             {
                                 var projectName = projectDir.Name;
 
                                 newProjectDetails[projectName] = new ProjectDetails
                                 {
                                     ProjectName = projectName,
-                                    // Find the modified date of the latest IDTT file for the project
+                                    // Find the modified date of the latest generated file for the project
                                     ProjectUpdated =
-                                        projectDir.GetFiles()
+                                        projectFiles
                                             .Select(fileItem => fileItem.LastWriteTimeUtc)
                                             .Aggregate(DateTime.MinValue,
                                                 (lastTimeUtc, writeTimeUtc) =>

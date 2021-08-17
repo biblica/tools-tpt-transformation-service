@@ -68,7 +68,7 @@ namespace TptMain.InDesign
         /// <param name="serverConfig">InDesign server configuration (required).</param>
         /// <param name="idsTimeoutInMSec">IDS request timeout in seconds (required).</param>
         /// <param name="scriptDir">Preview script (JSX) path (required).</param>
-        /// <param name="jobFileManager">Job File Manager for access necessary file paths (required).</param>
+        /// <param name="jobFileManager">Job File Manager to access necessary file paths (required).</param>
         public InDesignScriptRunner(
             ILogger logger,
             InDesignServerConfig serverConfig,
