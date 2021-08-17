@@ -7,10 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
-using TptMain.ParatextProjects;
 using TptMain.Util;
 
 namespace TptTest
@@ -19,7 +17,7 @@ namespace TptTest
     public class JobManagerTests
     {
         // Consts
-        private const string JOB_FILE_MANAGER_ROOT_DIR = "Resources";
+        private const string JOB_FILE_MANAGER_ROOT_DIR = @"Resources\JobData";
 
         /// <summary>
         /// Test configuration.
