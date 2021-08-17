@@ -74,7 +74,6 @@ namespace TptMain.Models
         /// <param name="source">The source of the state</param>
         public PreviewJobState(JobStateEnum state, JobStateSourceEnum source) : this(state)
         {
-            State = state;
             Source = source;
         }
 
@@ -88,7 +87,6 @@ namespace TptMain.Models
         /// <param name="dateTime">The date and time of the entry if not using the default (now)</param>
         public PreviewJobState(JobStateEnum state, JobStateSourceEnum source, DateTime dateTime) : this(state)
         {
-            State = state;
             Source = source;
             DateSubmitted = dateTime;
         }
@@ -104,12 +102,13 @@ namespace TptMain.Models
         public DateTime DateSubmitted { get; set; } = DateTime.UtcNow;
 
         /// <summary>
-        /// The state of this state.
+        /// The state of this job.
         /// </summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public JobStateEnum State { get; set; }
+
         /// <summary>
-        /// The processing source of this state
+        /// The processing source reporting the job state.
         /// </summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public JobStateSourceEnum Source { get; set; } = JobStateSourceEnum.GeneralManagement;
