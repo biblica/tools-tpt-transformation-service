@@ -6,14 +6,9 @@
     public static class ConfigConsts
     {
         /// <summary>
-        /// IDML directory config key.
+        /// Processed Job Files Root Directory Key
         /// </summary>
-        public const string IdmlDocDirKey = "Docs:IDML:Directory";
-
-        /// <summary>
-        /// IDTT directory config key.
-        /// </summary>
-        public const string IdttDocDirKey = "Docs:IDTT:Directory";
+        public const string ProcessedJobFilesRootDirKey = "Docs:Job:Processed:RootDirectory";
 
         /// <summary>
         /// Paratext directory config key.
@@ -21,24 +16,14 @@
         public const string ParatextDocDirKey = "Docs:Paratext:Directory";
 
         /// <summary>
-        /// PDF directory config key.
-        /// </summary>
-        public const string PdfDocDirKey = "Docs:PDF:Directory";
-
-        /// <summary>
-        /// Zip directory config key.
-        /// </summary>
-        public const string ZipDocDirKey = "Docs:Zip:Directory";
-
-        /// <summary>
         /// Max document age in seconds config key.
         /// </summary>
         public const string MaxDocAgeInSecKey = "Docs:MaxAgeInSec";
 
         /// <summary>
-        /// Max concurrent jobs config key.
+        /// Job processing interval in seconds config key.
         /// </summary>
-        public const string MaxConcurrentJobsKey = "Jobs:MaxConcurrent";
+        public const string JobProcessIntervalInSecKey = "Jobs:Processing:ProcessIntervalInSec";
 
         /// <summary>
         /// InDesign servers section config key.

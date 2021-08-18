@@ -17,12 +17,12 @@ namespace TptMain.Jobs
     /// This class is for submitting jobs, either TEMPLATE GENERATION, or TAGGED TEXT, to the SQS queue in AWS.
     /// These jobs will then be picked up by the template generation ability and processed.
     /// </summary>
-    public class TransformService
+    public class TransformService : ITransformService
     {
         /// <summary>
         /// Type-specific logger (injected).
         /// </summary>
-        private readonly ILogger _logger;
+        private readonly ILogger<TransformService> _logger;
 
         /// <summary>
         /// The current two types of jobs to submit to the queue. These turn into group ids to separate the two
@@ -69,12 +69,12 @@ namespace TptMain.Jobs
         /// <summary>
         /// A flag for the transform processing is complete
         /// </summary>
-        private const string CompleteTemplateMarker = "-template";
+        private const string CompleteTemplateMarker = "-tg";
 
         /// <summary>
         /// A flag that the tagged text is complete
         /// </summary>
-        private const string CompleteTaggedTextMarker = "-tagged-text";
+        private const string CompleteTaggedTextMarker = "-idtt";
 
         /// <summary>
         /// AWS security key as baked into the application from development environment variables
@@ -115,7 +115,7 @@ namespace TptMain.Jobs
         /// Simple constructor to be used by the managers. Creates the connection to AWS. It's ok if there
         /// are more than one of these at a time.
         /// </summary>
-        public TransformService(ILogger logger)
+        public TransformService(ILogger<TransformService> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 

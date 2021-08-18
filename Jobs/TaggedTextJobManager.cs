@@ -18,7 +18,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// The service that's processing the transform job
         /// </summary>
-        TransformService _transformService;
+        ITransformService _transformService;
 
         /// <summary>
         /// The timeout period, in milliseconds, before the job is considered to be over-due, thus needing to be canceled and errored out
@@ -33,11 +33,11 @@ namespace TptMain.Jobs
         /// <param name="configuration">The set of configuration parameters</param>
         /// <param name="transformService">Injected service instance</param>
         public TaggedTextJobManager(
-            ILogger logger,
+            ILogger<TaggedTextJobManager> logger,
             IConfiguration configuration,
-            TransformService transformService)
+            ITransformService transformService)
         {
-            _logger = (ILogger<TaggedTextJobManager>)(logger ?? throw new ArgumentNullException(nameof(logger)));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             /// this is the only difference for this constructor
@@ -84,11 +84,12 @@ namespace TptMain.Jobs
             {
                 case TransformJobStatus.WAITING:
                 case TransformJobStatus.PROCESSING:
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTaggedText, JobStateSourceEnum.TaggedTextGeneration));
+                case TransformJobStatus.TEMPLATE_COMPLETE:
                     _logger.LogDebug($"Status reported as {JobStateEnum.GeneratingTaggedText} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.TAGGED_TEXT_COMPLETE:
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTaggedText, JobStateSourceEnum.TaggedTextGeneration));
+                case TransformJobStatus.ALL_COMPLETE:
+                    previewJob.State.Add(new PreviewJobState(JobStateEnum.TaggedTextGenerated, JobStateSourceEnum.TaggedTextGeneration));
                     _logger.LogDebug($"Status reported as {JobStateEnum.TaggedTextGenerated} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.CANCELED:
@@ -96,8 +97,9 @@ namespace TptMain.Jobs
                     _logger.LogDebug($"Status reported as {JobStateEnum.Cancelled} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.ERROR:
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TaggedTextGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.Error} for {previewJob.Id}");
+                    var errorMessage = $"Status reported as {JobStateEnum.Error} for {previewJob.Id}";
+                    _logger.LogDebug(errorMessage);
+                    previewJob.SetError(errorMessage, null, JobStateSourceEnum.TaggedTextGeneration);
                     break;
             }
 

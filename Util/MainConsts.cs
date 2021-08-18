@@ -43,22 +43,17 @@ namespace TptMain.Util
         /// <summary>
         /// Timer startup delay, in seconds.
         /// </summary>
-        public const int TIMER_STARTUP_DELAY_IN_SEC = 30;
+        public const int TIMER_STARTUP_DELAY_IN_SEC = 10;
 
         /// <summary>
         /// What fraction of a max age to check for expiration.
         /// </summary>
-        public const double MAX_AGE_CHECK_DIVISOR = 10.0;
+        public const double MAX_AGE_CHECK_DIVISOR = 5.0;
 
         /// <summary>
         /// Default project prefix, should a language prefix not be detectable or usable.
         /// </summary>
         public const string DEFAULT_PROJECT_PREFIX = "Default";
-
-        /// <summary>
-        /// Preview file name prefix.
-        /// </summary>
-        public const string PREVIEW_FILENAME_PREFIX = "preview-";
 
         /// <summary>
         /// Paratext project settings filename.

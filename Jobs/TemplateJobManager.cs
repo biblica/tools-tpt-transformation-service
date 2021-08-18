@@ -18,7 +18,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// The service that's processing the transform job
         /// </summary>
-        private TransformService _transformService;
+        private ITransformService _transformService;
 
         /// <summary>
         /// The timeout period, in milliseconds, before the job is considered to be over-due, thus needing to be canceled and errored out
@@ -33,18 +33,17 @@ namespace TptMain.Jobs
         /// <param name="configuration">The set of configuration parameters</param>
         /// <param name="transformService">Injected service instance</param>
         public TemplateJobManager(
-            ILogger logger,
+            ILogger<TemplateJobManager> logger,
             IConfiguration configuration,
-            TransformService transformService)
+            ITransformService transformService)
         {
-            _logger = (ILogger<TemplateJobManager>)(logger ?? throw new ArgumentNullException(nameof(logger)));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             /// this is the only difference for this constructor
             _transformService = transformService;
 
             // grab global settings for template generation timeout
-
             _timeoutMills = 1000 * int.Parse(configuration[ConfigConsts.TemplateGenerationTimeoutInSecKey] ?? throw new ArgumentNullException(ConfigConsts
                                                                         .TemplateGenerationTimeoutInSecKey));
         }
@@ -84,7 +83,6 @@ namespace TptMain.Jobs
             {
                 case TransformJobStatus.WAITING:
                 case TransformJobStatus.PROCESSING:
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTemplate, JobStateSourceEnum.TemplateGeneration));
                     _logger.LogDebug($"Status reported as {JobStateEnum.GeneratingTemplate} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.TEMPLATE_COMPLETE:
@@ -96,8 +94,9 @@ namespace TptMain.Jobs
                     _logger.LogDebug($"Status reported as {JobStateEnum.Cancelled} for {previewJob.Id}");
                     break;
                 case TransformJobStatus.ERROR:
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TemplateGeneration));
-                    _logger.LogDebug($"Status reported as {JobStateEnum.Error} for {previewJob.Id}");
+                    var errorMessage = $"Status reported as {JobStateEnum.Error} for {previewJob.Id}";
+                    _logger.LogDebug(errorMessage);
+                    previewJob.SetError(errorMessage, null, JobStateSourceEnum.TemplateGeneration);
                     break;
             }
 
@@ -120,10 +119,9 @@ namespace TptMain.Jobs
 
             if (previewJobState == null)
             {
-                _logger.LogError($"PreviewJob has not started Template generation even when asked for status update. Cancelling: {previewJob.Id}");
-                previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TemplateGeneration));
-
-                previewJob.SetError("Template generation error.", "Could not get state indicating that the Template generation had been started.");
+                var errorMessage = $"PreviewJob has not started Template generation even when asked for status update. Cancelling: {previewJob.Id}";
+                _logger.LogError(errorMessage);
+                previewJob.SetError("Template generation error.", errorMessage, JobStateSourceEnum.TemplateGeneration);
                 _transformService.CancelTransformJobs(previewJob.Id);
             }
             else
@@ -132,10 +130,9 @@ namespace TptMain.Jobs
 
                 if (diff.TotalMilliseconds >= _timeoutMills)
                 {
-                    _logger.LogError($"PreviewJob has not completed Template generation, timed out! Cancelling: {previewJob.Id}");
-                    previewJob.State.Add(new PreviewJobState(JobStateEnum.Error, JobStateSourceEnum.TemplateGeneration));
-
-                    previewJob.SetError("Template generation error, timed-out", $"The Template generation timed out - timeout:{_timeoutMills}, diff:{diff}");
+                    var errorMessage = $"The Template generation timed out on job {previewJob.Id} - timeout:{_timeoutMills}, diff:{diff}";
+                    _logger.LogError(errorMessage);
+                    previewJob.SetError("Template generation error.", errorMessage, JobStateSourceEnum.TemplateGeneration);
                     _transformService.CancelTransformJobs(previewJob.Id);
                 }
             }
