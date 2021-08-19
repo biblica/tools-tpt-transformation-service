@@ -7,12 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using TptMain.Http;
-using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
-using TptMain.ParatextProjects;
-using TptMain.Toolbox;
 using TptMain.Util;
 
 namespace TptTest
@@ -20,10 +16,8 @@ namespace TptTest
     [TestClass]
     public class JobManagerTests
     {
-        /// <summary>
-        /// Mock job manager logger.
-        /// </summary>
-        private Mock<ILogger<JobManager>> _mockLogger;
+        // Consts
+        private const string JOB_FILE_MANAGER_ROOT_DIR = @"Resources\JobData";
 
         /// <summary>
         /// Test configuration.
@@ -36,19 +30,14 @@ namespace TptTest
         private TptServiceContext _context;
 
         /// <summary>
-        /// Mock script runner.
+        /// Mock job manager logger.
         /// </summary>
-        private Mock<InDesignScriptRunner> _mockScriptRunner;
+        private Mock<ILogger<JobManager>> _mockLogger;
 
         /// <summary>
-        /// Mock request factory.
+        /// Mock Job File Manager.
         /// </summary>
-        private Mock<WebRequestFactory> _mockRequestFactory;
-
-        /// <summary>
-        /// Mock template manager.
-        /// </summary>
-        private Mock<TemplateManager> _mockTemplateManager;
+        private Mock<JobFileManager> _mockJobFileManager;
 
         /// <summary>
         /// Mock Preview Job Validator.
@@ -56,9 +45,19 @@ namespace TptTest
         private Mock<IPreviewJobValidator> _mockJobValidator;
 
         /// <summary>
-        /// Mock Paratext Project Service API.
+        /// Mock Transform Service.
         /// </summary>
-        private Mock<ParatextProjectService> _mockParatextProjectService;
+        private Mock<ITransformService> _mockTransformService;
+
+        /// <summary>
+        /// Mock Template Job Manager.
+        /// </summary>
+        private Mock<TemplateJobManager> _mockTemplateJobManager;
+
+        /// <summary>
+        /// Mock Tagged Text JobManager.
+        /// </summary>
+        private Mock<TaggedTextJobManager> _mockTaggedTextJobManager;
 
         /// <summary>
         /// Mock Preview Manager.
@@ -66,41 +65,32 @@ namespace TptTest
         private Mock<IPreviewManager> _mockPreviewManager;
 
         /// <summary>
-        /// Mock job scheduler.
-        /// </summary>
-        private Mock<JobScheduler> _mockJobScheduler;
-
-        /// <summary>
         /// Test setup.
         /// </summary>
         [TestInitialize]
         public void TestSetup()
         {
-            // create mocks
-            _mockLogger = new Mock<ILogger<JobManager>>();
+            // Configuration Parameters
             IDictionary<string, string> configKeys = new Dictionary<string, string>();
 
-            // Configuration Parameters
-
-            // - TemplateManager
-            configKeys[TemplateManagerTests.TEST_TEMPLATE_SERVER_URI_KEY] = TemplateManagerTests.TEST_TEMPLATE_SERVER_URI;
-            configKeys[TemplateManagerTests.TEST_TEMPLATE_TIMEOUT_IN_SEC_KEY] = TemplateManagerTests.TEST_TEMPLATE_TIMEOUT_IN_SEC;
-
+            // - JobFileManager
+            configKeys[ConfigConsts.ProcessedJobFilesRootDirKey] = JOB_FILE_MANAGER_ROOT_DIR;
+            // - TemplateJobManager
+            configKeys[ConfigConsts.TemplateGenerationTimeoutInSecKey] = "3600";
+            // - TaggedTextJobManager
+            configKeys[ConfigConsts.TaggedTextGenerationTimeoutInSecKey] = "3600";
             // - JobManager
-            configKeys[ConfigConsts.IdmlDocDirKey] = TestConsts.TEST_IDML_DOC_DIR;
-            configKeys[ConfigConsts.IdttDocDirKey] = TestConsts.TEST_IDTT_DOC_DIR;
-            configKeys[ConfigConsts.ParatextDocDirKey] = TestConsts.TEST_PARATEXT_DOC_DIR;
-            configKeys[ConfigConsts.PdfDocDirKey] = TestConsts.TEST_PDF_DOC_DIR;
-            configKeys[ConfigConsts.ZipDocDirKey] = TestConsts.TEST_ZIP_DOC_DIR;
-            configKeys[ConfigConsts.MaxDocAgeInSecKey] = TestConsts.TEST_DOC_MAX_AGE_IN_SEC;
-
-            // - JobScheduler
-            configKeys[JobSchedulerTests.TEST_MAX_CONCURRENT_JOBS_KEY] = JobSchedulerTests.TEST_MAX_CONCURRENT_JOBS;
+            configKeys[ConfigConsts.JobProcessIntervalInSecKey] = "30";
+            configKeys[ConfigConsts.MaxDocAgeInSecKey] = "60";
 
             // The InMemoryCollection will snapshot the parameters upon creation, have to first populate the dictionary before passing it.
             _testConfiguration = new ConfigurationBuilder()
                .AddInMemoryCollection(configKeys)
                .Build();
+
+
+            // create mocks
+            _mockLogger = new Mock<ILogger<JobManager>>();
 
             // preview context
             _context = new TptServiceContext(
@@ -108,39 +98,44 @@ namespace TptTest
                     .UseInMemoryDatabase(Guid.NewGuid().ToString())
                     .Options);
 
-            // mock: script runner
-            var mockScriptRunnerLogger = new Mock<ILogger<InDesignScriptRunner>>();
-            _mockScriptRunner = new Mock<InDesignScriptRunner>(
-                mockScriptRunnerLogger.Object, _testConfiguration);
+            // mock: JobFileManager
+            _mockJobFileManager = new Mock<JobFileManager>(
+                new Mock<ILogger<JobFileManager>>().Object,
+                _testConfiguration);
+            _mockJobFileManager
+                .Setup(jobFileManager => jobFileManager.GetTemplateDirectoryById(It.IsAny<string>()))
+                .Returns(new DirectoryInfo(JOB_FILE_MANAGER_ROOT_DIR));
+            _mockJobFileManager
+                .Setup(jobFileManager => jobFileManager.GetTaggedTextDirectoryById(It.IsAny<string>()))
+                .Returns(new DirectoryInfo(JOB_FILE_MANAGER_ROOT_DIR));
+            _mockJobFileManager
+                .Setup(jobFileManager => jobFileManager.GetPreviewDirectoryById(It.IsAny<string>()))
+                .Returns(new DirectoryInfo(JOB_FILE_MANAGER_ROOT_DIR));
 
-            // mock: web request factory
-            var mockRequestFactoryLogger = new Mock<ILogger<WebRequestFactory>>();
-            _mockRequestFactory = new Mock<WebRequestFactory>(MockBehavior.Strict,
-                mockRequestFactoryLogger.Object);
 
-            // mock: template manager
-            var mockTemplateManagerLogger = new Mock<ILogger<TemplateManager>>();
-            _mockTemplateManager = new Mock<TemplateManager>(MockBehavior.Strict,
-                mockTemplateManagerLogger.Object, _testConfiguration, _mockRequestFactory.Object);
-
-            // mock: preview job validator
+            // mock: IPreviewJobValidator
             _mockJobValidator = new Mock<IPreviewJobValidator>();
             _mockJobValidator.Setup(validator =>
-                validator.ValidatePreviewJob(It.IsAny<PreviewJob>()))
+                validator.ProcessJob(It.IsAny<PreviewJob>()))
                 .Verifiable();
 
-            // mock: paratext project service
-            var _mockParatextProjectServiceLogger = new Mock<ILogger<ParatextProjectService>>();
-            _mockParatextProjectService = new Mock<ParatextProjectService>(MockBehavior.Strict,
-                _mockParatextProjectServiceLogger.Object, _testConfiguration);
+            // mock: ITransformService
+            _mockTransformService = new Mock<ITransformService>();
 
-            // mock: preview manager
+            // mock: TemplateJobManager
+            _mockTemplateJobManager = new Mock<TemplateJobManager>(
+                new Mock<ILogger<TemplateJobManager>>().Object,
+                _testConfiguration,
+                _mockTransformService.Object);
+
+            // mock: TaggedTextJobManager
+            _mockTaggedTextJobManager = new Mock<TaggedTextJobManager>(
+                new Mock<ILogger<TaggedTextJobManager>>().Object,
+                _testConfiguration,
+                _mockTransformService.Object);
+
+            // mock: IPreviewManager
             _mockPreviewManager = new Mock<IPreviewManager>();
-
-            // mock: job scheduler
-            var mockJobSchedulerLogger = new Mock<ILogger<JobScheduler>>();
-            _mockJobScheduler = new Mock<JobScheduler>(
-                mockJobSchedulerLogger.Object, _testConfiguration);
         }
 
         /// <summary>
@@ -154,11 +149,11 @@ namespace TptTest
                 _mockLogger.Object,
                 _testConfiguration,
                 _context,
-                _mockPreviewManager.Object,
-                _mockTemplateManager.Object,
+                _mockJobFileManager.Object,
                 _mockJobValidator.Object,
-                _mockParatextProjectService.Object,
-                _mockJobScheduler.Object);
+                _mockTemplateJobManager.Object,
+                _mockTaggedTextJobManager.Object,
+                _mockPreviewManager.Object);
 
             jobManager.Dispose();
         }
@@ -174,19 +169,19 @@ namespace TptTest
         {
             // setup service under test
             var mockJobManager =
-                new Mock<JobManager>(MockBehavior.Strict,
+                new Mock<JobManager>(
                     _mockLogger.Object,
-                _testConfiguration,
-                _context,
-                _mockPreviewManager.Object,
-                _mockTemplateManager.Object,
-                _mockJobValidator.Object,
-                _mockParatextProjectService.Object,
-                _mockJobScheduler.Object);
+                    _testConfiguration,
+                    _context,
+                    _mockJobFileManager.Object,
+                    _mockJobValidator.Object,
+                    _mockTemplateJobManager.Object,
+                    _mockTaggedTextJobManager.Object,
+                    _mockPreviewManager.Object);
 
             var testPreviewJob = TestUtils.CreateTestPreviewJob();
 
-            var expectedZipFileName = $@"{TestConsts.TEST_ZIP_DOC_DIR}\{MainConsts.PREVIEW_FILENAME_PREFIX}{testPreviewJob.Id}.zip";
+            var expectedZipFileName = $@"{TestConsts.TEST_ZIP_DOC_DIR}\{testPreviewJob.Id}.zip";
 
             // delete the file if it already exists
             if (File.Exists(expectedZipFileName))
@@ -219,60 +214,6 @@ namespace TptTest
         }
 
         /// <summary>
-        /// Test that the CheckPreviewJobs is called as expected and deletes old jobs.
-        /// </summary>
-        [TestMethod]
-        public void TestCheckPreviewJobDeletion()
-        {
-            // setup service under test
-            var mockJobManager =
-                new Mock<JobManager>(
-                    _mockLogger.Object,
-                    _testConfiguration,
-                    _context,
-                    _mockPreviewManager.Object,
-                    _mockTemplateManager.Object,
-                    _mockJobValidator.Object,
-                    _mockParatextProjectService.Object,
-                    _mockJobScheduler.Object);
-            // call base functions unless overriden
-            mockJobManager.CallBase = true;
-            _mockJobScheduler.CallBase = false;
-
-            mockJobManager
-                .Setup(jm => jm.CheckPreviewJobs())
-                .CallBase()
-                .Verifiable();
-
-            // Add a couple of jobs to check
-            var testPreviewJob1 = TestUtils.CreateTestPreviewJob();
-            // this function expects a null Id.
-            testPreviewJob1.Id = null;
-
-            Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob1, out var outputJob1));
-
-            var testPreviewJob2 = TestUtils.CreateTestPreviewJob();
-            // this function expects a null Id.
-            testPreviewJob2.Id = null;
-
-            Assert.IsTrue(mockJobManager.Object.TryAddJob(testPreviewJob2, out var outputJob2));
-
-            // set the job's completed time to be before the threshold for deletion.
-            outputJob2.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated, 
-                JobStateSourceEnum.GeneralManagement,
-                DateTime.Now.AddSeconds(Int32.Parse(TestConsts.TEST_DOC_MAX_AGE_IN_SEC) * -2)));
-            
-            // allow enough time for the check scheduled job to execute
-            Thread.Sleep((int)(MainConsts.TIMER_STARTUP_DELAY_IN_SEC + (2 * MainConsts.MAX_AGE_CHECK_DIVISOR)) * 1000);
-
-            // verify that check jobs was called.
-            mockJobManager.Verify(jm => jm.CheckPreviewJobs(), Times.Once);
-            // verify that the "old" job was deleted, and the "young" job hasn't been.
-            Assert.IsNotNull(_context.PreviewJobs.Find(outputJob1.Id));
-            Assert.IsNull(_context.PreviewJobs.Find(outputJob2.Id));
-        }
-
-        /// <summary>
         /// Test that the CheckPreviewJobs and that works with the JobScheduler.
         /// </summary>
         [TestMethod]
@@ -284,17 +225,16 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockPreviewManager.Object,
-                    _mockTemplateManager.Object,
+                    _mockJobFileManager.Object,
                     _mockJobValidator.Object,
-                    _mockParatextProjectService.Object,
-                    _mockJobScheduler.Object);
+                    _mockTemplateJobManager.Object,
+                    _mockTaggedTextJobManager.Object,
+                    _mockPreviewManager.Object);
             // call base functions unless overriden
             mockJobManager.CallBase = true;
-            _mockJobScheduler.CallBase = true;
 
             mockJobManager
-                .Setup(jm => jm.CheckPreviewJobs())
+                .Setup(jm => jm.ProcessJobs())
                 .CallBase()
                 .Verifiable();
 
@@ -315,7 +255,7 @@ namespace TptTest
             Thread.Sleep((int)(MainConsts.TIMER_STARTUP_DELAY_IN_SEC + (2 * MainConsts.MAX_AGE_CHECK_DIVISOR)) * 1000);
 
             // verify that check jobs was called.
-            mockJobManager.Verify(jm => jm.CheckPreviewJobs(), Times.Once);
+            mockJobManager.Verify(jm => jm.ProcessJobs(), Times.Once);
             // verify that the "old" job was deleted, and the "young" job hasn't been.
             Assert.IsNotNull(_context.PreviewJobs.Find(outputJob1.Id));
             Assert.IsNotNull(_context.PreviewJobs.Find(outputJob2.Id));
@@ -333,11 +273,11 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockPreviewManager.Object,
-                    _mockTemplateManager.Object,
+                    _mockJobFileManager.Object,
                     _mockJobValidator.Object,
-                    _mockParatextProjectService.Object,
-                    _mockJobScheduler.Object);
+                    _mockTemplateJobManager.Object,
+                    _mockTaggedTextJobManager.Object,
+                    _mockPreviewManager.Object);
             // call base functions unless overriden
             mockJobManager.CallBase = true;
 
@@ -359,11 +299,11 @@ namespace TptTest
                     _mockLogger.Object,
                     _testConfiguration,
                     _context,
-                    _mockPreviewManager.Object,
-                    _mockTemplateManager.Object,
+                    _mockJobFileManager.Object,
                     _mockJobValidator.Object,
-                    _mockParatextProjectService.Object,
-                    _mockJobScheduler.Object);
+                    _mockTemplateJobManager.Object,
+                    _mockTaggedTextJobManager.Object,
+                    _mockPreviewManager.Object);
             // call base functions unless overriden
             mockJobManager.CallBase = true;
 

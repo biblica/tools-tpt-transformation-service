@@ -4,13 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using TptMain.Http;
 using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
 using TptMain.ParatextProjects;
 using TptMain.Projects;
-using TptMain.Toolbox;
 
 namespace TptMain
 {
@@ -37,23 +35,19 @@ namespace TptMain
                 options => options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection")),
                ServiceLifetime.Singleton);
 
-            services.AddSingleton<IPreviewJobValidator, PreviewJobValidator>();
-            services.AddSingleton<IJobManager, JobManager>();
+            services.AddSingleton<JobFileManager>();
+            services.AddSingleton<ITransformService, TransformService>();
+            services.AddSingleton<TaggedTextJobManager>();
+            services.AddSingleton<TemplateJobManager>();
             services.AddSingleton<IPreviewManager, PreviewManager>();
+
             services.AddSingleton<IProjectManager, ProjectManager>();
+            services.AddSingleton<IJobManager, JobManager>();
+            services.AddSingleton<IPreviewJobValidator, PreviewJobValidator>();
 
             services.AddSingleton<InDesignScriptRunner>();
             services.AddSingleton<ParatextApi>();
             services.AddSingleton<ParatextProjectService>();
-            services.AddSingleton<JobScheduler>();
-            services.AddSingleton<TemplateManager>();
-            services.AddSingleton<WebRequestFactory>();
-
-            // These will be enabled with the implementation of the TPT 2.0 JobManager
-            //services.AddSingleton<TransformService>();
-
-            //services.AddSingleton<TaggedTextJobManager>();
-            //services.AddSingleton<TemplateJobManager>();
 
             services.AddControllers();
         }

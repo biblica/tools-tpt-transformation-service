@@ -37,7 +37,8 @@ namespace TptTest
                     PageWidthInPts = MainConsts.ALLOWED_PAGE_WIDTH_IN_PTS.Default,
                     PageHeaderInPts = MainConsts.ALLOWED_PAGE_HEADER_IN_PTS.Default,
                     UseProjectFont = false
-                }
+                },
+                AdditionalParams = new AdditionalPreviewParams()
             };
         }
 
