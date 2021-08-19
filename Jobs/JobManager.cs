@@ -401,9 +401,10 @@ namespace TptMain.Jobs
                 if (PreviewJobs is null)
                 {
                     previewJobs = _tptServiceContext.PreviewJobs
+                        .Include(x => x.State)
                         .Include(x => x.BibleSelectionParams)
                         .Include(x => x.TypesettingParams)
-                        .Include(x => x.State)
+                        .Include(x => x.AdditionalParams)
                         .ToList();
 
                     // populate the cache

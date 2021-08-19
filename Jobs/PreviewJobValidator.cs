@@ -132,7 +132,7 @@ namespace TptMain.Jobs
                 errorHandlerFunc);
 
             // Generate calculated needed fields
-            if (errors.Count > 0)
+            if (errors.Count <= 0)
             {
                 try
                 {
@@ -295,8 +295,11 @@ namespace TptMain.Jobs
 
                 if (String.IsNullOrEmpty(previewJob.AdditionalParams.OverrideFont))
                 {
-                    _logger.LogInformation($"No font specified for project {previewJob.BibleSelectionParams.ProjectName}. IDML font settings will not be modified.");
+                    _logger.LogWarning($"No font specified for project '{previewJob.BibleSelectionParams.ProjectName}'. IDML font settings will not be modified.");
                     previewJob.AdditionalParams.OverrideFont = null;
+                } else
+                {
+                    _logger.LogInformation($"Override font '{previewJob.AdditionalParams.OverrideFont}' specified for project '{previewJob.BibleSelectionParams.ProjectName}' and will be used.");
                 }
             }
         }

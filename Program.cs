@@ -37,6 +37,7 @@ namespace TptMain
                                       .Include(x => x.State)
                                       .Include(x => x.BibleSelectionParams)
                                       .Include(x => x.TypesettingParams)
+                                      .Include(x => x.AdditionalParams)
                                       .ToList();
 
                     // Update dangling jobs to be errored out. They may still be running, but we can't reach them or resume them.
