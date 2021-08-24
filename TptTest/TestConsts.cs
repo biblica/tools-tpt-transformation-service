@@ -1,4 +1,5 @@
 ﻿using System.Net.Http;
+using TptMain.Util;
 
 namespace TptTest
 {
@@ -40,7 +41,12 @@ namespace TptTest
         /// <summary>
         /// Expected test request URI.
         /// </summary>
-        public const string TestRequestUri =
-            "http://localhost:3000/idtt/template/create?book_type=cav&font_size=123.4&header_size=567.8&leading=234.5&page_height=345.6&page_width=456.7";
+        public static readonly string TestRequestUri =
+            "http://localhost:3000/idtt/template/create?book_type=cav&"
+            + "font_size=" + MainConsts.ALLOWED_FONT_SIZE_IN_PTS.Default.ToString()
+            + "&header_size=" + MainConsts.ALLOWED_PAGE_HEADER_IN_PTS.Default.ToString()
+            + "&leading=" + MainConsts.ALLOWED_FONT_LEADING_IN_PTS.Default.ToString()
+            + "&page_height=" + MainConsts.ALLOWED_PAGE_HEIGHT_IN_PTS.Default.ToString()
+            + "&page_width=" + MainConsts.ALLOWED_PAGE_WIDTH_IN_PTS.Default.ToString();
     }
 }

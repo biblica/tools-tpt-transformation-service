@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SIL.Linq;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TptMain.Models;
@@ -31,17 +32,25 @@ namespace TptMain
                     var context = services.GetRequiredService<TptServiceContext>();
                     context.Database.EnsureCreated();
 
-                    // Find any dangling jobs.
-                    IQueryable<PreviewJob> previewJobs = from job in context.PreviewJobs
-                                      where job.DateCompleted == null && job.DateCancelled == null
-                                      select job;
+                    // Eagerly load (including children objects) all jobs.
+                    List<PreviewJob> previewJobs = context.PreviewJobs
+                                      .Include(x => x.State)
+                                      .Include(x => x.BibleSelectionParams)
+                                      .Include(x => x.TypesettingParams)
+                                      .Include(x => x.AdditionalParams)
+                                      .ToList();
 
                     // Update dangling jobs to be errored out. They may still be running, but we can't reach them or resume them.
                     foreach (PreviewJob previewJob in previewJobs)
                     {
-                        previewJob.SetError("An internal server error occurred.", "Unrecoverable. The system restarted while the job was in progress.");
-                        previewJob.DateCompleted = DateTime.UtcNow;
-                        context.PreviewJobs.Update(previewJob);
+                        if (!previewJob.State.Any(state => state.State.Equals(JobStateEnum.PreviewGenerated))
+                            && !previewJob.State.Any(state => state.State.Equals(JobStateEnum.Cancelled))
+                            && !previewJob.State.Any(state => state.State.Equals(JobStateEnum.Error)))
+                        {
+                            previewJob.SetError("An internal server error occurred.", "Unrecoverable. The system restarted while the job was in progress.");
+                            previewJob.State.Add(new PreviewJobState(JobStateEnum.Error));
+                            context.PreviewJobs.Update(previewJob);
+                        }
                     }
 
                     // Persist any job updates.

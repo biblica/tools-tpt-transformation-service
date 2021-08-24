@@ -4,18 +4,45 @@
   },
   "Logging": {
     "LogLevel": {
-      "Default": "Debug",
-      "System": "Debug",
-      "Microsoft": "Debug"
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Warning"
+    },
+    "EventLog": {
+      "LogLevel": {
+        "Default": "Warning",
+        "Microsoft": "Warning",
+        "Microsoft.Hosting.Lifetime": "Warning",
+        "TptMain": "Debug"
+      }
+    }
+  },
+  "Job": {
+    "Template": {
+      "TimeoutInSec": "3600"
+    },
+    "TaggedText": {
+      "TimeoutInSec": "3600"
     }
   },
   "Jobs": {
-    "MaxConcurrent": "1"
+    "Processing": {
+      "ProcessIntervalInSec": "30"
+    }
   },
   "InDesign": {
-    "ServerUri": "http://localhost:9876/service",
-    "TimeoutInSec": "3600",
-    "PreviewScriptDirectory": "C:\\Work\\JSX"
+    "Servers": [
+      {
+        "Name": "IDS Server #1 (Port: 9876)",
+        "ServerUri": "http://localhost:9876/service"
+      },
+      {
+        "Name": "IDS Server #2 (Port: 9877)",
+        "ServerUri": "http://localhost:9877/service"
+      }
+    ],
+    "TimeoutInSec": "28800",
+    "PreviewScriptDirectory": "C:\\Work\\Service\\transformation\\Resources\\Scripts\\InDesign"
   },
   "Paratext": {
     "API": {
@@ -32,27 +59,15 @@
   },
   "Docs": {
     "MaxAgeInSec": "86400",
-    "IDML": {
-      "Directory": "C:\\Work\\IDML"
-    },
-    "IDTT": {
-      "Directory": "C:\\Work\\IDTT",
-      "CheckIntervalInSec": "120"
+    "Job": {
+      "Processed": {
+        "RootDirectory": "C:\\Work\\JobData"
+      }
     },
     "Paratext": {
-      "Directory": "C:\\Work\\Paratext"
-    },
-    "PDF": {
-      "Directory": "C:\\Work\\PDF"
-    },
-    "Zip": {
-      "Directory": "C:\\Work\\Zip"
-    }
-  },
-  "Toolbox": {
-    "Template": {
-      "ServerUri": "http://localhost:3000/idtt/template/create",
-      "TimeoutInSec": "600"
+      "Directory": "C:\\Work\\Paratext",
+      "CheckIntervalInSec": "60"
     }
   }
 }
+ 

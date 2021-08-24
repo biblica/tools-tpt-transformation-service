@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using TptMain.Models;
+using TptMain.Util;
 
 namespace TptTest
 {
@@ -23,19 +24,21 @@ namespace TptTest
                 Id = Guid.Empty.ToString(),
                 BibleSelectionParams = new BibleSelectionParams
                 {
-                    ProjectName = TestConsts.TEST_PROJECT_NAME
+                    ProjectName = TestConsts.TEST_PROJECT_NAME,
+                    SelectedBooks = null
                 },
                 User = TestConsts.TEST_USER,
                 TypesettingParams = new TypesettingParams
                 {
                     BookFormat = BookFormat.cav,
-                    FontSizeInPts = 123.4f,
-                    FontLeadingInPts = 234.5f,
-                    PageHeightInPts = 345.6f,
-                    PageWidthInPts = 456.7f,
-                    PageHeaderInPts = 567.8f,
+                    FontSizeInPts = MainConsts.ALLOWED_FONT_SIZE_IN_PTS.Default,
+                    FontLeadingInPts = MainConsts.ALLOWED_FONT_LEADING_IN_PTS.Default,
+                    PageHeightInPts = MainConsts.ALLOWED_PAGE_HEIGHT_IN_PTS.Default,
+                    PageWidthInPts = MainConsts.ALLOWED_PAGE_WIDTH_IN_PTS.Default,
+                    PageHeaderInPts = MainConsts.ALLOWED_PAGE_HEADER_IN_PTS.Default,
                     UseProjectFont = false
-                }
+                },
+                AdditionalParams = new AdditionalPreviewParams()
             };
         }
 

@@ -13,7 +13,6 @@ namespace TptTest
     public class ProjectManagerTests
     {
         // test config values
-        public readonly string TEST_IDTT_DIR = @"Resources/projectManagerDetails/idtt";
         public readonly string TEST_PARATEXT_DIR = @"Resources/projectManagerDetails/paratext";
         public readonly string TEST_CHECK_INTERVAL_SECS = "5";
 
@@ -38,7 +37,6 @@ namespace TptTest
 
             // setup for ctor
             IDictionary<string, string> configKeys = new Dictionary<string, string>();
-            configKeys[ProjectManager.IdttDirKey] = TEST_IDTT_DIR;
             configKeys[ProjectManager.ParatextDirKey] = TEST_PARATEXT_DIR;
             configKeys[ProjectManager.ProjectUpdateIntervalKey] = TEST_CHECK_INTERVAL_SECS;
             _testConfiguration = new TestConfiguration(configKeys);
