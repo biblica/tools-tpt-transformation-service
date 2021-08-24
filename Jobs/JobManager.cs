@@ -7,10 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading;
-using TptMain.InDesign;
 using TptMain.Models;
-using TptMain.ParatextProjects;
-using TptMain.Toolbox;
 using TptMain.Util;
 
 namespace TptMain.Jobs
@@ -31,49 +28,29 @@ namespace TptMain.Jobs
         private readonly TptServiceContext _tptServiceContext;
 
         /// <summary>
-        /// IDS server script runner (injected).
+        /// Job File Manager (injected).
         /// </summary>
-        private readonly ScriptRunner _scriptRunner;
+        private readonly JobFileManager _jobFileManager;
 
         /// <summary>
-        /// Template manager.
+        /// Job Validation service for ensuring feasible and authorized jobs (injected).
         /// </summary>
-        private readonly TemplateManager _templateManager;
+        private readonly IPreviewJobValidator _jobValidator;
 
         /// <summary>
-        /// Paratext API service used to authorize user access.
+        /// Template manager (injected).
         /// </summary>
-        private readonly ParatextApi _paratextApi;
+        private readonly TemplateJobManager _templateManager;
 
         /// <summary>
-        /// Paratext Project service used to get information related to local Paratext projects.
+        /// Tagged text manager (injected).
         /// </summary>
-        private readonly ParatextProjectService _paratextProjectService;
+        private readonly TaggedTextJobManager _taggedTextManager;
 
         /// <summary>
-        /// Job scheduler service (injected).
+        /// Preview Manager (injected).
         /// </summary>
-        private readonly JobScheduler _jobScheduler;
-
-        /// <summary>
-        /// Template (IDML) storage directory (configured).
-        /// </summary>
-        private readonly DirectoryInfo _idmlDirectory;
-
-        /// <summary>
-        /// Tagged Text (IDTT) storage directory (configured).
-        /// </summary>
-        private readonly DirectoryInfo _idttDirectory;
-
-        /// <summary>
-        /// Preview PDF storage directory (configured).
-        /// </summary>
-        private readonly DirectoryInfo _pdfDirectory;
-
-        /// <summary>
-        /// Preview zip storage directory (configured).
-        /// </summary>
-        private readonly DirectoryInfo _zipDirectory;
+        private readonly IPreviewManager _previewManager;
 
         /// <summary>
         /// Max document (IDML, PDF) age, in seconds (configured).
@@ -81,19 +58,32 @@ namespace TptMain.Jobs
         private readonly int _maxDocAgeInSec;
 
         /// <summary>
-        /// Job expiration check timer.
-        /// </summary>
-        private readonly Timer _jobCheckTimer;
-
-        /// <summary>
-        /// PDF expiration check timer.
+        /// Check timer and files
         /// </summary>
         private readonly Timer _docCheckTimer;
 
         /// <summary>
-        /// Template (IDML) storage directory.
+        /// Interval in between job processing functions run.
         /// </summary>
-        public DirectoryInfo IdmlDirectory => _idmlDirectory;
+        private readonly int _jobProcessIntervalInSec;
+
+        /// <summary>
+        /// Check timer for jobs
+        /// </summary>
+        private readonly Timer _processRunTimer;
+
+        /// <summary>
+        /// This dictionary maps the state that will determine which processor will process a job next.
+        /// </summary>
+        private Dictionary<JobStateEnum, IPreviewJobProcessor> StateToProcessorProcessMap { get; set; } 
+
+        /// <summary>
+        /// This dictionary maps the state that will determine which processor will update the job next.
+        /// </summary>
+        private Dictionary<JobStateEnum, IPreviewJobProcessor> StateToProcessorUpdateMap { get; set; } 
+
+        // Cache of jobs as they'll be updated repeatedly in processors.
+        private Dictionary<string, PreviewJob> PreviewJobs{ get; set; }
 
         /// <summary>
         /// Basic ctor.
@@ -101,151 +91,170 @@ namespace TptMain.Jobs
         /// <param name="logger">Type-specific logger (required).</param>
         /// <param name="configuration">System configuration (required).</param>
         /// <param name="tptServiceContext">Database context (persistence; required).</param>
-        /// <param name="scriptRunner">Script runner (required).</param>
+        /// <param name="jobFileManager">Job File Manager (required).</param>
+        /// <param name="jobValidator">Preview Job Validator used for ensuring job feasibility and authorization on projects (required).</param>
         /// <param name="templateManager">Template manager (required).</param>
-        /// <param name="paratextApi">Paratext API for verifying user authorization on projects (required).</param>
-        /// <param name="paratextProjectService">Paratext Project service for getting information related to local Paratext projects. (required).</param>
-        /// <param name="jobScheduler">Job scheduler (required).</param>
+        /// <param name="taggedTextManager">Tagged Text manager (required).</param>
+        /// <param name="previewManager">Preview manager (required).</param>
         public JobManager(
             ILogger<JobManager> logger,
             IConfiguration configuration,
             TptServiceContext tptServiceContext,
-            ScriptRunner scriptRunner,
-            TemplateManager templateManager,
-            ParatextApi paratextApi,
-            ParatextProjectService paratextProjectService,
-            JobScheduler jobScheduler)
+            JobFileManager jobFileManager,
+            IPreviewJobValidator jobValidator,
+            TemplateJobManager templateManager,
+            TaggedTextJobManager taggedTextManager,
+            IPreviewManager previewManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _tptServiceContext = tptServiceContext ?? throw new ArgumentNullException(nameof(tptServiceContext));
-            _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
+            _jobFileManager = jobFileManager ?? throw new ArgumentNullException(nameof(jobFileManager));
+            _jobValidator = jobValidator ?? throw new ArgumentNullException(nameof(jobValidator));
             _templateManager = templateManager ?? throw new ArgumentNullException(nameof(templateManager));
-            _paratextApi = paratextApi ?? throw new ArgumentNullException(nameof(paratextApi));
-            _paratextProjectService = paratextProjectService ?? throw new ArgumentNullException(nameof(paratextProjectService));
-            _jobScheduler = jobScheduler ?? throw new ArgumentNullException(nameof(jobScheduler));
+            _taggedTextManager = taggedTextManager ?? throw new ArgumentNullException(nameof(taggedTextManager));
+            _previewManager = previewManager ?? throw new ArgumentNullException(nameof(previewManager));
 
-            _idmlDirectory = new DirectoryInfo(configuration[ConfigConsts.IdmlDocDirKey]
-                                               ?? throw new ArgumentNullException(ConfigConsts.IdmlDocDirKey));
-            _idttDirectory = new DirectoryInfo(configuration[ConfigConsts.IdttDocDirKey]
-                                               ?? throw new ArgumentNullException(ConfigConsts.IdttDocDirKey));
-            _pdfDirectory = new DirectoryInfo(configuration[ConfigConsts.PdfDocDirKey]
-                                              ?? throw new ArgumentNullException(ConfigConsts.PdfDocDirKey));
-            _zipDirectory = new DirectoryInfo(configuration[ConfigConsts.ZipDocDirKey]
-                                              ?? throw new ArgumentNullException(ConfigConsts.ZipDocDirKey));
             _maxDocAgeInSec = int.Parse(configuration[ConfigConsts.MaxDocAgeInSecKey]
                                         ?? throw new ArgumentNullException(ConfigConsts.MaxDocAgeInSecKey));
-            _jobCheckTimer = new Timer((stateObject) => { CheckPreviewJobs(); }, null,
-                 TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
-                 TimeSpan.FromSeconds(_maxDocAgeInSec / MainConsts.MAX_AGE_CHECK_DIVISOR));
-            _docCheckTimer = new Timer((stateObject) => { CheckDocFiles(); }, null,
-                 TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
-                 TimeSpan.FromSeconds(_maxDocAgeInSec / MainConsts.MAX_AGE_CHECK_DIVISOR));
+            _jobProcessIntervalInSec = int.Parse(configuration[ConfigConsts.JobProcessIntervalInSecKey]
+                                        ?? throw new ArgumentNullException(ConfigConsts.JobProcessIntervalInSecKey));
 
-            if (!Directory.Exists(_pdfDirectory.FullName))
+            _docCheckTimer = new Timer((stateObject) => { CheckDocFiles(); }, 
+                null, 
+                 TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
+                 TimeSpan.FromSeconds(_maxDocAgeInSec));
+            _processRunTimer = new Timer((stateObject) => { ProcessJobs(); },
+                null, 
+                 TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
+                 TimeSpan.FromSeconds(_jobProcessIntervalInSec));
+
+            // map the events that kick them off to their respective processors
+            StateToProcessorProcessMap = new Dictionary<JobStateEnum, IPreviewJobProcessor>()
             {
-                Directory.CreateDirectory(_pdfDirectory.FullName);
+                { JobStateEnum.Submitted, _jobValidator },
+                { JobStateEnum.Started, _templateManager },
+                { JobStateEnum.TemplateGenerated, _taggedTextManager },
+                { JobStateEnum.TaggedTextGenerated, _previewManager }
+            };
+            StateToProcessorUpdateMap = new Dictionary<JobStateEnum, IPreviewJobProcessor>()
+            {
+                { JobStateEnum.GeneratingTemplate, _templateManager },
+                { JobStateEnum.GeneratingTaggedText, _taggedTextManager },
+                { JobStateEnum.GeneratingPreview, _previewManager }
+            };
+
+            // grab and cache the jobs from the database
+            if (TryGetJobs(out var previewJobs))
+            {
+                PreviewJobs = previewJobs.ToDictionary(
+                    job => job.Id,
+                    job => job
+                );
+            }
+            else
+            {
+                PreviewJobs = new Dictionary<string, PreviewJob>();
             }
 
-            if (!Directory.Exists(_zipDirectory.FullName))
-            {
-                Directory.CreateDirectory(_zipDirectory.FullName);
-            }
-
-            _logger.LogDebug("JobManager()");
+            _logger.LogDebug("JobManager() initialized");
         }
 
         /// <summary>
-        /// Iterate through PDFs and clean up old ones.
+        /// This function handles the processing of TPT jobs, and delgating work to individual managers based on state.
         /// </summary>
-        public virtual void CheckPreviewJobs()
+        public virtual void ProcessJobs()
         {
-            try
+            _logger.LogDebug("JobManager.ProcessJobs()");
+
+            // handle initial processing
+            foreach (var test in StateToProcessorProcessMap)
             {
-                lock (_tptServiceContext)
+                var initiationState = test.Key;
+                var handlingProcessor = test.Value;
+
+                if(TryGetJobsByCurrentState(initiationState, out var previewJobsByState))
                 {
-                    _logger.LogDebug("Checking preview jobs...");
-
-                    var checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
-                    IList<PreviewJob> toRemove = new List<PreviewJob>();
-
-                    foreach (var jobItem in _tptServiceContext.PreviewJobs)
+                    previewJobsByState.ForEach(previewJob =>
                     {
-                        var refTime = jobItem.DateCompleted
-                            ?? jobItem.DateCancelled
-                            ?? jobItem.DateStarted
-                            ?? jobItem.DateSubmitted;
-
-                        if (refTime != null
-                            && refTime < checkTime)
+                        if (!IsJobTerminated(previewJob))
                         {
-                            toRemove.Add(jobItem);
+                            handlingProcessor.ProcessJob(previewJob);
                         }
-                    }
-                    if (toRemove.Count > 0)
-                    {
-                        _tptServiceContext.PreviewJobs.RemoveRange(toRemove);
-                        _tptServiceContext.SaveChanges();
-                    }
-
-                    _logger.LogDebug("...Preview jobs checked.");
+                    });
                 }
             }
-            catch (Exception ex)
+
+            // handle follow-on updates
+            foreach (var test in StateToProcessorUpdateMap)
             {
-                _logger.LogWarning(ex, "Can't check preview jobs.");
+                var initiationState = test.Key;
+                var handlingProcessor = test.Value;
+
+                if(TryGetJobsByCurrentState(initiationState, out var previewJobsByState))
+                {
+                    previewJobsByState.ForEach(previewJob =>
+                    {
+                        if (!IsJobTerminated(previewJob))
+                        {
+                            handlingProcessor.GetStatus(previewJob);
+                        }
+                    });
+                }
+            }
+
+            // update all jobs against the DB.
+            if (TryGetJobs(out var previewJobs))
+            {
+                previewJobs.ForEach(job =>
+                {
+                    TryUpdateJob(job);
+                });
             }
         }
 
         /// <summary>
-        /// Iterate through generated preview files and clean up old ones.
+        /// Iterate through generated preview job directories and clean up old ones.
         /// </summary>
         private void CheckDocFiles()
         {
             try
             {
-                _logger.LogDebug("Checking document files...");
+                _logger.LogDebug("Checking job directories...");
 
-                DeleteOldFiles(_pdfDirectory.FullName, $"{MainConsts.PREVIEW_FILENAME_PREFIX}*.*");
-                DeleteOldFiles(_idmlDirectory.FullName, $"{MainConsts.PREVIEW_FILENAME_PREFIX}*.*");
-                DeleteOldFiles(_zipDirectory.FullName, $"{MainConsts.PREVIEW_FILENAME_PREFIX}*.*");
+                var checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
 
-                _logger.LogDebug("...Document files checked.");
+                foreach (var jobDirectory in _jobFileManager.JobFilesRootDir.GetDirectories())
+                {
+                    if (jobDirectory.CreationTimeUtc < checkTime)
+                    {
+                        try
+                        {
+                            jobDirectory.Delete(true);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, $"Can't delete directory (will retry): {jobDirectory}.");
+                        }
+                    }
+                }
+
+                _logger.LogDebug("...Job directories checked.");
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Can't check document files.");
+                _logger.LogWarning(ex, "Can't check job directories.");
             }
         }
 
         /// <summary>
-        /// Delete files that exceed the configured maximum document age in seconds (_maxDocAgeInSec). The files are based on a provided directory and file search pattern.
+        /// Return whether a job has entered a terminal state.
         /// </summary>
-        /// <param name="directory">The source directory containing the files we want to assess for deletion. (required)</param>
-        /// <param name="fileSearchPattern">A file search pattern for filtering out files assess for deletion. EG: "preview-*.zip" (required)</param>
-        private void DeleteOldFiles(string directory, string fileSearchPattern)
+        /// <param name="job">Job to assess.</param>
+        /// <returns>true: job has terminated; false job has not terminated.</returns>
+        public virtual bool IsJobTerminated(PreviewJob job)
         {
-            // Validate inputs
-            _ = directory ?? throw new ArgumentNullException(nameof(directory));
-            _ = fileSearchPattern ?? throw new ArgumentNullException(nameof(fileSearchPattern));
-
-            var checkTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(_maxDocAgeInSec));
-
-            foreach (var fileItem in Directory.EnumerateFiles(directory, fileSearchPattern))
-            {
-                var foundFile = new FileInfo(fileItem);
-                if (foundFile.CreationTimeUtc < checkTime)
-                {
-                    try
-                    {
-                        foundFile.Delete();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, $"Can't delete file (will retry): {fileItem}.");
-                    }
-                }
-            }
+            return job.IsCancelled || job.IsCompleted || job.IsError;
         }
 
         /// <summary>
@@ -256,7 +265,6 @@ namespace TptMain.Jobs
         /// <returns>True if job created successfully, false otherwise.</returns>
         public virtual bool TryAddJob(PreviewJob inputJob, out PreviewJob outputJob)
         {
-            _logger.LogDebug($"TryAddJob() - inputJob.Id={inputJob.Id}.");
             if (inputJob.Id != null
                 || inputJob.BibleSelectionParams.ProjectName == null
                 || inputJob.BibleSelectionParams.ProjectName.Any(charItem => !char.IsLetterOrDigit(charItem)))
@@ -264,24 +272,16 @@ namespace TptMain.Jobs
                 outputJob = null;
                 return false;
             }
-            this.InitPreviewJob(inputJob);
+
+            InitPreviewJob(inputJob);
+
+            _logger.LogDebug($"TryAddJob() - inputJob.Id={inputJob.Id}.");
 
             lock (_tptServiceContext)
             {
+                PreviewJobs.Add(inputJob.Id, inputJob);
                 _tptServiceContext.PreviewJobs.Add(inputJob);
                 _tptServiceContext.SaveChanges();
-
-                _jobScheduler.AddEntry(
-                    new JobWorkflow(
-                        _logger,
-                        this,
-                        _scriptRunner,
-                        _templateManager,
-                        _paratextApi,
-                        _paratextProjectService,
-                        inputJob
-                        )
-                    );
 
                 outputJob = inputJob;
                 return true;
@@ -296,19 +296,20 @@ namespace TptMain.Jobs
         {
             // identifying information
             previewJob.Id = Guid.NewGuid().ToString();
+            previewJob.BibleSelectionParams ??= new BibleSelectionParams();
             previewJob.BibleSelectionParams.Id = Guid.NewGuid().ToString();
+            previewJob.TypesettingParams ??= new TypesettingParams();
             previewJob.TypesettingParams.Id = Guid.NewGuid().ToString();
-            previewJob.DateSubmitted = DateTime.UtcNow;
-            previewJob.DateStarted = null;
-            previewJob.DateCompleted = null;
-            previewJob.DateCancelled = null;
+            previewJob.AdditionalParams ??= new AdditionalPreviewParams();
+            previewJob.AdditionalParams.Id = Guid.NewGuid().ToString();
+            previewJob.State.Add(new PreviewJobState(JobStateEnum.Submitted));
 
             // project defaults
-            previewJob.TypesettingParams.FontSizeInPts ??= MainConsts.DEFAULT_FONT_SIZE_IN_PTS;
-            previewJob.TypesettingParams.FontLeadingInPts ??= MainConsts.DEFAULT_FONT_LEADING_IN_PTS;
-            previewJob.TypesettingParams.PageWidthInPts ??= MainConsts.DEFAULT_PAGE_WIDTH_IN_PTS;
-            previewJob.TypesettingParams.PageHeightInPts ??= MainConsts.DEFAULT_PAGE_HEIGHT_IN_PTS;
-            previewJob.TypesettingParams.PageHeaderInPts ??= MainConsts.DEFAULT_PAGE_HEADER_IN_PTS;
+            previewJob.TypesettingParams.FontSizeInPts ??= MainConsts.ALLOWED_FONT_SIZE_IN_PTS.Default;
+            previewJob.TypesettingParams.FontLeadingInPts ??= MainConsts.ALLOWED_FONT_LEADING_IN_PTS.Default;
+            previewJob.TypesettingParams.PageWidthInPts ??= MainConsts.ALLOWED_PAGE_WIDTH_IN_PTS.Default;
+            previewJob.TypesettingParams.PageHeightInPts ??= MainConsts.ALLOWED_PAGE_HEIGHT_IN_PTS.Default;
+            previewJob.TypesettingParams.PageHeaderInPts ??= MainConsts.ALLOWED_PAGE_HEADER_IN_PTS.Default;
             previewJob.TypesettingParams.BookFormat ??= MainConsts.DEFAULT_BOOK_FORMAT;
         }
 
@@ -325,8 +326,13 @@ namespace TptMain.Jobs
             {
                 if (TryGetJob(jobId, out var foundJob))
                 {
-                    _jobScheduler.RemoveEntry(foundJob.Id);
+                    // try to cancel against every processor
+                    foreach(var stateToProcessor in StateToProcessorProcessMap)
+                    {
+                        stateToProcessor.Value.CancelJob(foundJob);
+                    }
 
+                    PreviewJobs.Remove(foundJob.Id);
                     _tptServiceContext.PreviewJobs.Remove(foundJob);
                     _tptServiceContext.SaveChanges();
 
@@ -344,16 +350,17 @@ namespace TptMain.Jobs
         /// <summary>
         /// Update preview job.
         /// </summary>
-        /// <param name="nextJob">Preview job to update (required).</param>
+        /// <param name="job">Preview job to update (required).</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public virtual bool TryUpdateJob(PreviewJob nextJob)
+        public virtual bool TryUpdateJob(PreviewJob job)
         {
-            _logger.LogDebug($"TryUpdateJob() - nextJob={nextJob.Id}.");
+            _logger.LogDebug($"TryUpdateJob() - job={job.Id}.");
             lock (_tptServiceContext)
             {
-                if (IsJobId(nextJob.Id))
+                if (TryGetJob(job.Id, out var existing))
                 {
-                    _tptServiceContext.Entry(nextJob).State = EntityState.Modified;
+                    _tptServiceContext.Entry(existing).CurrentValues.SetValues(job);
+                    _tptServiceContext.Entry(existing).State = EntityState.Modified;
                     _tptServiceContext.SaveChanges();
 
                     return true;
@@ -376,8 +383,64 @@ namespace TptMain.Jobs
             _logger.LogDebug($"TryGetJob() - jobId={jobId}.");
             lock (_tptServiceContext)
             {
-                previewJob = _tptServiceContext.PreviewJobs.Find(jobId);
+                PreviewJobs.TryGetValue(jobId, out previewJob);
                 return (previewJob != null);
+            }
+        }
+
+        /// <summary>
+        /// Retrieve all jobs
+        /// </summary>
+        /// <param name="previewJobs">Retrieved preview jobs.</param>
+        /// <returns>True if successful, false otherwise.</returns>
+        public virtual bool TryGetJobs(out List<PreviewJob> previewJobs)
+        {
+            _logger.LogDebug($"TryGetJobs().");
+            lock (_tptServiceContext)
+            {
+                if (PreviewJobs is null)
+                {
+                    previewJobs = _tptServiceContext.PreviewJobs
+                        .Include(x => x.State)
+                        .Include(x => x.BibleSelectionParams)
+                        .Include(x => x.TypesettingParams)
+                        .Include(x => x.AdditionalParams)
+                        .ToList();
+
+                    // populate the cache
+                    PreviewJobs = previewJobs.ToDictionary(
+                        job => job.Id,
+                        job => job
+                    );
+                }
+                else
+                {
+                    previewJobs = PreviewJobs
+                        .Select(jobKvp => jobKvp.Value)
+                        .ToList();
+                }
+
+                return previewJobs != null && previewJobs.Count > 0;
+            }
+        }
+
+        /// <summary>
+        /// Retrieve jobs by their current state
+        /// </summary>
+        /// <param name="targetState">Target current state (required).</param>
+        /// <param name="previewJobs">Retrieved preview jobs.</param>
+        /// <returns>True if successful, false otherwise.</returns>
+        public virtual bool TryGetJobsByCurrentState(JobStateEnum targetState, out List<PreviewJob> previewJobs)
+        {
+            _logger.LogDebug($"TryGetJobsByCurrentState() - targetState={targetState}.");
+            lock (_tptServiceContext)
+            {
+                previewJobs = PreviewJobs
+                    .Where(jobKvp => jobKvp.Value?.State?.Last()?.State == targetState)
+                    .Select(jobKvp => jobKvp.Value)
+                    .ToList();
+
+                return previewJobs != null && previewJobs.Count > 0;
             }
         }
 
@@ -391,7 +454,7 @@ namespace TptMain.Jobs
             _logger.LogDebug($"IsJobId() - jobId={jobId}.");
             lock (_tptServiceContext)
             {
-                return _tptServiceContext.PreviewJobs.Find(jobId) != null;
+                return PreviewJobs.ContainsKey(jobId);
             }
         }
 
@@ -417,6 +480,8 @@ namespace TptMain.Jobs
                 {
                     try
                     {
+                        var pdfDirectory = _jobFileManager.GetPreviewDirectoryById(jobId).FullName;
+
                         if (archive)
                         {
                             _logger.LogDebug($"Preparing archive for job: {jobId}");
@@ -425,8 +490,11 @@ namespace TptMain.Jobs
                             var bookFormatStr = Enum.GetName(typeof(BookFormat), BookFormat.cav);
 
                             /// Archive all typesetting preview files
+
                             // Create the initial zip file.
-                            var zipFilePath = Path.Combine(_zipDirectory.FullName, $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.zip");
+                            var archiveDirectory = _jobFileManager.GetArchiveDirectoryById(jobId).FullName;
+                            FileUtil.CheckAndCreateDirectory(archiveDirectory);
+                            var zipFilePath = Path.Combine(archiveDirectory, $"{previewJob.Id}.zip");
 
                             // Return file if it already exists
                             if (File.Exists(zipFilePath))
@@ -443,33 +511,32 @@ namespace TptMain.Jobs
                             var zip = ZipFile.Open(zipFilePath, ZipArchiveMode.Create);
 
                             //IDML
-                            //"{{Properties::Docs::IDML::Directory}}\preview-{{PreviewJob::id}}.idml"
-                            var idmlDirectory = $@"{_idmlDirectory}";
-                            var idmlFilePattern = $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.idml";
+                            //"{{Properties::Docs::IDML::Directory}}\{{PreviewJob::id}}.idml"
+                            var idmlDirectory = _jobFileManager.GetTemplateDirectoryById(jobId).FullName;
+                            var idmlFilePattern = $"{previewJob.Id}.idml";
                             AddFilesToZip(zip, idmlDirectory, idmlFilePattern, "IDML");
 
                             //IDTT / TXT
-                            //"{{Properties::Docs::IDTT::Directory}}\{{PreviewJob::bookFormat}}\{{PreviewJob::projectName}}\book*.txt"
-                            var idttDirectory = Path.Combine(_idttDirectory.FullName, bookFormatStr, previewJob.BibleSelectionParams.ProjectName);
+                            //"{{Properties::Docs::IDTT::Directory}}\book*.txt"
+                            var idttDirectory = _jobFileManager.GetTaggedTextDirectoryById(jobId).FullName;
                             var idttFilePattern = "book*.txt";
                             AddFilesToZip(zip, idttDirectory, idttFilePattern, "IDTT");
 
                             //INDD
-                            //"{{Properties::Docs::IDML::Directory}}\preview-{{PreviewJob::id}}-*.indd"
-                            var inddDirectory = _idmlDirectory.FullName;
-                            var inddFilePattern = $"{ MainConsts.PREVIEW_FILENAME_PREFIX}{ previewJob.Id}-*.indd";
+                            //"{{Properties::Docs::IDML::Directory}}\{{PreviewJob::id}}-*.indd"
+                            var inddDirectory = idmlDirectory;
+                            var inddFilePattern = $"{previewJob.Id}-*.indd";
                             AddFilesToZip(zip, inddDirectory, inddFilePattern, "INDD");
 
                             //INDB
-                            //"{{Properties::Docs::IDML::Directory}}\preview-{{PreviewJob::id}}.indb"
-                            var indbDirectory = _idmlDirectory.FullName;
-                            var indbFilePattern = $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.indb";
+                            //"{{Properties::Docs::IDML::Directory}}\{{PreviewJob::id}}.indb"
+                            var indbDirectory = idmlDirectory;
+                            var indbFilePattern = $"{previewJob.Id}.indb";
                             AddFilesToZip(zip, indbDirectory, indbFilePattern, "INDB");
 
                             //PDF
-                            //"{{Properties::Docs::PDF::Directory}}\preview-{{PreviewJob::id}}.pdf"
-                            var pdfDirectory = _pdfDirectory.FullName;
-                            var pdfFilePattern = $"{MainConsts.PREVIEW_FILENAME_PREFIX}{previewJob.Id}.pdf";
+                            //"{{Properties::Docs::PDF::Directory}}\{{PreviewJob::id}}.pdf"
+                            var pdfFilePattern = $"{previewJob.Id}.pdf";
                             AddFilesToZip(zip, pdfDirectory, pdfFilePattern, "PDF");
 
                             // finalize the zip file writing
@@ -487,7 +554,7 @@ namespace TptMain.Jobs
                         {
                             // Return the preview PDF
                             fileStream = File.Open(
-                                Path.Combine(_pdfDirectory.FullName, $"preview-{previewJob.Id}.pdf"),
+                                Path.Combine(pdfDirectory, $"{previewJob.Id}.pdf"),
                                 FileMode.Open, FileAccess.Read);
                             return true;
                         }
@@ -546,9 +613,8 @@ namespace TptMain.Jobs
         {
             _logger.LogDebug("Dispose().");
 
-            _jobScheduler.Dispose();
-            _jobCheckTimer.Dispose();
             _docCheckTimer.Dispose();
+            _processRunTimer.Dispose();
         }
     }
 }

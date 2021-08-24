@@ -6,14 +6,9 @@
     public static class ConfigConsts
     {
         /// <summary>
-        /// IDML directory config key.
+        /// Processed Job Files Root Directory Key
         /// </summary>
-        public const string IdmlDocDirKey = "Docs:IDML:Directory";
-
-        /// <summary>
-        /// IDTT directory config key.
-        /// </summary>
-        public const string IdttDocDirKey = "Docs:IDTT:Directory";
+        public const string ProcessedJobFilesRootDirKey = "Docs:Job:Processed:RootDirectory";
 
         /// <summary>
         /// Paratext directory config key.
@@ -21,29 +16,19 @@
         public const string ParatextDocDirKey = "Docs:Paratext:Directory";
 
         /// <summary>
-        /// PDF directory config key.
-        /// </summary>
-        public const string PdfDocDirKey = "Docs:PDF:Directory";
-
-        /// <summary>
-        /// Zip directory config key.
-        /// </summary>
-        public const string ZipDocDirKey = "Docs:Zip:Directory";
-
-        /// <summary>
         /// Max document age in seconds config key.
         /// </summary>
         public const string MaxDocAgeInSecKey = "Docs:MaxAgeInSec";
 
         /// <summary>
-        /// Max concurrent jobs config key.
+        /// Job processing interval in seconds config key.
         /// </summary>
-        public const string MaxConcurrentJobsKey = "Jobs:MaxConcurrent";
+        public const string JobProcessIntervalInSecKey = "Jobs:Processing:ProcessIntervalInSec";
 
         /// <summary>
-        /// InDesign server uri config key.
+        /// InDesign servers section config key.
         /// </summary>
-        public const string IdsUriKey = "InDesign:ServerUri";
+        public const string IdsServersSectionKey = "InDesign:Servers";
 
         /// <summary>
         /// InDesign server request timeout config key.
@@ -54,11 +39,6 @@
         /// InDesign server preview script config key.
         /// </summary>
         public const string IdsPreviewScriptDirKey = "InDesign:PreviewScriptDirectory";
-
-        /// <summary>
-        /// InDesign server preview script name format config key.
-        /// </summary>
-        public const string IdsPreviewScriptNameFormatKey = "InDesign:PreviewScriptNameFormat";
 
         /// <summary>
         /// Paratext Server URI param key.
@@ -84,6 +64,16 @@
         /// Paratext API Password param key.
         /// </summary>
         public const string ParatextApiAllowedMemberRolesKey = "Paratext:API:AllowedMemberRoles";
+
+        /// <summary>
+        /// Template generation timeout config key.
+        /// </summary>
+        public const string TemplateGenerationTimeoutInSecKey = "Job:Template:TimeoutInSec";
+
+        /// <summary>
+        /// TaggedText generation timeout config key.
+        /// </summary>
+        public const string TaggedTextGenerationTimeoutInSecKey = "Job:TaggedText:TimeoutInSec";
 
     }
 }
