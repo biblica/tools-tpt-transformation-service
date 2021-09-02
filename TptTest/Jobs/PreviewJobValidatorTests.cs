@@ -140,7 +140,7 @@ namespace TptTest.Jobs
             testPreviewJob1.BibleSelectionParams.ProjectName = "    ";
             testPreviewJob1.BibleSelectionParams.SelectedBooks = "FOO,bar";
 
-            TestValidation(serviceUnderTest, testPreviewJob1, new List<string> { "ProjectName", "SelectedBooks", "SelectedBooks" });
+            TestValidation(serviceUnderTest, testPreviewJob1, new List<string> { "ProjectName", "SelectedBooks" });
 
             var testPreviewJob2 = TestUtils.CreateTestPreviewJob();
             testPreviewJob2.BibleSelectionParams.ProjectName = "";
