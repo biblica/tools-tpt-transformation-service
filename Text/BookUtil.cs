@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 using CsvHelper;
 using CsvHelper.Configuration;
-using static System.String;
 
 namespace TptMain.Text
 {
