@@ -26,9 +26,36 @@ namespace TptMain.Text
         public static readonly IDictionary<string, BookIdItem> BookIdsByCode;
 
         /// <summary>
+        /// Map of book codes to USX composite keys. EG: GEN => 001GEN
+        /// </summary>
+        public static readonly IDictionary<string, string> UsxCompKeyByCode;
+
+        /// <summary>
         /// Map of book numbers (1-based) to IDs.
         /// </summary>
         public static readonly IDictionary<int, BookIdItem> BookIdsByNum;
+
+        /// <summary>
+        /// List of Ancillary books by their canonical book ID.
+        /// </summary>
+        public static readonly List<string> AncillaryBooks = new List<string>()
+        {
+            "FRT",
+            "BAK",
+            "OTH",
+            "INT",
+            "CNC",
+            "GLO",
+            "TDX",
+            "NDX",
+            "XXA",
+            "XXB",
+            "XXC",
+            "XXD",
+            "XXE",
+            "XXF",
+            "XXG"
+        };
 
         static BookUtil()
         {
@@ -42,7 +69,10 @@ namespace TptMain.Text
             csvReader.Configuration.MissingFieldFound = null;
 
             BookIdList = csvReader.GetRecords<BookIdItem>().ToImmutableList();
-            BookIdsByCode = BookIdList.ToImmutableDictionary(idItem => $"{idItem.UsfmBookNum}{idItem.BookCode}");
+            BookIdsByCode = BookIdList.ToImmutableDictionary(idItem => idItem.BookCode);
+            UsxCompKeyByCode = BookIdList.ToImmutableDictionary(
+                keySelector: idItem => idItem.BookCode, 
+                elementSelector: idItem => $"{idItem.BookNum.ToString("000")}{idItem.BookCode}");
             BookIdsByNum = BookIdList.ToImmutableDictionary(idItem => idItem.BookNum);
         }
     }

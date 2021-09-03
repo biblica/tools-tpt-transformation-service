@@ -19,6 +19,11 @@ namespace TptMain.Models
         public string CustomFootnoteMarkers { get; set; }
 
         /// <summary>
+        /// Custom book list CSV of USX composite keys. EG: "001GEN,005DEU". Empty/null means all.
+        /// </summary>
+        public string CustomBookListUsxCompKeys { get; set; }
+
+        /// <summary>
         /// The font we want to use in our preview generation instead; Otherwise, null to use the default.
         /// </summary>
         public string OverrideFont { get; set;}

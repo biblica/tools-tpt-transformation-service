@@ -95,7 +95,7 @@ namespace TptMain.Jobs
                 $"{modelBibleSelectionPrefix}{nameof(previewJob.BibleSelectionParams.ProjectName)}",
                 previewJob.BibleSelectionParams.ProjectName,
                 errorHandlerFunc);
-            ValidateBookIdList(
+            var bookCodeSet = ValidateBookIdList(
                 $"{modelBibleSelectionPrefix}{nameof(previewJob.BibleSelectionParams.SelectedBooks)}",
                 previewJob.BibleSelectionParams.SelectedBooks,
                 errorHandlerFunc);
@@ -136,7 +136,7 @@ namespace TptMain.Jobs
             {
                 try
                 {
-                    GenerateAdditionalParams(previewJob);
+                    GenerateAdditionalParams(previewJob, bookCodeSet);
                 }
                 catch (Exception ex)
                 {
@@ -222,25 +222,26 @@ namespace TptMain.Jobs
         }
 
         /// <summary>
-        /// Validates a list of book IDs for eligibility.
+        /// Validates a list of book code for eligibility.
         /// </summary>
         /// <param name="parameterName">Parameter name. (required)</param>
-        /// <param name="bookIdList">Comma-delimited book ID list to validate. (optional, may be null)</param>
+        /// <param name="bookIdList">Comma-delimited book codes list to validate. (optional, may be null)</param>
         /// <param name="handleError">Error handling function. (required)</param>
-        private void ValidateBookIdList(string parameterName, string bookIdList, Action<string> handleError)
+        /// <returns>A hashset of the validated book codes</returns>
+        private HashSet<string> ValidateBookIdList(string parameterName, string bookIdList, Action<string> handleError)
         {
             // parameter validation
             _ = parameterName ?? throw new ArgumentNullException(nameof(parameterName));
             _ = handleError ?? throw new ArgumentNullException(nameof(handleError));
 
             // null/empty = no book list, which is ok
+            var idSet = new HashSet<string>();
             if (IsNullOrWhiteSpace(bookIdList))
             {
-                return;
+                return idSet;
             }
 
             // split & iterate book list
-            var idSet = new HashSet<string>();
             foreach (var bookId in bookIdList.Split(","))
             {
                 if (IsNullOrWhiteSpace(bookId))
@@ -249,8 +250,8 @@ namespace TptMain.Jobs
                 }
                 else
                 {
-                    var tempBookId = bookId.Trim();
-                    if (!BookUtil.BookIdsByCode.ContainsKey(tempBookId))
+                    var tempBookId = bookId.Trim().ToUpper();
+                    if (!BookUtil.UsxCompKeyByCode.ContainsKey(tempBookId))
                     {
                         handleError($"Invalid book id '{tempBookId}' in book id list '{parameterName}'.");
                     }
@@ -260,13 +261,16 @@ namespace TptMain.Jobs
                     }
                 }
             }
+
+            return idSet;
         }
 
         /// <summary>
         /// Generate any calculated fields that we will need.
         /// </summary>
         /// <param name="previewJob">The Job to generate the calculated fields for.</param>
-        private void GenerateAdditionalParams(PreviewJob previewJob)
+        /// <param name="bookCodeList">Set of validated book codes we want included in our preview. Empty set means all.</param>
+        private void GenerateAdditionalParams(PreviewJob previewJob, HashSet<string> bookCodeList)
         {
             // parameter validation
             _ = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
@@ -301,6 +305,32 @@ namespace TptMain.Jobs
                 {
                     _logger.LogInformation($"Override font '{previewJob.AdditionalParams.OverrideFont}' specified for project '{previewJob.BibleSelectionParams.ProjectName}' and will be used.");
                 }
+            }
+
+            // If a custom book list is provided, calculate the expected USX composite keys.
+            if (bookCodeList != null && bookCodeList.Count > 0)
+            {
+                var usxCompKeys = new List<string>();
+                foreach (var bookCode in bookCodeList)
+                {
+                    usxCompKeys.Add(BookUtil.UsxCompKeyByCode[bookCode]);
+                }
+
+                // add any missing ancillary books if specified.
+                if (previewJob.BibleSelectionParams.IncludeAncillary)
+                {
+                    BookUtil.AncillaryBooks.ForEach(bookCode =>
+                    {
+                        var ancillaryUsfmCompKey = BookUtil.UsxCompKeyByCode[bookCode];
+
+                        if (!usxCompKeys.Contains(ancillaryUsfmCompKey))
+                        {
+                            usxCompKeys.Add(ancillaryUsfmCompKey);
+                        }
+                    });
+                }
+
+                previewJob.AdditionalParams.CustomBookListUsxCompKeys = string.Join(',', usxCompKeys);
             }
         }
 
