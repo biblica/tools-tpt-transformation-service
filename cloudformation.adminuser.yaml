@@ -1,0 +1,86 @@
+﻿Description: This stack creates a user and associated permissions for use with the TPT service.
+Parameters:
+  IAMGroupName:
+    Type: String
+    Description: The name of the group that will be created with permissions for TPT
+    Default: TptAdminGroup
+  IAMUserName:
+    Type: String
+    Description: The name of the user that will be created and added to the group
+    Default: TptAdmin
+  S3ProductionRepoArn:
+    Type: String
+    Description: The ARN of the S3 Bucket used as the production TPT repository
+    Default: arn:aws:s3:::biblica-tpt-transform-repo
+  S3DevelopmentRepoArn:
+    Type: String
+    Description: The ARN of the S3 Bucket used as the development TPT repository
+    Default: arn:aws:s3:::biblica-tpt-transform-repo-dev
+  SQSProductionIdttQueueArn:
+    Type: String
+    Description: The ARN of the production IDTT queue
+    Default: arn:aws:sqs:us-east-1:007611731121:biblica-tpt-transform-idtt.fifo
+  SQSDevelopmentIdttQueueArn:
+    Type: String
+    Description: The ARN of the production IDTT queue
+    Default: arn:aws:sqs:us-east-2:007611731121:biblica-tpt-transform-idtt-dev.fifo
+  SQSProductionTemplateQueueArn:
+    Type: String
+    Description: The ARN of the production Template queue
+    Default: arn:aws:sqs:us-east-1:007611731121:biblica-tpt-transform-template.fifo
+  SQSDevelopmentTemplateQueueArn:
+    Type: String
+    Description: The ARN of the production Template queue
+    Default: arn:aws:sqs:us-east-2:007611731121:biblica-tpt-transform-template-dev.fifo
+Resources:
+  TptAdminGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: !Ref IAMGroupName
+  TptAdmin:
+    Type: AWS::IAM::User
+    DeletionPolicy: Delete
+    Properties: 
+      UserName: !Ref IAMUserName
+      Groups:
+        - !Ref TptAdminGroup
+  TptAdminS3Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Groups:
+        - !Ref TptAdminGroup
+      PolicyName: TptAdminS3Policy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+            Resource:
+              - !Ref S3ProductionRepoArn
+              - !Join
+                - ""
+                - - !Ref S3ProductionRepoArn
+                  - "/*"
+              - !Ref S3DevelopmentRepoArn
+              - !Join
+                - ""
+                - - !Ref S3DevelopmentRepoArn
+                  - "/*"
+  TptAdminSqsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Groups:
+        - !Ref TptAdminGroup
+      PolicyName: TptAdminSqsPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sqs:SendMessage"
+            Resource:
+              - !Ref SQSProductionIdttQueueArn
+              - !Ref SQSDevelopmentIdttQueueArn
+              - !Ref SQSProductionTemplateQueueArn
+              - !Ref SQSDevelopmentTemplateQueueArn

@@ -119,13 +119,13 @@ namespace TptTest.Jobs
         {
             var testPreviewJob1 = TestUtils.CreateTestPreviewJob();
             testPreviewJob1.BibleSelectionParams.ProjectName = "TestProject1";
-            testPreviewJob1.BibleSelectionParams.SelectedBooks = "01GEN,02EXO,03LEV,04NUM,05DEU,06JOS,07JDG,08RUT,091SA,102SA,111KI,122KI,131CH,142CH,15EZR,16NEH,17EST,18JOB,19PSA,20PRO,21ECC,22SNG,23ISA,24JER,25LAM,26EZK,27DAN,28HOS,29JOL,30AMO,31OBA,32JON,33MIC,34NAM,35HAB,36ZEP,37HAG,38ZEC,39MAL,41MAT,42MRK,43LUK,44JHN,45ACT,46ROM,471CO,482CO,49GAL,50EPH,51PHP,52COL,531TH,542TH,551TI,562TI,57TIT,58PHM,59HEB,60JAS,611PE,622PE,631JN,642JN,653JN,66JUD,67REV,68TOB,69JDT,70ESG,71WIS,72SIR,73BAR,74LJE,75S3Y,76SUS,77BEL,781MA,792MA,803MA,814MA,821ES,832ES,84MAN,85PS2,86ODA,87PSS,A4EZA,A55EZ,A66EZ,B2DAG,B3PS3,B42BA,B5LBA,B6JUB,B7ENO,B81MQ,B92MQ,C03MQ,C1REP,C24BA,C3LAO,A0FRT,A1BAK,A2OTH,A7INT,A8CNC,A9GLO,B0TDX,B1NDX,94XXA,95XXB,96XXC,97XXD,98XXE,99XXF,100XXG";
+            testPreviewJob1.BibleSelectionParams.SelectedBooks = "GEN,EXO,LEV,NUM,DEU,JOS,JDG,RUT,1SA,2SA,1KI,2KI,1CH,2CH,EZR,NEH,EST,JOB,PSA,PRO,ECC,SNG,ISA,JER,LAM,EZK,DAN,HOS,JOL,AMO,OBA,JON,MIC,NAM,HAB,ZEP,HAG,ZEC,MAL,MAT,MRK,LUK,JHN,ACT,ROM,1CO,2CO,GAL,EPH,PHP,COL,1TH,2TH,1TI,2TI,TIT,PHM,HEB,JAS,1PE,2PE,1JN,2JN,3JN,JUD,REV,TOB,JDT,ESG,WIS,SIR,BAR,LJE,S3Y,SUS,BEL,1MA,2MA,3MA,4MA,1ES,2ES,MAN,PS2,ODA,PSS,EZA,5EZ,6EZ,DAG,PS3,2BA,LBA,JUB,ENO,1MQ,2MQ,3MQ,REP,4BA,LAO,FRT,BAK,OTH,INT,CNC,GLO,TDX,NDX,XXA,XXB,XXC,XXD,XXE,XXF,XXG";
 
             TestValidation(serviceUnderTest, testPreviewJob1, new List<string>());
 
             var testPreviewJob2 = TestUtils.CreateTestPreviewJob();
             testPreviewJob2.BibleSelectionParams.ProjectName = "TestProject2";
-            testPreviewJob2.BibleSelectionParams.SelectedBooks = " 01GEN , 02EXO , 03LEV , 04NUM , 05DEU , 06JOS , 07JDG , 08RUT , 091SA , 102SA , 111KI , 122KI , 131CH , 142CH , 15EZR , 16NEH , 17EST , 18JOB , 19PSA , 20PRO , 21ECC , 22SNG , 23ISA , 24JER , 25LAM , 26EZK , 27DAN , 28HOS , 29JOL , 30AMO , 31OBA , 32JON , 33MIC , 34NAM , 35HAB , 36ZEP , 37HAG , 38ZEC , 39MAL , 41MAT , 42MRK , 43LUK , 44JHN , 45ACT , 46ROM , 471CO , 482CO , 49GAL , 50EPH , 51PHP , 52COL , 531TH , 542TH , 551TI , 562TI , 57TIT , 58PHM , 59HEB , 60JAS , 611PE , 622PE , 631JN , 642JN , 653JN , 66JUD , 67REV , 68TOB , 69JDT , 70ESG , 71WIS , 72SIR , 73BAR , 74LJE , 75S3Y , 76SUS , 77BEL , 781MA , 792MA , 803MA , 814MA , 821ES , 832ES , 84MAN , 85PS2 , 86ODA , 87PSS , A4EZA , A55EZ , A66EZ , B2DAG , B3PS3 , B42BA , B5LBA , B6JUB , B7ENO , B81MQ , B92MQ , C03MQ , C1REP , C24BA , C3LAO , A0FRT , A1BAK , A2OTH , A7INT , A8CNC , A9GLO , B0TDX , B1NDX , 94XXA , 95XXB , 96XXC , 97XXD , 98XXE , 99XXF , 100XXG ";
+            testPreviewJob2.BibleSelectionParams.SelectedBooks = " GEN , EXO , LEV , NUM , DEU , JOS , JDG , RUT , 1SA , 2SA , 1KI , 2KI , 1CH , 2CH , EZR , NEH , EST , JOB , PSA , PRO , ECC , SNG , ISA , JER , LAM , EZK , DAN , HOS , JOL , AMO , OBA , JON , MIC , NAM , HAB , ZEP , HAG , ZEC , MAL , MAT , MRK , LUK , JHN , ACT , ROM , 1CO , 2CO , GAL , EPH , PHP , COL , 1TH , 2TH , 1TI , 2TI , TIT , PHM , HEB , JAS , 1PE , 2PE , 1JN , 2JN , 3JN , JUD , REV , TOB , JDT , ESG , WIS , SIR , BAR , LJE , S3Y , SUS , BEL , 1MA , 2MA , 3MA , 4MA , 1ES , 2ES , MAN , PS2 , ODA , PSS , EZA , 5EZ , 6EZ , DAG , PS3 , 2BA , LBA , JUB , ENO , 1MQ , 2MQ , 3MQ , REP , 4BA , LAO , FRT , BAK , OTH , INT , CNC , GLO , TDX , NDX , XXA , XXB , XXC , XXD , XXE , XXF , XXG ";
 
             TestValidation(serviceUnderTest, testPreviewJob2, new List<string>());
         }
@@ -140,17 +140,17 @@ namespace TptTest.Jobs
             testPreviewJob1.BibleSelectionParams.ProjectName = "    ";
             testPreviewJob1.BibleSelectionParams.SelectedBooks = "FOO,bar";
 
-            TestValidation(serviceUnderTest, testPreviewJob1, new List<string> { "ProjectName", "SelectedBooks", "SelectedBooks" });
+            TestValidation(serviceUnderTest, testPreviewJob1, new List<string> { "ProjectName", "SelectedBooks" });
 
             var testPreviewJob2 = TestUtils.CreateTestPreviewJob();
             testPreviewJob2.BibleSelectionParams.ProjectName = "";
-            testPreviewJob2.BibleSelectionParams.SelectedBooks = "01GEN, ,A0FRT";
+            testPreviewJob2.BibleSelectionParams.SelectedBooks = "GEN, ,FRT";
 
             TestValidation(serviceUnderTest, testPreviewJob2, new List<string> { "ProjectName", "SelectedBooks" });
 
             var testPreviewJob3 = TestUtils.CreateTestPreviewJob();
             testPreviewJob3.BibleSelectionParams.ProjectName = "Test1";
-            testPreviewJob3.BibleSelectionParams.SelectedBooks = "01GEN,01GEN,A0FRT";
+            testPreviewJob3.BibleSelectionParams.SelectedBooks = "GEN,GEN,FRT";
 
             TestValidation(serviceUnderTest, testPreviewJob3, new List<string> { "SelectedBooks" });
         }
