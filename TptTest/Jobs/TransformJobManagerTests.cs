@@ -1,13 +1,11 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TptMain.Jobs;
-using System;
 using System.Collections.Generic;
 using Moq;
 using Microsoft.Extensions.Logging;
 using TptMain.Models;
 using TptMain.Util;
 using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
 using static TptMain.Jobs.TransformService;
 
 namespace TptTest.Jobs

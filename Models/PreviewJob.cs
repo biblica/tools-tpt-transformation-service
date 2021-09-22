@@ -126,12 +126,12 @@ namespace TptMain.Models
         /// <summary>
         /// User-friendly message regarding the error; <c>null</c> otherwise.
         /// </summary>
-        public string ErrorMessage { get; private set; }
+        public string ErrorMessage { get; set; }
 
         /// <summary>
         /// More technical reason as to why the error occurred; <c>null</c> otherwise.
         /// </summary>
-        public string ErrorDetail { get; private set; }
+        public string ErrorDetail { get; set; }
 
         /// <summary>
         /// Which Bible books to include.
