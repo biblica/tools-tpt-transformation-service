@@ -1,6 +1,9 @@
 
 # Typesetting Preview Service
 
+## License
+* License information can be found in the LICENSE.txt file within the project.
+
 ## Configuration
 * Biblica OpenVPN required
 * Private IP: 10.20.2.4
