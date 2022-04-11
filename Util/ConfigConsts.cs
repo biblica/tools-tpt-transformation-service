@@ -30,6 +30,28 @@ namespace TptMain.Util
         public const string MaxDocAgeInSecKey = "Docs:MaxAgeInSec";
 
         /// <summary>
+        /// Max document upload size in bytes config key.
+        /// </summary>
+        public const string MaxDocUploadSizeInBytesKey = "Docs:Upload:MaxSizeInBytes";
+
+        /// <summary>
+        /// Max doc uploads per request config key.
+        /// </summary>
+        public const string MaxDocUploadsPerRequestKey = "Docs:Upload:MaxUploadsPerRequest";
+
+        /// <summary>
+        /// Max project name length for uploaded projects config key
+        /// (Paratext-sourced projects have their restrictions).
+        /// </summary>
+        public const string MaxProjectNameLengthForUploadsKey = "Docs:Upload:MaxProjectNameLength";
+
+        /// <summary>
+        /// Max username length for uploaded projects config key
+        /// (Paratext-sourced projects have their restrictions).
+        /// </summary>
+        public const string MaxUserNameLengthForUploadsKey = "Docs:Upload:MaxUserNameLength";
+
+        /// <summary>
         /// Job processing interval in seconds config key.
         /// </summary>
         public const string JobProcessIntervalInSecKey = "Jobs:Processing:ProcessIntervalInSec";

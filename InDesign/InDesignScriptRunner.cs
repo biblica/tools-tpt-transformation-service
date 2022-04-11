@@ -175,9 +175,9 @@ namespace TptMain.InDesign
         /// <param name="textDirection">The text direction of the typesetting preview text.</param>
         /// <exception cref="ScriptException">An InDesign Server exception that resulted from executing the script</exception>
         private void CreateDocument(
-            string jobId, 
+            string jobId,
             string txtFilePath,
-            string overrideFont, 
+            string overrideFont,
             string customFootnotes,
             TextDirection textDirection
             )
@@ -286,7 +286,7 @@ namespace TptMain.InDesign
         /// <param name="newArgName">The new argument key name. (required)</param>
         /// <param name="newArgValue">The new argument value. (optional)</param>
         private void AddNewArgToIdsArgs(
-            ref IList<IDSPScriptArg> scriptArgs, 
+            ref IList<IDSPScriptArg> scriptArgs,
             string newArgName,
             string newArgValue = null)
         {

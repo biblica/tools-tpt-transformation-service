@@ -11,33 +11,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace TptMain.Models
 {
     /// <summary>
-    /// Model for tracking parameters derived from Paratext project settings.
+    /// Source of content for preview generation.
     /// </summary>
-    public class AdditionalPreviewParams
+    public enum ContentSource
     {
         /// <summary>
-        /// Unique identifier for params
+        /// Paratext project folders, via mercurial download.
         /// </summary>
-        public string Id { get; set; }
+        ParatextRepository,
 
         /// <summary>
-        /// Project's custom footnote markers.
+        /// Supplied with preview job request, as form-encoded files.
         /// </summary>
-        public string CustomFootnoteMarkers { get; set; }
-
-        /// <summary>
-        /// Custom book list CSV of USX composite keys. EG: "001GEN,005DEU". Empty/null means all.
-        /// </summary>
-        public string CustomBookListUsxCompKeys { get; set; }
-
-        /// <summary>
-        /// The font we want to use in our preview generation instead; Otherwise, null to use the default.
-        /// </summary>
-        public string OverrideFont { get; set;}
-
-        /// <summary>
-        /// The text direction of the content.
-        /// </summary>
-        public TextDirection TextDirection { get; set; }
+        PreviewJobRequest
     }
 }

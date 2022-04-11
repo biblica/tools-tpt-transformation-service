@@ -13,7 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
 using TptMain.ParatextProjects;
@@ -27,13 +26,11 @@ namespace TptMain
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class Startup
     {
-        private readonly IConfiguration _configuration;
-
-        public IConfiguration Configuration => _configuration;
+        public IConfiguration Configuration { get; }
 
         public Startup(IConfiguration configuration)
         {
-            _configuration = configuration;
+            Configuration = configuration;
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -41,7 +38,7 @@ namespace TptMain
         {
             // Add database service for tracking Preview Jobs
             services.AddDbContext<TptServiceContext>(
-                options => options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection")),
+                options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")),
                ServiceLifetime.Singleton);
 
             services.AddSingleton<JobFileManager>();
@@ -54,7 +51,6 @@ namespace TptMain
             services.AddSingleton<IJobManager, JobManager>();
             services.AddSingleton<IPreviewJobValidator, PreviewJobValidator>();
 
-            services.AddSingleton<InDesignScriptRunner>();
             services.AddSingleton<ParatextApi>();
             services.AddSingleton<ParatextProjectService>();
 

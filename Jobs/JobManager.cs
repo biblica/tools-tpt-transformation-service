@@ -17,6 +17,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using TptMain.Models;
+using TptMain.Text;
 using TptMain.Util;
 
 namespace TptMain.Jobs
@@ -84,15 +85,15 @@ namespace TptMain.Jobs
         /// <summary>
         /// This dictionary maps the state that will determine which processor will process a job next.
         /// </summary>
-        private Dictionary<JobStateEnum, IPreviewJobProcessor> StateToProcessorProcessMap { get; set; } 
+        private Dictionary<JobStateEnum, IPreviewJobProcessor> StateToProcessorProcessMap { get; set; }
 
         /// <summary>
         /// This dictionary maps the state that will determine which processor will update the job next.
         /// </summary>
-        private Dictionary<JobStateEnum, IPreviewJobProcessor> StateToProcessorUpdateMap { get; set; } 
+        private Dictionary<JobStateEnum, IPreviewJobProcessor> StateToProcessorUpdateMap { get; set; }
 
         // Cache of jobs as they'll be updated repeatedly in processors.
-        private Dictionary<string, PreviewJob> PreviewJobs{ get; set; }
+        private Dictionary<string, PreviewJob> PreviewJobs { get; set; }
 
         /// <summary>
         /// Basic ctor.
@@ -129,12 +130,12 @@ namespace TptMain.Jobs
             _jobProcessIntervalInSec = int.Parse(configuration[ConfigConsts.JobProcessIntervalInSecKey]
                                         ?? throw new ArgumentNullException(ConfigConsts.JobProcessIntervalInSecKey));
 
-            _docCheckTimer = new Timer((stateObject) => { CheckDocFiles(); }, 
-                null, 
+            _docCheckTimer = new Timer((stateObject) => { CheckDocFiles(); },
+                null,
                  TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
                  TimeSpan.FromSeconds(_maxDocAgeInSec));
             _processRunTimer = new Timer((stateObject) => { ProcessJobs(); },
-                null, 
+                null,
                  TimeSpan.FromSeconds(MainConsts.TIMER_STARTUP_DELAY_IN_SEC),
                  TimeSpan.FromSeconds(_jobProcessIntervalInSec));
 
@@ -182,7 +183,7 @@ namespace TptMain.Jobs
                 var initiationState = test.Key;
                 var handlingProcessor = test.Value;
 
-                if(TryGetJobsByCurrentState(initiationState, out var previewJobsByState))
+                if (TryGetJobsByCurrentState(initiationState, out var previewJobsByState))
                 {
                     previewJobsByState.ForEach(previewJob =>
                     {
@@ -200,7 +201,7 @@ namespace TptMain.Jobs
                 var initiationState = test.Key;
                 var handlingProcessor = test.Value;
 
-                if(TryGetJobsByCurrentState(initiationState, out var previewJobsByState))
+                if (TryGetJobsByCurrentState(initiationState, out var previewJobsByState))
                 {
                     previewJobsByState.ForEach(previewJob =>
                     {
@@ -275,8 +276,7 @@ namespace TptMain.Jobs
         public virtual bool TryAddJob(PreviewJob inputJob, out PreviewJob outputJob)
         {
             if (inputJob.Id != null
-                || inputJob.BibleSelectionParams.ProjectName == null
-                || inputJob.BibleSelectionParams.ProjectName.Any(charItem => !char.IsLetterOrDigit(charItem)))
+                || !ProjectUtil.ValidateProjectName(inputJob.BibleSelectionParams?.ProjectName))
             {
                 outputJob = null;
                 return false;
@@ -336,7 +336,7 @@ namespace TptMain.Jobs
                 if (TryGetJob(jobId, out var foundJob))
                 {
                     // try to cancel against every processor
-                    foreach(var stateToProcessor in StateToProcessorProcessMap)
+                    foreach (var stateToProcessor in StateToProcessorProcessMap)
                     {
                         stateToProcessor.Value.CancelJob(foundJob);
                     }
