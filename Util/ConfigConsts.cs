@@ -40,16 +40,9 @@ namespace TptMain.Util
         public const string MaxDocUploadsPerRequestKey = "Docs:Upload:MaxUploadsPerRequest";
 
         /// <summary>
-        /// Max project name length for uploaded projects config key
-        /// (Paratext-sourced projects have their restrictions).
+        /// Auth token for uploads key.
         /// </summary>
-        public const string MaxProjectNameLengthForUploadsKey = "Docs:Upload:MaxProjectNameLength";
-
-        /// <summary>
-        /// Max username length for uploaded projects config key
-        /// (Paratext-sourced projects have their restrictions).
-        /// </summary>
-        public const string MaxUserNameLengthForUploadsKey = "Docs:Upload:MaxUserNameLength";
+        public const string UploadsAuthTokenKey = "Docs:Upload:AuthToken";
 
         /// <summary>
         /// Job processing interval in seconds config key.

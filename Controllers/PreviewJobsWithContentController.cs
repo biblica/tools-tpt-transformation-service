@@ -52,19 +52,14 @@ namespace TptMain.Controllers
         private readonly int _maxDocUploadsPerRequest;
 
         /// <summary>
-        /// Max project name length for uploads.
-        /// </summary>
-        private readonly int _maxProjectNameLengthForUploads;
-
-        /// <summary>
-        /// Max username length for uploads.
-        /// </summary>
-        private readonly int _maxUserNameLengthForUploads;
-
-        /// <summary>
         /// Paratext document directory.
         /// </summary>
         private readonly DirectoryInfo _paratextDocDir;
+
+        /// <summary>
+        /// Auth token for uploads.
+        /// </summary>
+        private readonly string _uploadsAuthToken;
 
         /// <summary>
         /// Set of allowable USX filenames, either directly in a request or in an uploaded archive.
@@ -91,10 +86,8 @@ namespace TptMain.Controllers
                                                  ?? throw new ArgumentNullException(ConfigConsts.MaxDocUploadSizeInBytesKey));
             _maxDocUploadsPerRequest = int.Parse(configuration[ConfigConsts.MaxDocUploadsPerRequestKey]
                                                  ?? throw new ArgumentNullException(ConfigConsts.MaxDocUploadsPerRequestKey));
-            _maxProjectNameLengthForUploads = int.Parse(configuration[ConfigConsts.MaxProjectNameLengthForUploadsKey]
-                                                        ?? throw new ArgumentNullException(ConfigConsts.MaxProjectNameLengthForUploadsKey));
-            _maxUserNameLengthForUploads = int.Parse(configuration[ConfigConsts.MaxUserNameLengthForUploadsKey]
-                                                     ?? throw new ArgumentNullException(ConfigConsts.MaxUserNameLengthForUploadsKey));
+            _uploadsAuthToken = configuration[ConfigConsts.UploadsAuthTokenKey]
+                                                ?? throw new ArgumentNullException(ConfigConsts.UploadsAuthTokenKey);
             _paratextDocDir = new DirectoryInfo(configuration[ConfigConsts.ParatextDocDirKey]
                                                 ?? throw new ArgumentNullException(ConfigConsts.ParatextDocDirKey));
 
@@ -114,32 +107,23 @@ namespace TptMain.Controllers
         {
             _logger.LogDebug($"PostPreviewJob() - previewJob.Id={previewJob.Id}.");
 
-            // check project name
-            if (!ProjectUtil.ValidateProjectName(previewJob.BibleSelectionParams?.ProjectName)
-                || previewJob.BibleSelectionParams?.ProjectName.Length > _maxProjectNameLengthForUploads)
+            // check for authorization
+            if (!Request.Headers.Authorization.Any(foundValue => foundValue.Equals(_uploadsAuthToken)))
             {
-                return BadRequest($"Invalid \"bibleSelectionParams.projectName\" parameter (must be 1-{_maxProjectNameLengthForUploads} alphanumeric characters long).");
+                return Unauthorized();
             }
 
-            // check username
-            if (!ProjectUtil.ValidateUserName(previewJob.User)
-                || previewJob.User.Length > _maxUserNameLengthForUploads)
-            {
-                return BadRequest($"Invalid \"user\" parameter (must be 1-{_maxUserNameLengthForUploads} alphanumeric characters long).");
-            }
-
-            // check request files for basic conformity
+            // check request files for basic usability
             if (Request.Form.Files.Count < 1
-                || Request.Form.Files.Count > _maxDocUploadsPerRequest
-                || Request.Form.Files.Any(foundFile => foundFile.Length < 1
-                    || foundFile.Length > _maxDocUploadSizeInBytes))
+                    || Request.Form.Files.Count > _maxDocUploadsPerRequest
+                    || Request.Form.Files.Any(foundFile => foundFile.Length < 1
+                        || foundFile.Length > _maxDocUploadSizeInBytes))
             {
                 return BadRequest($"Invalid file count (must be 1-{_maxDocUploadsPerRequest} in request) or size (each must be 1-{_maxDocUploadSizeInBytes} bytes).");
             }
 
             // set up preview job with needed field values
-            var projectName = previewJob.BibleSelectionParams?.ProjectName
-                              ?? throw new ArgumentNullException(nameof(previewJob.BibleSelectionParams.ProjectName)); ;
+            var projectName = Guid.NewGuid().ToString("N");
             previewJob.ContentSource = ContentSource.PreviewJobRequest;
             previewJob.TypesettingParams ??= new TypesettingParams();
             previewJob.TypesettingParams.BookFormat = BookFormat.cav;
