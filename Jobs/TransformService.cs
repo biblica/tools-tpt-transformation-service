@@ -16,6 +16,8 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net;
+using Microsoft.Extensions.Configuration;
+using SIL.Linq;
 using TptMain.Exceptions;
 using TptMain.Models;
 using TptMain.Util;
@@ -63,6 +65,11 @@ namespace TptMain.Jobs
         /// The directory where job status is stored
         /// </summary>
         private const string JobsDirectory = "jobs/";
+
+        /// <summary>
+        /// USX files bucket prefix.
+        /// </summary>
+        private const string UsxDirectory = "usx/";
 
         /// <summary>
         /// A flag/marker that a preview job has been canceled
@@ -121,12 +128,21 @@ namespace TptMain.Jobs
         private readonly S3Service _s3Service;
 
         /// <summary>
+        /// Paratext project dir.
+        /// </summary>
+        private readonly DirectoryInfo _paratextDocDir;
+
+        /// <summary>
         /// Simple constructor to be used by the managers. Creates the connection to AWS. It's ok if there
         /// are more than one of these at a time.
         /// </summary>
-        public TransformService(ILogger<TransformService> logger)
+        public TransformService(
+            ILogger<TransformService> logger,
+            IConfiguration configuration)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _paratextDocDir = new DirectoryInfo(configuration[ConfigConsts.ParatextDocDirKey]
+                                                ?? throw new ArgumentNullException(ConfigConsts.ParatextDocDirKey));
 
             _s3Service = new S3Service();
             _amazonSqsClient = new AmazonSQSClient(AccessKey, SecretKey, _region);
@@ -154,6 +170,33 @@ namespace TptMain.Jobs
                     );
 
                 throw new PreviewJobException(previewJob, "Could not submit Template job to queue", ex);
+            }
+        }
+
+        /// <summary>
+        /// Moves (copies & deletes) a local project's files to S3, optionally not deleting it after copying.
+        /// </summary>
+        /// <param name="previewJob">Preview job (required).</param>
+        /// <param name="deleteAfterCopy">Delete project after copying (optional; default = true).</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void MoveProjectToS3(PreviewJob previewJob, bool deleteAfterCopy = true)
+        {
+            var projectName = previewJob.BibleSelectionParams?.ProjectName
+                ?? throw new ArgumentNullException(nameof(previewJob.BibleSelectionParams.ProjectName));
+            var projectFolder = new DirectoryInfo(Path.Combine(_paratextDocDir.FullName, projectName));
+            if (!projectFolder.Exists)
+            {
+                throw new ArgumentNullException($"missing project directory: ${projectFolder.FullName}");
+            }
+            projectFolder.EnumerateFiles("*.usx").ForEach(foundFile =>
+            {
+                using var inputStream = new FileStream(foundFile.FullName, FileMode.Open, FileAccess.Read);
+                var bucketPrefix = $"${UsxDirectory}/${projectName}/";
+                _s3Service.PutFileStream(bucketPrefix, inputStream);
+            });
+            if (deleteAfterCopy)
+            {
+                Directory.Delete(projectFolder.FullName, true);
             }
         }
 
@@ -282,7 +325,7 @@ namespace TptMain.Jobs
             // Put the message onto the queue
             var sendMessageRequest = new SendMessageRequest
             {
-                QueueUrl = transformType.Equals(TransformTypeEnum.TAGGED_TEXT)                                 
+                QueueUrl = transformType.Equals(TransformTypeEnum.TAGGED_TEXT)
                     ? AwsSqsQueueUrlTaggedText : AwsSqsQueueUrlTemplate,
                 MessageBody = message,
                 MessageGroupId = uniqueId,

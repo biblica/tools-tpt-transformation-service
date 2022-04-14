@@ -45,6 +45,11 @@ namespace TptMain.Util
         public const string UploadsAuthTokenKey = "Docs:Upload:AuthToken";
 
         /// <summary>
+        /// Project name prefix for uploads key.
+        /// </summary>
+        public const string UploadsProjectNamePrefixKey = "Docs:Upload:ProjectNamePrefix";
+
+        /// <summary>
         /// Job processing interval in seconds config key.
         /// </summary>
         public const string JobProcessIntervalInSecKey = "Jobs:Processing:ProcessIntervalInSec";

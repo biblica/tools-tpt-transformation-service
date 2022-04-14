@@ -62,9 +62,19 @@ namespace TptMain.Controllers
         private readonly string _uploadsAuthToken;
 
         /// <summary>
+        /// Projcet name prefix for uploads.
+        /// </summary>
+        private readonly string _projectNamePrefix;
+
+        /// <summary>
         /// Set of allowable USX filenames, either directly in a request or in an uploaded archive.
         /// </summary>
         private readonly ISet<string> _allowableFileNames;
+
+        /// <summary>
+        /// Dictionary of input to output USX filenames, to maintain compatibility with USX transform capability.
+        /// </summary>
+        private readonly IDictionary<string, string> _inputToOutputFileNames;
 
         /// <summary>
         /// Basic ctor.
@@ -87,12 +97,17 @@ namespace TptMain.Controllers
             _maxDocUploadsPerRequest = int.Parse(configuration[ConfigConsts.MaxDocUploadsPerRequestKey]
                                                  ?? throw new ArgumentNullException(ConfigConsts.MaxDocUploadsPerRequestKey));
             _uploadsAuthToken = configuration[ConfigConsts.UploadsAuthTokenKey]
-                                                ?? throw new ArgumentNullException(ConfigConsts.UploadsAuthTokenKey);
+                                ?? throw new ArgumentNullException(ConfigConsts.UploadsAuthTokenKey);
+            _projectNamePrefix = configuration[ConfigConsts.UploadsProjectNamePrefixKey]
+                                 ?? throw new ArgumentNullException(ConfigConsts.UploadsProjectNamePrefixKey);
             _paratextDocDir = new DirectoryInfo(configuration[ConfigConsts.ParatextDocDirKey]
                                                 ?? throw new ArgumentNullException(ConfigConsts.ParatextDocDirKey));
 
             // create dictionary of allowable filenames
             _allowableFileNames = BookUtil.BookIdList.Select(foundIdItem => $"{foundIdItem.BookCode}.usx").ToImmutableHashSet();
+            _inputToOutputFileNames = BookUtil.BookIdList.ToImmutableDictionary(
+                foundIdItem => $"{foundIdItem.BookCode}.usx",
+                foundIdItem => $"{foundIdItem.BookNum:000}{foundIdItem.BookCode}.usx");
 
             _logger.LogDebug("PreviewJobsWithContentController()");
         }
@@ -123,7 +138,7 @@ namespace TptMain.Controllers
             }
 
             // set up preview job with needed field values
-            var projectName = Guid.NewGuid().ToString("N");
+            var projectName = $"{_projectNamePrefix}{Guid.NewGuid():N}";
             previewJob.ContentSource = ContentSource.PreviewJobRequest;
             previewJob.TypesettingParams ??= new TypesettingParams();
             previewJob.TypesettingParams.BookFormat = BookFormat.cav;
@@ -150,15 +165,15 @@ namespace TptMain.Controllers
                             projectFolder.Refresh();
                         }
                         // create output path & deal with duplicates
-                        var outputFile = Path.Combine(projectFolder.FullName, foundFile.FileName);
+                        var outputFile = Path.Combine(projectFolder.FullName, _inputToOutputFileNames[foundFile.FileName]);
                         if (System.IO.File.Exists(outputFile))
                         {
                             throw new ArgumentException(
                                 $"\"{foundFile.FileName}\" is a duplicate filename (must be unique in uploaded files).");
                         }
                         // write file
-                        using var outputWriter = new StreamWriter(outputFile);
-                        foundFile.CopyTo(outputWriter.BaseStream);
+                        using var outputStream = new FileStream(outputFile, FileMode.Create, FileAccess.Write);
+                        foundFile.CopyTo(outputStream);
                     }
                     else // else, assume we have an archive
                     {
@@ -180,16 +195,16 @@ namespace TptMain.Controllers
                                     projectFolder.Refresh();
                                 }
                                 // create output path & deal with duplicates
-                                var outputFile = Path.Combine(projectFolder.FullName, foundEntry.Name);
+                                var outputFile = Path.Combine(projectFolder.FullName, _inputToOutputFileNames[foundEntry.Name]);
                                 if (System.IO.File.Exists(outputFile))
                                 {
                                     throw new ArgumentException(
                                         $"\"{foundEntry.FullName}\" is a duplicate filename (must be unique in uploaded archives).");
                                 }
                                 // write file
-                                using var outputWriter = new StreamWriter(outputFile);
+                                using var outputStream = new FileStream(outputFile, FileMode.Create, FileAccess.Write);
                                 using var entryStream = foundEntry.Open();
-                                entryStream.CopyTo(outputWriter.BaseStream);
+                                entryStream.CopyTo(outputStream);
                             });
                         }
                         catch (InvalidDataException ex)

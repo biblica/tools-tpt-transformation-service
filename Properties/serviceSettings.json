@@ -71,7 +71,8 @@
     "Upload": {
       "MaxSizeInBytes": "10485760",
       "MaxUploadsPerRequest": "200",
-      "AuthToken":  "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890" 
+      "AuthToken": "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
+      "ProjectNamePrefix": "upload_"
     }
   }
 }
