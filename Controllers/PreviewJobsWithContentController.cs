@@ -140,13 +140,8 @@ namespace TptMain.Controllers
             // set up preview job with needed field values
             var projectName = $"{_projectNamePrefix}{Guid.NewGuid():N}";
             previewJob.ContentSource = ContentSource.PreviewJobRequest;
-            previewJob.TypesettingParams ??= new TypesettingParams();
-            previewJob.TypesettingParams.BookFormat = BookFormat.cav;
-            previewJob.TypesettingParams.UseCustomFootnotes = false;
-            previewJob.TypesettingParams.UseProjectFont = false;
-            previewJob.TypesettingParams.UseHyphenation = false;
-            previewJob.AdditionalParams ??= new AdditionalPreviewParams();
-            previewJob.AdditionalParams.TextDirection = TextDirection.LTR;
+            previewJob.BibleSelectionParams ??= new BibleSelectionParams();
+            previewJob.BibleSelectionParams.ProjectName = projectName;
 
             // save/extract files
             var projectFolder = new DirectoryInfo(Path.Combine(_paratextDocDir.FullName, projectName));

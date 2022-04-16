@@ -29,6 +29,7 @@ namespace TptTest.Jobs
         private Mock<TransformService> _mockTransformService;
 
         private const string TIMEOUT_IN_SECS = "3600";
+        private const string PARATEXT_DOC_DIR = "C:\\Work\\Paratext";
         private const string NEG_TIMEOUT_IN_SECS = "-3600";
 
         /// <summary>
@@ -40,6 +41,7 @@ namespace TptTest.Jobs
 
             IDictionary<string, string> configKeys = new Dictionary<string, string>();
             configKeys[ConfigConsts.TemplateGenerationTimeoutInSecKey] = TIMEOUT_IN_SECS;
+            configKeys[ConfigConsts.ParatextDocDirKey] = PARATEXT_DOC_DIR;
 
             _testConfiguration = new ConfigurationBuilder()
                .AddInMemoryCollection(configKeys)
@@ -50,7 +52,7 @@ namespace TptTest.Jobs
 
             // mock: transform service
             _mockTransformServiceLogger = new Mock<ILogger<TransformService>>();
-            _mockTransformService = new Mock<TransformService>(_mockTransformServiceLogger.Object);
+            _mockTransformService = new Mock<TransformService>(_mockTransformServiceLogger.Object, _testConfiguration);
 
         }
 

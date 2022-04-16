@@ -55,6 +55,11 @@ namespace TptMain.Jobs
         private readonly DirectoryInfo _idsPreviewScriptDirectory;
 
         /// <summary>
+        /// Logger factory (injected).
+        /// </summary>
+        private readonly ILoggerFactory _loggerFactory;
+
+        /// <summary>
         /// All configured InDesign script runners.
         /// </summary>
         private List<InDesignScriptRunner> IndesignScriptRunners { get; } = new();
@@ -77,7 +82,7 @@ namespace TptMain.Jobs
         /// <summary>
         /// Basic ctor.
         /// </summary>
-        /// <param name="loggerFactory">Type-specific logger (required).</param>
+        /// <param name="loggerFactory">Logger factory (required).</param>
         /// <param name="configuration">System configuration (required).</param>
         /// <param name="jobFileManager">Job File Manager (required).</param>
         public PreviewManager(
@@ -85,10 +90,9 @@ namespace TptMain.Jobs
             IConfiguration configuration,
             JobFileManager jobFileManager)
         {
-            _ = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _jobFileManager = jobFileManager ?? throw new ArgumentNullException(nameof(jobFileManager));
-            _logger = loggerFactory.CreateLogger<PreviewManager>();
 
             // grab global settings that apply to every InDesignScriptRunner
             _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(configuration[ConfigConsts.IdsTimeoutInSecKey]
@@ -99,13 +103,15 @@ namespace TptMain.Jobs
                                                             ?? throw new ArgumentNullException(ConfigConsts
                                                                 .IdsPreviewScriptDirKey)));
 
+            // create logger
+            _logger = _loggerFactory.CreateLogger<PreviewManager>();
+
             // grab the individual InDesignScriptRunner settings and create servers for each configuration
-            var serversSection = configuration.GetSection(ConfigConsts.IdsServersSectionKey);
-            var serversConfig = serversSection.Get<List<InDesignServerConfig>>();
-            SetUpInDesignScriptRunners(loggerFactory, serversConfig);
+            SetUpInDesignScriptRunners(
+                configuration.GetSection(ConfigConsts.IdsServersSectionKey)
+                    .Get<List<InDesignServerConfig>>());
 
             _s3Service = new S3Service();
-
             _logger.LogDebug("PreviewManager()");
         }
 
@@ -268,9 +274,9 @@ namespace TptMain.Jobs
         /// <summary>
         /// Create an InDesignScriptRunner object for each server configuration.
         /// </summary>
-        /// <param name="loggerFactory">Logger Factory (required).</param>
         /// <param name="serverConfigs">Server configurations (required).</param>
-        private void SetUpInDesignScriptRunners(ILoggerFactory loggerFactory, List<InDesignServerConfig> serverConfigs)
+        private void SetUpInDesignScriptRunners(
+            List<InDesignServerConfig> serverConfigs)
         {
             if (serverConfigs is not { Count: > 0 })
             {
@@ -282,16 +288,15 @@ namespace TptMain.Jobs
             foreach (var config in serverConfigs)
             {
                 var serverName = config.Name;
-
-                if (serverName == null || serverName.Trim().Length <= 0)
+                if (string.IsNullOrWhiteSpace(serverName))
                 {
                     throw new ArgumentException("Server.Name cannot be null or empty.'");
                 }
 
-                var logger = loggerFactory.CreateLogger(nameof(InDesignScriptRunner) + $":{config.Name}");
                 IndesignScriptRunners.Add(
                     new InDesignScriptRunner(
-                        logger,
+                        _loggerFactory,
+                        serverName,
                         config,
                         _idsTimeoutInMSec,
                         _idsPreviewScriptDirectory,

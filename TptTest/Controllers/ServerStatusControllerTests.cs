@@ -13,7 +13,6 @@ using Moq;
 using Microsoft.Extensions.Logging;
 using TptMain.Models;
 using Microsoft.AspNetCore.Mvc;
-using TptMain.Projects;
 using System.Collections.Generic;
 
 namespace TptTest.Controllers
