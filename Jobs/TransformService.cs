@@ -186,13 +186,14 @@ namespace TptMain.Jobs
             var projectFolder = new DirectoryInfo(Path.Combine(_paratextDocDir.FullName, projectName));
             if (!projectFolder.Exists)
             {
-                throw new ArgumentNullException($"missing project directory: ${projectFolder.FullName}");
+                throw new ArgumentNullException($"missing project directory: {projectFolder.FullName}");
             }
+            var folderPrefix = $"{UsxDirectory}{projectName}";
             projectFolder.EnumerateFiles("*.usx").ForEach(foundFile =>
             {
+                var filePrefix = $"{folderPrefix}/{foundFile.Name}";
                 using var inputStream = new FileStream(foundFile.FullName, FileMode.Open, FileAccess.Read);
-                var bucketPrefix = $"${UsxDirectory}/${projectName}/";
-                _s3Service.PutFileStream(bucketPrefix, inputStream);
+                _s3Service.PutFileStream(filePrefix, inputStream);
             });
             if (deleteAfterCopy)
             {
