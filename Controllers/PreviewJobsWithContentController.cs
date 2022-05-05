@@ -42,27 +42,27 @@ namespace TptMain.Controllers
         private readonly IJobManager _jobManager;
 
         /// <summary>
-        /// Max doc upload size in bytes.
+        /// Max doc upload size in bytes (injected).
         /// </summary>
         private readonly int _maxDocUploadSizeInBytes;
 
         /// <summary>
-        /// Max doc uploads per request.
+        /// Max doc uploads per request (injected).
         /// </summary>
         private readonly int _maxDocUploadsPerRequest;
 
         /// <summary>
-        /// Paratext document directory.
+        /// Paratext document directory (injected).
         /// </summary>
         private readonly DirectoryInfo _paratextDocDir;
 
         /// <summary>
-        /// Auth token for uploads.
+        /// Auth token for uploads (injected).
         /// </summary>
         private readonly string _uploadsAuthToken;
 
         /// <summary>
-        /// Projcet name prefix for uploads.
+        /// Project name prefix for uploads (injected).
         /// </summary>
         private readonly string _projectNamePrefix;
 
@@ -80,7 +80,7 @@ namespace TptMain.Controllers
         /// Basic ctor.
         /// </summary>
         /// <param name="logger">Logger (required).</param>
-        /// <param name="configuration"></param>
+        /// <param name="configuration">Service configuration (required).</param>
         /// <param name="jobManager">Job manager (required).</param>
         public PreviewJobsWithContentController(
             ILogger<PreviewJobsWithContentController> logger,
