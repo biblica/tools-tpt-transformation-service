@@ -26,9 +26,24 @@ namespace TptMain.InDesign
     public class InDesignScriptRunner
     {
         /// <summary>
+        /// Logger factory (injected).
+        /// </summary>
+        private readonly ILoggerFactory _loggerFactory;
+
+        /// <summary>
+        /// Logger (server-specific).
+        /// </summary>
+        private readonly ILogger _serverLogger;
+
+        /// <summary>
         /// Logger (injected).
         /// </summary>
-        private readonly ILogger _logger;
+        private readonly ILogger<InDesignScriptRunner> _logger;
+
+        /// <summary>
+        /// Runner category name.
+        /// </summary>
+        private readonly string _serverName;
 
         /// <summary>
         /// Job File Manager (injected).
@@ -71,37 +86,44 @@ namespace TptMain.InDesign
         private readonly FileInfo _defaultBookScriptFile;
 
         /// <summary>
-        /// Basic ctor.
+        /// Basic ctor 
         /// </summary>
-        /// <param name="logger">Logger (required).</param>
+        /// <param name="loggerFactory">Logger factory (required).</param>
+        /// <param name="serverName">Category name for runners created at runtime.</param>
         /// <param name="serverConfig">InDesign server configuration (required).</param>
         /// <param name="idsTimeoutInMSec">IDS request timeout in seconds (required).</param>
         /// <param name="scriptDir">Preview script (JSX) path (required).</param>
         /// <param name="jobFileManager">Job File Manager to access necessary file paths (required).</param>
+        /// <exception cref="ArgumentNullException"></exception>
         public InDesignScriptRunner(
-            ILogger logger,
+            ILoggerFactory loggerFactory,
+            string serverName,
             InDesignServerConfig serverConfig,
             int idsTimeoutInMSec,
             DirectoryInfo scriptDir,
-            JobFileManager jobFileManager
-            )
+            JobFileManager jobFileManager)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _serverName = serverName;
             _jobFileManager = jobFileManager ?? throw new ArgumentNullException(nameof(jobFileManager));
             _serverConfig = serverConfig ?? throw new ArgumentNullException(nameof(serverConfig));
 
             _idsTimeoutInMSec = idsTimeoutInMSec;
             _idsPreviewScriptDirectory = scriptDir ?? throw new ArgumentNullException(nameof(scriptDir));
 
-            _serviceClient = SetUpInDesignClient();
+            _logger = loggerFactory.CreateLogger<InDesignScriptRunner>();
+            if (!string.IsNullOrWhiteSpace(_serverName))
+            {
+                _serverLogger = loggerFactory.CreateLogger(nameof(InDesignScriptRunner) + $":{serverName}");
+            }
 
+            _serviceClient = SetUpInDesignClient();
             _defaultDocScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
                 "CreateDocument.jsx"));
-
             _defaultBookScriptFile = new FileInfo(Path.Combine(_idsPreviewScriptDirectory.FullName,
                 "CreateBook.jsx"));
 
-            _logger.LogDebug("InDesignScriptRunner()");
+            GetActiveLogger().LogDebug("InDesignScriptRunner()");
         }
 
         /// <summary>
@@ -133,7 +155,7 @@ namespace TptMain.InDesign
             PreviewJob inputJob,
             CancellationToken? cancellationToken)
         {
-            _logger.LogDebug($"CreatePreview() - inputJob.Id={inputJob.Id}.");
+            GetActiveLogger().LogDebug($"CreatePreview() - inputJob.Id={inputJob.Id}.");
 
             // Simplify our logic later on by establishing a cancellation token if none was passed
             var ct = cancellationToken ?? new CancellationToken();
@@ -149,20 +171,20 @@ namespace TptMain.InDesign
             var customFootnotes = inputJob.AdditionalParams.CustomFootnoteMarkers;
 
             // Create the InDesign Documents (IDTT files)
-            _logger.LogDebug("Creating InDesign Documents");
+            GetActiveLogger().LogDebug("Creating InDesign Documents");
             foreach (var txtFile in txtFiles)
             {
                 ct.ThrowIfCancellationRequested();
                 CreateDocument(jobId, txtFile, inputJob.AdditionalParams.OverrideFont, customFootnotes, inputJob.AdditionalParams.TextDirection);
             }
 
-            _logger.LogDebug("Finished creating InDesign Documents");
+            GetActiveLogger().LogDebug("Finished creating InDesign Documents");
 
             // Create a book (INDB) from the InDesign Documents and export it to PDF
             ct.ThrowIfCancellationRequested();
             CreateBook(jobId);
 
-            _logger.LogDebug($"Finished CreatePreview() - inputJob.Id={inputJob.Id}.");
+            GetActiveLogger().LogDebug($"Finished CreatePreview() - inputJob.Id={inputJob.Id}.");
         }
 
         /// <summary>
@@ -175,9 +197,9 @@ namespace TptMain.InDesign
         /// <param name="textDirection">The text direction of the typesetting preview text.</param>
         /// <exception cref="ScriptException">An InDesign Server exception that resulted from executing the script</exception>
         private void CreateDocument(
-            string jobId, 
+            string jobId,
             string txtFilePath,
-            string overrideFont, 
+            string overrideFont,
             string customFootnotes,
             TextDirection textDirection
             )
@@ -187,7 +209,7 @@ namespace TptMain.InDesign
             var idmlPath = Path.Combine(idmlDir, $"{jobId}.idml");
             var docOutputPath = Path.Combine(idmlDir, $"{jobId}-{txtFileName.Replace(".txt", ".indd")}");
 
-            _logger.LogDebug($"Creating '{docOutputPath}' from '{txtFileName}'");
+            GetActiveLogger().LogDebug($"Creating '{docOutputPath}' from '{txtFileName}'");
             var docScriptRequest = new RunScriptRequest();
             var docScriptParameters = new RunScriptParameters();
             docScriptRequest.runScriptParameters = docScriptParameters;
@@ -249,7 +271,7 @@ namespace TptMain.InDesign
             var pdfOutputPath = Path.Combine(pdfDir, $"{jobId}.pdf");
             var bookOutputPath = Path.Combine(templateDir, $"{ jobId}.indb");
 
-            _logger.LogDebug("Creating InDesign Book and PDF");
+            GetActiveLogger().LogDebug("Creating InDesign Book and PDF");
             IList<IDSPScriptArg> bookScriptArgs = new List<IDSPScriptArg>();
             AddNewArgToIdsArgs(ref bookScriptArgs, "docPath", templateDir);
             AddNewArgToIdsArgs(ref bookScriptArgs, "docPattern", docPattern);
@@ -276,7 +298,7 @@ namespace TptMain.InDesign
                     null);
             }
 
-            _logger.LogDebug("Finished creating InDesign Book and PDF");
+            GetActiveLogger().LogDebug("Finished creating InDesign Book and PDF");
         }
 
         /// <summary>
@@ -286,7 +308,7 @@ namespace TptMain.InDesign
         /// <param name="newArgName">The new argument key name. (required)</param>
         /// <param name="newArgValue">The new argument value. (optional)</param>
         private void AddNewArgToIdsArgs(
-            ref IList<IDSPScriptArg> scriptArgs, 
+            ref IList<IDSPScriptArg> scriptArgs,
             string newArgName,
             string newArgValue = null)
         {
@@ -295,6 +317,15 @@ namespace TptMain.InDesign
 
             scriptArg.name = newArgName.Trim();
             scriptArg.value = newArgValue;
+        }
+
+        /// <summary>
+        /// Gets the server-specific logger if defined, default (injected) logger otherwise.
+        /// </summary>
+        /// <returns>Logger to use for this instance.</returns>
+        private ILogger GetActiveLogger()
+        {
+            return _serverLogger ?? _logger;
         }
     }
 

@@ -14,7 +14,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using TptMain.InDesign;
 using TptMain.Jobs;
 using TptMain.Models;
@@ -38,7 +37,7 @@ namespace TptTest
         /// <summary>
         /// Mock script runner logger.
         /// </summary>
-        private Mock<ILogger<InDesignScriptRunner>> _mockLogger;
+        private Mock<LoggerFactory> _mockLoggerFactory;
 
         /// <summary>
         /// Mock Job File Manager.
@@ -65,7 +64,7 @@ namespace TptTest
 
 
             // create mocks
-            _mockLogger = new Mock<ILogger<InDesignScriptRunner>>();
+            _mockLoggerFactory = new Mock<LoggerFactory>();
 
             _mockJobFileManager = new Mock<JobFileManager>(
                 new Mock<ILogger<JobFileManager>>().Object,
@@ -86,7 +85,8 @@ namespace TptTest
         public void InstantiateTest()
         {
             new InDesignScriptRunner(
-                _mockLogger.Object,
+                _mockLoggerFactory.Object,
+                null,
                 _testIdsConfig,
                 TEST_IDS_TIMEOUT,
                 new DirectoryInfo(TEST_IDS_PREVIEW_SCRIPT_DIR),
@@ -99,7 +99,8 @@ namespace TptTest
         {
             // We're mocking the runner only for the InDesign client set up portion. Otherwise, call the base functionality.
             var scriptRunner = new Mock<InDesignScriptRunner>(
-                _mockLogger.Object,
+                _mockLoggerFactory.Object,
+                null,
                 _testIdsConfig,
                 TEST_IDS_TIMEOUT,
                 new DirectoryInfo(TEST_IDS_PREVIEW_SCRIPT_DIR),

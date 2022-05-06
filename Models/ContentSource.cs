@@ -7,41 +7,22 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TptMain.Controllers;
-using Moq;
-using Microsoft.Extensions.Logging;
-using TptMain.Models;
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 
-namespace TptTest.Controllers
+namespace TptMain.Models
 {
-    [TestClass()]
-    public class ServerStatusControllerTests
+    /// <summary>
+    /// Source of content for preview generation.
+    /// </summary>
+    public enum ContentSource
     {
-        // controller under test
-        ServerStatusController serverStatusController;
         /// <summary>
-        /// Test setup.
+        /// Paratext project folders, via mercurial download.
         /// </summary>
-        [TestInitialize]
-        public void TestSetup()
-        {
-            serverStatusController = new ServerStatusController(
-                Mock.Of<ILogger<ServerStatusController>>());
-        }
+        ParatextRepository,
 
-        delegate void TryGetProjectDetails(out IDictionary<string, ProjectDetails> projectDetails); // needed for Callback
-
-        [TestMethod()]
-        public void GetServerStatusSuccessfulTest()
-        {
-            ActionResult<ServerStatus> result = serverStatusController.Get();
-            Assert.IsNotNull(result.Value);
-            var serverStatusResponse = result.Value;
-
-            Assert.IsNotNull(serverStatusResponse);
-        }
+        /// <summary>
+        /// Supplied with preview job request, as form-encoded files.
+        /// </summary>
+        PreviewJobRequest
     }
 }

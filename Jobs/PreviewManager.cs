@@ -7,16 +7,17 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-using Amazon.S3.Transfer;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.S3.Transfer;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using TptMain.InDesign;
 using TptMain.Models;
 using TptMain.Util;
@@ -54,29 +55,34 @@ namespace TptMain.Jobs
         private readonly DirectoryInfo _idsPreviewScriptDirectory;
 
         /// <summary>
+        /// Logger factory (injected).
+        /// </summary>
+        private readonly ILoggerFactory _loggerFactory;
+
+        /// <summary>
         /// All configured InDesign script runners.
         /// </summary>
-        private List<InDesignScriptRunner> IndesignScriptRunners { get; } = new List<InDesignScriptRunner>();
+        private List<InDesignScriptRunner> IndesignScriptRunners { get; } = new();
 
         /// <summary>
         /// The map for tracking running tasks against IDS script runners.
         /// </summary>
-        private Dictionary<InDesignScriptRunner, Task> IdsTaskMap { get; } = new Dictionary<InDesignScriptRunner, Task>();
+        private Dictionary<InDesignScriptRunner, Task> IdsTaskMap { get; } = new();
 
         /// <summary>
         /// The map for cancellation token sources by jobs.
         /// </summary>
-        private Dictionary<PreviewJob, CancellationTokenSource> CancellationSourceMap { get; } = new Dictionary<PreviewJob, CancellationTokenSource>();
+        private Dictionary<PreviewJob, CancellationTokenSource> CancellationSourceMap { get; } = new();
 
         /// <summary>
         /// This FIFO collection tracks the order in which <code>PreviewJob</code>s came in so that they're processed in-order.
         /// </summary>
-        private ConcurrentQueue<PreviewJob> JobQueue { get; } = new ConcurrentQueue<PreviewJob>();
+        private ConcurrentQueue<PreviewJob> JobQueue { get; } = new();
 
         /// <summary>
         /// Basic ctor.
         /// </summary>
-        /// <param name="logger">Type-specific logger (required).</param>
+        /// <param name="loggerFactory">Logger factory (required).</param>
         /// <param name="configuration">System configuration (required).</param>
         /// <param name="jobFileManager">Job File Manager (required).</param>
         public PreviewManager(
@@ -84,10 +90,9 @@ namespace TptMain.Jobs
             IConfiguration configuration,
             JobFileManager jobFileManager)
         {
-            _ = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _jobFileManager = jobFileManager ?? throw new ArgumentNullException(nameof(jobFileManager));
-            _logger = loggerFactory.CreateLogger<PreviewManager>();
 
             // grab global settings that apply to every InDesignScriptRunner
             _idsTimeoutInMSec = (int)TimeSpan.FromSeconds(int.Parse(configuration[ConfigConsts.IdsTimeoutInSecKey]
@@ -98,13 +103,15 @@ namespace TptMain.Jobs
                                                             ?? throw new ArgumentNullException(ConfigConsts
                                                                 .IdsPreviewScriptDirKey)));
 
+            // create logger
+            _logger = _loggerFactory.CreateLogger<PreviewManager>();
+
             // grab the individual InDesignScriptRunner settings and create servers for each configuration
-            var serversSection = configuration.GetSection(ConfigConsts.IdsServersSectionKey);
-            var serversConfig = serversSection.Get<List<InDesignServerConfig>>();
-            SetUpInDesignScriptRunners(loggerFactory, serversConfig);
+            SetUpInDesignScriptRunners(
+                configuration.GetSection(ConfigConsts.IdsServersSectionKey)
+                    .Get<List<InDesignServerConfig>>());
 
             _s3Service = new S3Service();
-
             _logger.LogDebug("PreviewManager()");
         }
 
@@ -134,7 +141,7 @@ namespace TptMain.Jobs
                 _logger.LogInformation("Checking and updating preview processing...");
 
                 // Keep queuing jobs while we have a runner and jobs available.
-                InDesignScriptRunner availableRunner = GetAvailableRunner();
+                var availableRunner = GetAvailableRunner();
                 while (availableRunner != null && !JobQueue.IsEmpty)
                 {
                     // grab the next prioritized preview job
@@ -155,7 +162,6 @@ namespace TptMain.Jobs
                     var task = new Task(() =>
                     {
                         _logger.LogDebug($"Assigning preview generation job '{previewJob.Id}' to IDS runner '{taskRunner.Name}'.");
-                        var runner = taskRunner;
 
                         try
                         {
@@ -167,13 +173,13 @@ namespace TptMain.Jobs
                                 _jobFileManager.GetProjectDirectoryById(previewJob.Id).FullName
                                 );
 
-                            runner.CreatePreview(previewJob, tokenSource.Token);
+                            taskRunner.CreatePreview(previewJob, tokenSource.Token);
                             previewJob.State.Add(new PreviewJobState(JobStateEnum.PreviewGenerated, JobStateSourceEnum.PreviewGeneration));
                         }
                         catch (Exception ex)
                         {
                             previewJob.SetError("An error occurred while generating preview.", ex.Message);
-                        } 
+                        }
                         finally
                         {
                             CancellationSourceMap.Remove(previewJob);
@@ -228,7 +234,8 @@ namespace TptMain.Jobs
         {
             InDesignScriptRunner availableRunner = null;
 
-            IndesignScriptRunners.ForEach((idsRunner) => {
+            IndesignScriptRunners.ForEach(idsRunner =>
+            {
 
                 // break out if we've found a runner already
                 if (availableRunner == null)
@@ -243,7 +250,8 @@ namespace TptMain.Jobs
                     {
                         _logger.LogDebug($"'{idsRunner.Name}' has no task assigned and is available.");
                         availableRunner = idsRunner;
-                    } else if (task.IsCompleted)
+                    }
+                    else if (task.IsCompleted)
                     {
                         _logger.LogDebug($"'{idsRunner.Name}' has a task in the terminal state of '{task.Status}' and is available.");
                         availableRunner = idsRunner;
@@ -266,31 +274,30 @@ namespace TptMain.Jobs
         /// <summary>
         /// Create an InDesignScriptRunner object for each server configuration.
         /// </summary>
-        /// <param name="loggerFactory">Logger Factory (required).</param>
         /// <param name="serverConfigs">Server configurations (required).</param>
-        private void SetUpInDesignScriptRunners(ILoggerFactory loggerFactory, List<InDesignServerConfig> serverConfigs)
+        private void SetUpInDesignScriptRunners(
+            List<InDesignServerConfig> serverConfigs)
         {
-            if (serverConfigs == null || serverConfigs.Count <= 0)
+            if (serverConfigs is not { Count: > 0 })
             {
                 throw new ArgumentException($"No server configurations were found in the configuration section '{ConfigConsts.IdsServersSectionKey}'");
             }
 
             _logger.LogDebug($"{serverConfigs.Count} InDesign Server configurations found. \r\n" + JsonConvert.SerializeObject(serverConfigs));
 
-            foreach(var config in serverConfigs)
+            foreach (var config in serverConfigs)
             {
                 var serverName = config.Name;
-
-                if (serverName == null || serverName.Trim().Length <= 0)
+                if (string.IsNullOrWhiteSpace(serverName))
                 {
-                    throw new ArgumentException($"Server.Name cannot be null or empty.'");
+                    throw new ArgumentException("Server.Name cannot be null or empty.'");
                 }
 
-                var logger = loggerFactory.CreateLogger(nameof(InDesignScriptRunner) + $":{config.Name}");
                 IndesignScriptRunners.Add(
                     new InDesignScriptRunner(
-                        logger, 
-                        config, 
+                        _loggerFactory,
+                        serverName,
+                        config,
                         _idsTimeoutInMSec,
                         _idsPreviewScriptDirectory,
                         _jobFileManager

@@ -88,14 +88,18 @@ namespace TptMain.Jobs
             /// allowed to be invalid upon submission: Id, DateStarted, DateCompleted, DateCancelled, State
             ValidateString($"{modelRootPrefix}{nameof(previewJob.User)}", previewJob.User, errorHandlerFunc);
 
-            // User authorization
-            try
+            // only relevant if we're dealing with a paratext project
+            if (previewJob.ContentSource == ContentSource.ParatextRepository)
             {
-                _paratextApi.IsUserAuthorizedOnProject(previewJob);
-            }
-            catch (PreviewJobException ex)
-            {
-                errorHandlerFunc($"'{modelRootPrefix}{nameof(previewJob.User)}' is not valid. {ex.Message}");
+                // User authorization
+                try
+                {
+                    _paratextApi.IsUserAuthorizedOnProject(previewJob);
+                }
+                catch (PreviewJobException ex)
+                {
+                    errorHandlerFunc($"'{modelRootPrefix}{nameof(previewJob.User)}' is not valid. {ex.Message}");
+                }
             }
 
 
@@ -158,7 +162,8 @@ namespace TptMain.Jobs
             {
                 previewJob.SetError("There were validation errors.", $" '{nameof(previewJob)}' validation errors were encountered:{NEWLINE_TAB}"
                                             + Join(NEWLINE_TAB, errors.ToArray()));
-            } else
+            }
+            else
             {
                 previewJob.State.Add(new PreviewJobState(JobStateEnum.Started, JobStateSourceEnum.JobValidation));
             }
@@ -284,35 +289,47 @@ namespace TptMain.Jobs
             // parameter validation
             _ = previewJob ?? throw new ArgumentNullException(nameof(previewJob));
 
-            previewJob.AdditionalParams.TextDirection = _paratextProjectService.GetTextDirection(previewJob.BibleSelectionParams.ProjectName);
-
-            // Grab the project's footnote markers if configured to do so.
-            if (previewJob.TypesettingParams.UseCustomFootnotes)
+            // only relevant if we're dealing with a paratext project
+            if (previewJob.ContentSource == ContentSource.ParatextRepository)
             {
-                previewJob.AdditionalParams.CustomFootnoteMarkers = String.Join(',', _paratextProjectService.GetFootnoteCallerSequence(previewJob.BibleSelectionParams.ProjectName));
-                // Throw an error, if custom footnotes are requested but are not available.
-                // This allows us to set the user's expectations early, rather than waiting
-                // for a preview.
-                if (String.IsNullOrEmpty(previewJob.AdditionalParams.CustomFootnoteMarkers))
+                previewJob.AdditionalParams.TextDirection =
+                    _paratextProjectService.GetTextDirection(previewJob.BibleSelectionParams.ProjectName);
+
+                // Grab the project's footnote markers if configured to do so.
+                if (previewJob.TypesettingParams.UseCustomFootnotes)
                 {
-                    throw new PreviewJobException(previewJob, "Custom footnotes requested, but aren't specified in the project.");
+                    previewJob.AdditionalParams.CustomFootnoteMarkers = String.Join(',',
+                        _paratextProjectService.GetFootnoteCallerSequence(previewJob.BibleSelectionParams.ProjectName));
+                    // Throw an error, if custom footnotes are requested but are not available.
+                    // This allows us to set the user's expectations early, rather than waiting
+                    // for a preview.
+                    if (String.IsNullOrEmpty(previewJob.AdditionalParams.CustomFootnoteMarkers))
+                    {
+                        throw new PreviewJobException(previewJob,
+                            "Custom footnotes requested, but aren't specified in the project.");
+                    }
+
+                    _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " +
+                                           previewJob.AdditionalParams.CustomFootnoteMarkers);
                 }
 
-                _logger.LogInformation("Custom footnotes requested and found. Custom footnotes: " + previewJob.AdditionalParams.CustomFootnoteMarkers);
-            }
-
-            // If we're using the project font (rather than what's in the IDML) pass it as an override.
-            if (previewJob.TypesettingParams.UseProjectFont)
-            {
-                previewJob.AdditionalParams.OverrideFont = _paratextProjectService.GetProjectFont(previewJob.BibleSelectionParams.ProjectName);
-
-                if (String.IsNullOrEmpty(previewJob.AdditionalParams.OverrideFont))
+                // If we're using the project font (rather than what's in the IDML) pass it as an override.
+                if (previewJob.TypesettingParams.UseProjectFont)
                 {
-                    _logger.LogWarning($"No font specified for project '{previewJob.BibleSelectionParams.ProjectName}'. IDML font settings will not be modified.");
-                    previewJob.AdditionalParams.OverrideFont = null;
-                } else
-                {
-                    _logger.LogInformation($"Override font '{previewJob.AdditionalParams.OverrideFont}' specified for project '{previewJob.BibleSelectionParams.ProjectName}' and will be used.");
+                    previewJob.AdditionalParams.OverrideFont =
+                        _paratextProjectService.GetProjectFont(previewJob.BibleSelectionParams.ProjectName);
+
+                    if (String.IsNullOrEmpty(previewJob.AdditionalParams.OverrideFont))
+                    {
+                        _logger.LogWarning(
+                            $"No font specified for project '{previewJob.BibleSelectionParams.ProjectName}'. IDML font settings will not be modified.");
+                        previewJob.AdditionalParams.OverrideFont = null;
+                    }
+                    else
+                    {
+                        _logger.LogInformation(
+                            $"Override font '{previewJob.AdditionalParams.OverrideFont}' specified for project '{previewJob.BibleSelectionParams.ProjectName}' and will be used.");
+                    }
                 }
             }
 

@@ -65,6 +65,10 @@ namespace TptMain.Jobs
         public void ProcessJob(PreviewJob previewJob)
         {
             previewJob.State.Add(new PreviewJobState(JobStateEnum.GeneratingTaggedText, JobStateSourceEnum.TaggedTextGeneration));
+            if (previewJob.ContentSource == ContentSource.PreviewJobRequest)
+            {
+                _transformService.MoveProjectToS3(previewJob);
+            }
             _transformService.GenerateTaggedText(previewJob);
         }
 
