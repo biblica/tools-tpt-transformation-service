@@ -1,7 +1,15 @@
-﻿using System;
+﻿/*
+Copyright © 2021 by Biblica, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 namespace TptMain.Models
 {
@@ -22,14 +30,10 @@ namespace TptMain.Models
         {
             get
             {
-                this.State.Sort();
-                PreviewJobState previewJobState = this.State.FindLast(
-                   (previewJobState) =>
-                    {
-                        return previewJobState.State == JobStateEnum.Submitted;
-                    }
-                );
-                return previewJobState != null ? previewJobState.DateSubmitted : null;
+                State.Sort();
+                var previewJobState = State.FindLast(
+                   previewJobState => previewJobState.State == JobStateEnum.Submitted);
+                return previewJobState?.DateSubmitted;
             }
         }
 
@@ -40,14 +44,10 @@ namespace TptMain.Models
         {
             get
             {
-                this.State.Sort();
-                PreviewJobState previewJobState = this.State.FindLast(
-                   (previewJobState) =>
-                   {
-                       return previewJobState.State == JobStateEnum.Started;
-                   }
-                );
-                return previewJobState != null ? previewJobState.DateSubmitted : null;
+                State.Sort();
+                var previewJobState = State.FindLast(
+                   previewJobState => previewJobState.State == JobStateEnum.Started);
+                return previewJobState?.DateSubmitted;
             }
         }
 
@@ -58,14 +58,10 @@ namespace TptMain.Models
         {
             get
             {
-                this.State.Sort();
-                PreviewJobState previewJobState = this.State.FindLast(
-                   (previewJobState) =>
-                   {
-                       return previewJobState.State == JobStateEnum.PreviewGenerated;
-                   }
-                );
-                return previewJobState != null ? previewJobState.DateSubmitted : null;
+                State.Sort();
+                var previewJobState = State.FindLast(
+                   previewJobState => previewJobState.State == JobStateEnum.PreviewGenerated);
+                return previewJobState?.DateSubmitted;
             }
         }
 
@@ -76,14 +72,11 @@ namespace TptMain.Models
         {
             get
             {
-                this.State.Sort();
-                PreviewJobState previewJobState = this.State.FindLast(
-                    delegate (PreviewJobState previewJobState)
-                    {
-                        return previewJobState.State == JobStateEnum.Cancelled;
-                    }
+                State.Sort();
+                var previewJobState = State.FindLast(
+                    previewJobState => previewJobState.State == JobStateEnum.Cancelled
                 );
-                return previewJobState != null ? previewJobState.DateSubmitted : null;
+                return previewJobState?.DateSubmitted;
             }
         }
 
@@ -95,33 +88,32 @@ namespace TptMain.Models
         /// <summary>
         /// Whether the job was submitted or not.
         /// </summary>
-        public bool IsSubmitted => this.State.Contains(new PreviewJobState(JobStateEnum.Submitted));
+        public bool IsSubmitted => State.Contains(new PreviewJobState(JobStateEnum.Submitted));
 
         /// <summary>
         /// Whether or not the job has started execution or not.
         /// </summary>
-        public bool IsStarted => this.State.Contains(new PreviewJobState(JobStateEnum.Started));
+        public bool IsStarted => State.Contains(new PreviewJobState(JobStateEnum.Started));
 
         /// <summary>
         /// Whether the job has been completed or not.
         /// </summary>
-        public bool IsCompleted => this.State.Contains(new PreviewJobState(JobStateEnum.PreviewGenerated));
+        public bool IsCompleted => State.Contains(new PreviewJobState(JobStateEnum.PreviewGenerated));
 
         /// <summary>
         ///  Whether the job has been cancelled or not.
         /// </summary>
-        public bool IsCancelled => this.State.Contains(new PreviewJobState(JobStateEnum.Cancelled));
+        public bool IsCancelled => State.Contains(new PreviewJobState(JobStateEnum.Cancelled));
 
         /// <summary>
         /// Whether or not there was an error during job execution.
         /// </summary>
-        public bool IsError => this.State.Contains(new PreviewJobState(JobStateEnum.Error));
+        public bool IsError => State.Contains(new PreviewJobState(JobStateEnum.Error));
 
         /// <summary>
         /// The set of all states of the Preview Job over time
         /// </summary>
-        public List<PreviewJobState> State { get; set; } = new List<PreviewJobState> {
-        };
+        public List<PreviewJobState> State { get; set; } = new();
 
         /// <summary>
         /// User-friendly message regarding the error; <c>null</c> otherwise.
@@ -149,6 +141,16 @@ namespace TptMain.Models
         public AdditionalPreviewParams AdditionalParams { get; set; }
 
         /// <summary>
+        /// Source of content for this preview job.
+        /// </summary>
+        public ContentSource ContentSource { get; set; }
+
+        /// <summary>
+        /// The body of USX archive.
+        /// </summary>
+        public string UsxArchive { get; set; }
+
+        /// <summary>
         /// Function used for indicating an error occurred and provide a message for the reason.
         /// </summary>
         /// <param name="errorMessage">User-friendly error message. (Required)</param>
@@ -167,10 +169,10 @@ namespace TptMain.Models
         public void SetError(string errorMessage, string errorDetail, JobStateSourceEnum jobStateSourceEnum)
         {
             // validate inputs
-            this.ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
-            this.ErrorDetail = errorDetail;
+            ErrorMessage = errorMessage ?? throw new ArgumentNullException(nameof(errorMessage));
+            ErrorDetail = errorDetail;
 
-            this.State.Add(new PreviewJobState(JobStateEnum.Error, jobStateSourceEnum));
+            State.Add(new PreviewJobState(JobStateEnum.Error, jobStateSourceEnum));
         }
     }
 }

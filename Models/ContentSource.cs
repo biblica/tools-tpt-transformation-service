@@ -7,24 +7,22 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-using System.Diagnostics.CodeAnalysis;
 
 namespace TptMain.Models
 {
     /// <summary>
-    /// Book format.
+    /// Source of content for preview generation.
     /// </summary>
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
-    public enum BookFormat
+    public enum ContentSource
     {
         /// <summary>
-        /// The Books of the Bible
+        /// Paratext project folders, via mercurial download.
         /// </summary>
-        tbotb,
+        ParatextRepository,
 
         /// <summary>
-        /// Chapter and Verse.
+        /// Supplied with preview job request, as form-encoded files.
         /// </summary>
-        cav
+        PreviewJobRequest
     }
 }

@@ -1,4 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿/*
+Copyright © 2021 by Biblica, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TptMain.Jobs;
 using System.Collections.Generic;
 using Moq;
@@ -20,6 +29,7 @@ namespace TptTest.Jobs
         private Mock<TransformService> _mockTransformService;
 
         private const string TIMEOUT_IN_SECS = "3600";
+        private const string PARATEXT_DOC_DIR = "C:\\Work\\Paratext";
         private const string NEG_TIMEOUT_IN_SECS = "-3600";
 
         /// <summary>
@@ -31,6 +41,7 @@ namespace TptTest.Jobs
 
             IDictionary<string, string> configKeys = new Dictionary<string, string>();
             configKeys[ConfigConsts.TemplateGenerationTimeoutInSecKey] = TIMEOUT_IN_SECS;
+            configKeys[ConfigConsts.ParatextDocDirKey] = PARATEXT_DOC_DIR;
 
             _testConfiguration = new ConfigurationBuilder()
                .AddInMemoryCollection(configKeys)
@@ -41,7 +52,7 @@ namespace TptTest.Jobs
 
             // mock: transform service
             _mockTransformServiceLogger = new Mock<ILogger<TransformService>>();
-            _mockTransformService = new Mock<TransformService>(_mockTransformServiceLogger.Object);
+            _mockTransformService = new Mock<TransformService>(_mockTransformServiceLogger.Object, _testConfiguration);
 
         }
 

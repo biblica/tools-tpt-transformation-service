@@ -1,16 +1,25 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<!--
+Copyright © 2021 by Biblica, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>TptMain</RootNamespace>
     <Company>Biblica</Company>
     <Authors />
     <PackageId>TptMain</PackageId>
     <Copyright />
     <Product>Typesetting Preview Tool Service</Product>
-    <Version>2.0.0.1</Version>
-    <AssemblyVersion>2.0.0.1</AssemblyVersion>
-    <FileVersion>2.0.0.1</FileVersion>
+    <Version>2.0.0.7</Version>
+    <AssemblyVersion>2.0.0.7</AssemblyVersion>
+    <FileVersion>2.0.0.7</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,31 +48,31 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.ECS" Version="3.7.1.2" />
-    <PackageReference Include="AWSSDK.S3" Version="3.7.0.21" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.7.0.18" />
-    <PackageReference Include="DotNetZip" Version="1.15.0" />
-    <PackageReference Include="CsvHelper" Version="15.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.5">
+    <PackageReference Include="AWSSDK.ECS" Version="3.7.5.11" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.8.13" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.2.38" />
+    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="CsvHelper" Version="27.2.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.5">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="ParatextData" Version="9.2.4-alpha8" />
-    <PackageReference Include="System.Runtime.Caching" Version="5.0.0" />
-    <PackageReference Include="System.Security.Permissions" Version="5.0.0" />
-    <PackageReference Include="System.ServiceModel.Duplex" Version="4.8.1" />
-    <PackageReference Include="System.ServiceModel.Http" Version="4.8.1" />
-    <PackageReference Include="System.ServiceModel.NetTcp" Version="4.8.1" />
-    <PackageReference Include="System.ServiceModel.Security" Version="4.8.1" />
+    <PackageReference Include="ParatextData" Version="9.2.6.2" />
+    <PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
+    <PackageReference Include="System.Security.Permissions" Version="6.0.0" />
+    <PackageReference Include="System.ServiceModel.Duplex" Version="4.9.0" />
+    <PackageReference Include="System.ServiceModel.Http" Version="4.9.0" />
+    <PackageReference Include="System.ServiceModel.NetTcp" Version="4.9.0" />
+    <PackageReference Include="System.ServiceModel.Security" Version="4.9.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -81,7 +90,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="echo /// This is an auto-generated file, created by a Pre-Build event. &gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo /// After changing environment variables, restart Visual Studio. &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo namespace TptMain.Util &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo { &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     ///^&lt;summary^&gt;Configuration information for AWS services.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     public static class AWSCredentials &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     { &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The AWS Access Key ID. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_ACCESS_KEY_ID = &quot;$(AWS_ACCESS_KEY_ID)&quot;; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The AWS Access Key Secret. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_ACCESS_KEY_SECRET = &quot;$(AWS_ACCESS_KEY_SECRET)&quot;; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The TPT AWS Bucket Name. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_BUCKET_NAME = &quot;$(AWS_TPT_BUCKET_NAME)&quot;; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The AWS Region. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_REGION = &quot;$(AWS_TPT_REGION)&quot;; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The TPT AWS SQS Queue URL for Template Generation. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_SQS_QUEUE_URL_TEMPLATE = &quot;$(AWS_TPT_SQS_QUEUE_URL_TEMPLATE)&quot;; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The TPT AWS SQS Queue URL for Tagged Text Generation. Provided by an environment eariable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_SQS_QUEUE_URL_TAGGED_TEXT = &quot;$(AWS_TPT_SQS_QUEUE_URL_TAGGED_TEXT)&quot;; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     } &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo } &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;" />
+    <Exec Command="echo /// This is an auto-generated file, created by a Pre-Build event. &gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo /// After changing environment variables, restart Visual Studio. &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo namespace TptMain.Util &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo { &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     ///^&lt;summary^&gt;Configuration information for AWS services.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     public static class AWSCredentials &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     { &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The AWS Access Key ID. Provided by an environment variable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_ACCESS_KEY_ID = &quot;$(AWS_ACCESS_KEY_ID)&quot;; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The AWS Access Key Secret. Provided by an environment variable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_ACCESS_KEY_SECRET = &quot;$(AWS_ACCESS_KEY_SECRET)&quot;; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The TPT AWS Bucket Name. Provided by an environment variable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_BUCKET_NAME = &quot;$(AWS_TPT_BUCKET_NAME)&quot;; &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The AWS Region. Provided by an environment variable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_REGION = &quot;$(AWS_TPT_REGION)&quot;; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The TPT AWS SQS Queue URL for Template Generation. Provided by an environment variable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_SQS_QUEUE_URL_TEMPLATE = &quot;$(AWS_TPT_SQS_QUEUE_URL_TEMPLATE)&quot;; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         ///^&lt;summary^&gt;The TPT AWS SQS Queue URL for Tagged Text Generation. Provided by an environment variable of the same name.^&lt;/summary^&gt; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo         public const string AWS_TPT_SQS_QUEUE_URL_TAGGED_TEXT = &quot;$(AWS_TPT_SQS_QUEUE_URL_TAGGED_TEXT)&quot;; &gt;&gt; &quot;$(ProjectDir)\Util\AWSCredentials.cs&quot;&#xD;&#xA;echo     } &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;&#xD;&#xA;echo } &gt;&gt; &quot;$(ProjectDir)Util\AWSCredentials.cs&quot;" />
   </Target>
 
 </Project>
