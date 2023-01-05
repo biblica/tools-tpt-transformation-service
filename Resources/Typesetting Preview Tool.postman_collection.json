@@ -1,123 +1,29 @@
 {
 	"info": {
-		"_postman_id": "96ebe306-7cb0-4534-a31c-f6844c3d65b5",
+		"_postman_id": "81960ed8-3aa7-4bf2-8dec-cbec8bfbad92",
 		"name": "Typesetting Preview Tool",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "583746"
 	},
 	"item": [
 		{
-			"name": "Get Project Details",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{api-url}}{{api-port}}/api/ProjectDetails",
-					"host": [
-						"{{api-url}}{{api-port}}"
-					],
-					"path": [
-						"api",
-						"ProjectDetails"
-					]
-				}
-			},
-			"response": [
-				{
-					"name": "Get Preview Jobs",
-					"originalRequest": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://10.20.2.4:9875/api/PreviewJobs/81b849e8-4fad-4870-a0f2-2f3cf5c62a6c",
-							"protocol": "http",
-							"host": [
-								"10",
-								"20",
-								"2",
-								"4"
-							],
-							"port": "9875",
-							"path": [
-								"api",
-								"PreviewJobs",
-								"81b849e8-4fad-4870-a0f2-2f3cf5c62a6c"
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Transfer-Encoding",
-							"value": "chunked"
-						},
-						{
-							"key": "Content-Type",
-							"value": "application/json; charset=utf-8"
-						},
-						{
-							"key": "Server",
-							"value": "Microsoft-IIS/10.0"
-						},
-						{
-							"key": "Date",
-							"value": "Mon, 28 Oct 2019 03:50:30 GMT"
-						}
-					],
-					"cookie": [],
-					"body": "{\n    \"id\": \"81b849e8-4fad-4870-a0f2-2f3cf5c62a6c\",\n    \"dateSubmitted\": \"2019-10-28T03:49:35.590241Z\",\n    \"dateStarted\": \"2019-10-28T03:49:36.0034986Z\",\n    \"dateCompleted\": \"2019-10-28T03:49:37.6720261Z\",\n    \"dateCancelled\": null,\n    \"projectName\": \"spaNVI15\",\n    \"isSubmitted\": true,\n    \"isStarted\": true,\n    \"isCompleted\": true,\n    \"isCancelled\": false,\n    \"isError\": true\n}"
-				}
-			]
-		},
-		{
-			"name": "Create Preview Job",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"projectName\": \"faPCB18\",\n\t\"user\": \"Kent Spielmann\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{api-url}}{{api-port}}/api/PreviewJobs",
-					"host": [
-						"{{api-url}}{{api-port}}"
-					],
-					"path": [
-						"api",
-						"PreviewJobs"
-					]
-				}
-			},
-			"response": [
+			"name": "TPT Plugin Job Creation",
+			"item": [
 				{
 					"name": "Create Preview Job",
-					"originalRequest": {
+					"request": {
 						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
 								"name": "Content-Type",
-								"value": "application/json",
-								"type": "text"
+								"type": "text",
+								"value": "application/json"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"projectName\": \"spaNVI15\"\n}",
+							"raw": "{\n    \"user\": \"{{user}}\",\n    \"bibleSelectionParams\": {\n        \"projectName\": \"usNIV11\"\n    },\n    \"typesettingParams\": {\n        \"bookFormat\": 1,\n        \"includeFootnotes\": true\n    }\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -125,116 +31,279 @@
 							}
 						},
 						"url": {
-							"raw": "http://10.20.2.4:9875/api/PreviewJobs",
-							"protocol": "http",
+							"raw": "{{api-url}}/api/PreviewJobs",
 							"host": [
-								"10",
-								"20",
-								"2",
-								"4"
+								"{{api-url}}"
 							],
-							"port": "9875",
 							"path": [
 								"api",
 								"PreviewJobs"
 							]
 						}
 					},
-					"status": "Created",
-					"code": 201,
-					"_postman_previewlanguage": "json",
-					"header": [
+					"response": [
 						{
-							"key": "Content-Type",
-							"value": "application/json; charset=utf-8"
+							"name": "ukNIV11-cav",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"user\": \"{{user}}\",\n    \"bibleSelectionParams\": {\n        \"projectName\": \"ukNIV11\"\n    },\n    \"typesettingParams\": {\n        \"bookFormat\": 1,\n        \"includeFootnotes\": true\n    }\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api-url}}/api/PreviewJobs",
+									"host": [
+										"{{api-url}}"
+									],
+									"path": [
+										"api",
+										"PreviewJobs"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Date",
+									"value": "Thu, 30 Sep 2021 21:03:07 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1189"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Location",
+									"value": "http://tpt-server.biblica.com/api/PreviewJobs/fee6c0ba-ac12-41a2-9f75-c4820a004332"
+								},
+								{
+									"key": "Server",
+									"value": "Microsoft-IIS/10.0"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": \"fee6c0ba-ac12-41a2-9f75-c4820a004332\",\n    \"dateSubmitted\": \"2021-09-30T21:03:07.8220767Z\",\n    \"dateStarted\": null,\n    \"dateCompleted\": null,\n    \"dateCancelled\": null,\n    \"user\": \"Kent Spielmann\",\n    \"isSubmitted\": true,\n    \"isStarted\": false,\n    \"isCompleted\": false,\n    \"isCancelled\": false,\n    \"isError\": false,\n    \"state\": [\n        {\n            \"id\": \"703b0469-98fe-4cee-b601-1c7a671d3156\",\n            \"dateSubmitted\": \"2021-09-30T21:03:07.8220767Z\",\n            \"state\": \"Submitted\",\n            \"source\": \"GeneralManagement\"\n        }\n    ],\n    \"errorMessage\": null,\n    \"errorDetail\": null,\n    \"bibleSelectionParams\": {\n        \"id\": \"179d5240-8b7e-4800-aadc-4208c42b709b\",\n        \"projectName\": \"ukNIV11\",\n        \"selectedBooks\": null,\n        \"includeAncillary\": false\n    },\n    \"typesettingParams\": {\n        \"id\": \"ba1ac726-41b6-4f1c-b5d9-ad89e270c2f2\",\n        \"fontSizeInPts\": 8,\n        \"fontLeadingInPts\": 9,\n        \"pageWidthInPts\": 396,\n        \"pageHeightInPts\": 612,\n        \"pageHeaderInPts\": 18,\n        \"bookFormat\": 1,\n        \"useHyphenation\": false,\n        \"useCustomFootnotes\": false,\n        \"useProjectFont\": true,\n        \"includeHeadings\": false,\n        \"includeFootnotes\": true,\n        \"includeChapterNumbers\": false,\n        \"includeVerseNumbers\": false,\n        \"includeParallelPassages\": false,\n        \"includeAcrosticPoetry\": false\n    },\n    \"additionalParams\": {\n        \"id\": \"cfb0e291-b685-4883-a28d-57e847718f5c\",\n        \"customFootnoteMarkers\": null,\n        \"customBookListUsxCompKeys\": null,\n        \"overrideFont\": null,\n        \"textDirection\": 0\n    }\n}"
 						},
 						{
-							"key": "Location",
-							"value": "http://10.20.2.4:9875/api/PreviewJobs/81b849e8-4fad-4870-a0f2-2f3cf5c62a6c"
-						},
-						{
-							"key": "Server",
-							"value": "Microsoft-IIS/10.0"
-						},
-						{
-							"key": "Date",
-							"value": "Mon, 28 Oct 2019 03:49:36 GMT"
-						},
-						{
-							"key": "Content-Length",
-							"value": "295"
+							"name": "usNIV11-cav",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"user\": \"{{user}}\",\n    \"bibleSelectionParams\": {\n        \"projectName\": \"usNIV11\"\n    },\n    \"typesettingParams\": {\n        \"bookFormat\": 1,\n        \"includeFootnotes\": true\n    }\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api-url}}/api/PreviewJobs",
+									"host": [
+										"{{api-url}}"
+									],
+									"path": [
+										"api",
+										"PreviewJobs"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Date",
+									"value": "Thu, 30 Sep 2021 21:04:02 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1189"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Location",
+									"value": "http://tpt-server.biblica.com/api/PreviewJobs/78ac7f78-4bfd-480c-bf53-44d853e6b690"
+								},
+								{
+									"key": "Server",
+									"value": "Microsoft-IIS/10.0"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": \"78ac7f78-4bfd-480c-bf53-44d853e6b690\",\n    \"dateSubmitted\": \"2021-09-30T21:04:01.9995091Z\",\n    \"dateStarted\": null,\n    \"dateCompleted\": null,\n    \"dateCancelled\": null,\n    \"user\": \"Kent Spielmann\",\n    \"isSubmitted\": true,\n    \"isStarted\": false,\n    \"isCompleted\": false,\n    \"isCancelled\": false,\n    \"isError\": false,\n    \"state\": [\n        {\n            \"id\": \"d139698a-713d-449d-8c35-87f6f3784cf9\",\n            \"dateSubmitted\": \"2021-09-30T21:04:01.9995091Z\",\n            \"state\": \"Submitted\",\n            \"source\": \"GeneralManagement\"\n        }\n    ],\n    \"errorMessage\": null,\n    \"errorDetail\": null,\n    \"bibleSelectionParams\": {\n        \"id\": \"d832a210-e807-4ece-a460-3b1bf99b98b0\",\n        \"projectName\": \"usNIV11\",\n        \"selectedBooks\": null,\n        \"includeAncillary\": false\n    },\n    \"typesettingParams\": {\n        \"id\": \"e153e132-cc51-4889-8a85-ffb935df8079\",\n        \"fontSizeInPts\": 8,\n        \"fontLeadingInPts\": 9,\n        \"pageWidthInPts\": 396,\n        \"pageHeightInPts\": 612,\n        \"pageHeaderInPts\": 18,\n        \"bookFormat\": 1,\n        \"useHyphenation\": false,\n        \"useCustomFootnotes\": false,\n        \"useProjectFont\": true,\n        \"includeHeadings\": false,\n        \"includeFootnotes\": true,\n        \"includeChapterNumbers\": false,\n        \"includeVerseNumbers\": false,\n        \"includeParallelPassages\": false,\n        \"includeAcrosticPoetry\": false\n    },\n    \"additionalParams\": {\n        \"id\": \"472b7acc-30e5-4c56-937d-e0e5b8056a08\",\n        \"customFootnoteMarkers\": null,\n        \"customBookListUsxCompKeys\": null,\n        \"overrideFont\": null,\n        \"textDirection\": 0\n    }\n}"
 						}
-					],
-					"cookie": [],
-					"body": "{\n    \"id\": \"81b849e8-4fad-4870-a0f2-2f3cf5c62a6c\",\n    \"dateSubmitted\": \"2019-10-28T03:49:35.590241Z\",\n    \"dateStarted\": \"2019-10-28T03:49:36.0034986Z\",\n    \"dateCompleted\": null,\n    \"dateCancelled\": null,\n    \"projectName\": \"spaNVI15\",\n    \"isSubmitted\": true,\n    \"isStarted\": true,\n    \"isCompleted\": false,\n    \"isCancelled\": false,\n    \"isError\": false\n}"
+					]
 				}
 			]
 		},
 		{
-			"name": "Get Preview Jobs",
+			"name": "USX Job Creation",
+			"item": [
+				{
+					"name": "POST PreviewJob w/Content",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth-token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "usxContent",
+									"type": "file",
+									"src": "/C:/Work/Files/Bb/DT-475 Release TPT/DT331.zip"
+								},
+								{
+									"key": "TypesettingParams.BookFormat",
+									"value": "cav",
+									"type": "text"
+								},
+								{
+									"key": "TypesettingParams.UseCustomFootnotes",
+									"value": "false",
+									"type": "text"
+								},
+								{
+									"key": "TypesettingParams.UseProjectFont",
+									"value": "false",
+									"type": "text"
+								},
+								{
+									"key": "TypesettingParams.UseHyphenation",
+									"value": "false",
+									"type": "text"
+								},
+								{
+									"key": "AdditionalParams.TextDirection",
+									"value": "LTR",
+									"type": "text"
+								},
+								{
+									"key": "User",
+									"value": "Test1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{api-url}}/api/PreviewJobsWithContent",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"PreviewJobsWithContent"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Get Project Details",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api-url}}{{api-port}}/api/PreviewJobs/{{preview-job_id}}",
+					"raw": "{{api-url}}/api/ProjectDetails",
 					"host": [
-						"{{api-url}}{{api-port}}"
+						"{{api-url}}"
+					],
+					"path": [
+						"api",
+						"ProjectDetails"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Server Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api-url}}/api/ServerStatus",
+					"host": [
+						"{{api-url}}"
+					],
+					"path": [
+						"api",
+						"ServerStatus"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Preview Jobs",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{api-url}}/api/PreviewJobs/bbf099b6-240e-4940-9090-9cb9c560a825",
+					"host": [
+						"{{api-url}}"
 					],
 					"path": [
 						"api",
 						"PreviewJobs",
-						"{{preview-job_id}}"
+						"bbf099b6-240e-4940-9090-9cb9c560a825"
 					]
 				}
 			},
-			"response": [
-				{
-					"name": "Get Preview Jobs",
-					"originalRequest": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://10.20.2.4:9875/api/PreviewJobs/81b849e8-4fad-4870-a0f2-2f3cf5c62a6c",
-							"protocol": "http",
-							"host": [
-								"10",
-								"20",
-								"2",
-								"4"
-							],
-							"port": "9875",
-							"path": [
-								"api",
-								"PreviewJobs",
-								"81b849e8-4fad-4870-a0f2-2f3cf5c62a6c"
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Transfer-Encoding",
-							"value": "chunked"
-						},
-						{
-							"key": "Content-Type",
-							"value": "application/json; charset=utf-8"
-						},
-						{
-							"key": "Server",
-							"value": "Microsoft-IIS/10.0"
-						},
-						{
-							"key": "Date",
-							"value": "Mon, 28 Oct 2019 03:50:30 GMT"
-						}
-					],
-					"cookie": [],
-					"body": "{\n    \"id\": \"81b849e8-4fad-4870-a0f2-2f3cf5c62a6c\",\n    \"dateSubmitted\": \"2019-10-28T03:49:35.590241Z\",\n    \"dateStarted\": \"2019-10-28T03:49:36.0034986Z\",\n    \"dateCompleted\": \"2019-10-28T03:49:37.6720261Z\",\n    \"dateCancelled\": null,\n    \"projectName\": \"spaNVI15\",\n    \"isSubmitted\": true,\n    \"isStarted\": true,\n    \"isCompleted\": true,\n    \"isCancelled\": false,\n    \"isError\": true\n}"
-				}
-			]
+			"response": []
 		},
 		{
 			"name": "Delete Preview Job",
@@ -242,14 +311,14 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "{{api-url}}{{api-port}}/api/PreviewJobs/{{preview-job_id}}",
+					"raw": "{{api-url}}/api/PreviewJobs/59e2b17d-a905-4ad3-82af-c8919e1ff10d",
 					"host": [
-						"{{api-url}}{{api-port}}"
+						"{{api-url}}"
 					],
 					"path": [
 						"api",
 						"PreviewJobs",
-						"{{preview-job_id}}"
+						"59e2b17d-a905-4ad3-82af-c8919e1ff10d"
 					]
 				}
 			},
@@ -261,58 +330,24 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api-url}}{{api-port}}/api/PreviewFile/{{preview-job_id}}",
+					"raw": "{{api-url}}/api/PreviewFile/724a6b47-c9b8-4554-a4ec-091d4fdd9c89?archive=true",
 					"host": [
-						"{{api-url}}{{api-port}}"
+						"{{api-url}}"
 					],
 					"path": [
 						"api",
 						"PreviewFile",
-						"{{preview-job_id}}"
+						"724a6b47-c9b8-4554-a4ec-091d4fdd9c89"
+					],
+					"query": [
+						{
+							"key": "archive",
+							"value": "true"
+						}
 					]
 				}
 			},
 			"response": []
 		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"id": "56c4a593-0c38-48ff-ae1e-01ad5fe3c3aa",
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"id": "736c508a-68e3-445b-ae3c-5c026a4ab006",
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"id": "48499a5d-76f1-4b89-87e0-201d3d4e89cf",
-			"key": "api-url",
-			"value": "http://172.31.10.12"
-		},
-		{
-			"id": "9c06e8ee-f06e-4cd7-8e92-0812f3703273",
-			"key": "api-port",
-			"value": ":9875"
-		},
-		{
-			"id": "b72b7dee-1c9a-47f5-80fd-ecd35cb6475a",
-			"key": "preview-job_id",
-			"value": ""
-		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

@@ -14,9 +14,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using TptMain.Models;
-using TptMain.Util;
 
 namespace TptMain.Projects
 {

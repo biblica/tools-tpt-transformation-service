@@ -68,18 +68,22 @@ namespace TptMain.Text
         {
             var executingAssembly = Assembly.GetExecutingAssembly();
             using var streamReader = new StreamReader(executingAssembly.GetManifestResourceStream("TptMain.Resources.book-ids-1.csv")!);
-            using var csvReader = new CsvReader(streamReader, CultureInfo.CurrentCulture);
 
-            csvReader.Configuration.HasHeaderRecord = false;
-            csvReader.Configuration.IgnoreBlankLines = true;
-            csvReader.Configuration.TrimOptions = TrimOptions.Trim;
-            csvReader.Configuration.MissingFieldFound = null;
+            var csvConfig = new CsvConfiguration(CultureInfo.CurrentCulture)
+            {
+                HasHeaderRecord = false,
+                IgnoreBlankLines = true,
+                TrimOptions = TrimOptions.Trim,
+                MissingFieldFound = null
+            };
+
+            using var csvReader = new CsvReader(streamReader, csvConfig);
 
             BookIdList = csvReader.GetRecords<BookIdItem>().ToImmutableList();
             BookIdsByCode = BookIdList.ToImmutableDictionary(idItem => idItem.BookCode);
             UsxCompKeyByCode = BookIdList.ToImmutableDictionary(
-                keySelector: idItem => idItem.BookCode, 
-                elementSelector: idItem => $"{idItem.BookNum.ToString("000")}{idItem.BookCode}");
+                keySelector: idItem => idItem.BookCode,
+                elementSelector: idItem => $"{idItem.BookNum:000}{idItem.BookCode}");
             BookIdsByNum = BookIdList.ToImmutableDictionary(idItem => idItem.BookNum);
         }
     }
